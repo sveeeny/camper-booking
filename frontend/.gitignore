@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Umgebungsvariablen
+.env
+.env.local
+.env.*  # Falls du mehrere Umgebungsdateien hast (z. B. .env.production)

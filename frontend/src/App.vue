@@ -1,5 +1,5 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import BookingForm from './components/BookingForm.vue'; // NEU: Buchungsformular importieren
 </script>
 
 <template>
@@ -11,7 +11,9 @@ import HelloWorld from './components/HelloWorld.vue'
       <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
     </a>
   </div>
-  <HelloWorld msg="Vite + Vue" />
+
+  <!-- NEU: Buchungsformular einfügen -->
+  <BookingForm />
 </template>
 
 <style scoped>
