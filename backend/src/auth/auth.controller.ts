@@ -6,12 +6,13 @@ import { LocalAuthGuard } from './local-auth.guard';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {
-    Logger.log('✅ AuthController wurde geladen!');
+    Logger.log('✅ AuthController wurde geladen!', 'AuthController');
   }
 
-  //@UseGuards(LocalAuthGuard)
+  @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Request() req) {
+    Logger.log('🔍 Login-Route aufgerufen!', 'AuthController');
     return this.authService.login(req.user);
   }
 
@@ -19,6 +20,7 @@ export class AuthController {
   async register(
     @Body() { email, password, role }: { email: string; password: string; role: 'admin' | 'host' },
   ) {
+    Logger.log(`📩 Registrierung mit E-Mail: ${email}`, 'AuthController');
     return this.authService.register(email, password, role);
   }
 }
