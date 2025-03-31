@@ -45,7 +45,7 @@ const kurtaxePerAdult = 3;
 const kurtaxePerChild = 0;
 const manualPhoneCodeChange = ref(false);
 
-
+//TEST
 // // 🌟 Gäste-Informationen
 // const guestInfos = ref({
   // salutation = '',
