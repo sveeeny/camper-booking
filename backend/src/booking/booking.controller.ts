@@ -27,15 +27,6 @@ async checkAvailability(@Body() createBookingCheckDto: CreateBookingCheckDto) {
     );
 }
 
-
-  // 📌 Buchung abschließen und Gästedaten speichern
-  @Public()
-  @Post('guest')
-  async completeGuestInfo(@Body() createBookingGuestDto: CreateBookingGuestDto) {
-    console.log('📥 Gästeinformationen empfangen:', createBookingGuestDto);
-    return this.bookingService.completeGuestInfo(createBookingGuestDto);
-  }
-
   // 📌 NEUE Buchung abschließen und Gästedaten speichern
   @Public()
   @Post('create')

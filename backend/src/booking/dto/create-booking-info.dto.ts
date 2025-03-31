@@ -2,8 +2,8 @@ import { IsInt, IsBoolean } from 'class-validator';
 
 export class CreateBookingInfoDto {
   @IsInt()
-  bookingId: number; // ID der bestehenden Buchung
-
+  bookingId: number; 
+  
   @IsBoolean()
   paymentConfirmed: boolean;
 }

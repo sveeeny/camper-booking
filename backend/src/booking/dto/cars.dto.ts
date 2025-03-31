@@ -5,10 +5,6 @@ import internal from 'stream';
 
 export class CarsDto {
 
-  // @IsNotEmpty()
-  // @Type(()=> Number)
-  // id: number;
-
   @IsNotEmpty()
   carPlate: string;
 

@@ -65,28 +65,6 @@ export class BookingService {
       }
     }
     
-    // let currentDate = new Date(checkInDate);
-    // const endDate = new Date(checkOutDate);
-
-    // while (currentDate < endDate) {
-    //   const checkIn = new Date(currentDate); // neue Kopie
-    //   const checkOut = new Date(currentDate);
-    //   checkOut.setDate(checkOut.getDate() + 1);
-
-    //   await this.dataSource.query(`
-    //     INSERT INTO cars (booking_id, checkInDate, checkOutDate)
-    //     VALUES ($1, $2, $3)
-    //   `, [
-    //     newBooking[0].booking_id,
-    //     checkIn.toISOString().split('T')[0],
-    //     checkOut.toISOString().split('T')[0]
-    //   ]);
-
-    //   currentDate.setDate(currentDate.getDate() + 1);
-    // }
-
-
-
     // availability Tabelle
     currentDate = new Date(checkInDate);
     while (currentDate < endDate) {
@@ -126,7 +104,7 @@ export class BookingService {
       dto.phoneNumber, 
       dto.email, 
       dto.totalPrice,
-      dto.bookingId // Muss vom Frontend mitgesendet werden
+      dto.bookingId 
     ]
     );
 
@@ -174,16 +152,7 @@ export class BookingService {
           dto.bookingId,
           carId
         ]);
-    
-        // 📅 Availability-Tabelle aktualisieren für diese Nacht
-        // await this.dataSource.query(`
-        //   UPDATE availability
-        //   SET occupied = occupied + 1
-        //   WHERE date = $1
-        // `, [
-        //   checkIn.toISOString().split('T')[0]
-        // ]);
-    
+       
         currentNight.setDate(currentNight.getDate() + 1);
       }
     }

@@ -6,7 +6,7 @@ export class Car {
   id: number;
 
   @Column()
-  bookingID: string; // 🛠️ Sicherstellen, dass dies als Spalte gespeichert wird
+  bookingID: string; 
 
   @Column()
   carPlate: string;
@@ -20,12 +20,12 @@ export class Car {
   @Column({ default: false })
   isCancelled: boolean;
 
-  @Column({ type: 'int', default: 1 }) // 🛠️ Explizit als Integer, mit Defaultwert 1
+  @Column({ type: 'int', default: 1 }) 
   adults: number;
 
-  @Column({ type: 'int', default: 0 }) // 🛠️ Explizit als Integer, mit Defaultwert 0
+  @Column({ type: 'int', default: 0 }) 
   children: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0.00 }) // 🛠️ Standardwert für Sicherheit
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0.00 }) 
   touristTax: number;
 }

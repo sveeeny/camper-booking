@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BookingService } from './booking.service';
 import { BookingController } from './booking.controller';
-import { AvailabilityService } from '../availability/availability.service'; // ✅ Import
-import { Availability } from '../entitys/availability.entity'; // ✅ Import der Entity
-import { ConfigModule } from '@nestjs/config';  // 🔥 Wichtig: ConfigModule importieren!
+import { AvailabilityService } from '../availability/availability.service'; 
+import { Availability } from '../entitys/availability.entity'; 
+import { ConfigModule } from '@nestjs/config';  
 import { TableModule } from 'tables/table.module';
 
 @Module({
@@ -14,7 +14,7 @@ import { TableModule } from 'tables/table.module';
     TableModule 
   ],
   controllers: [BookingController],
-  providers: [BookingService, AvailabilityService], // ✅ AvailabilityService hinzufügen
+  providers: [BookingService, AvailabilityService], 
   exports: [BookingService],
 })
 export class BookingModule {}

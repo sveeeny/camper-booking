@@ -28,9 +28,6 @@ const bookingId = ref(null);
 const cars = ref([]); // 🚀 
 const hasSubmitted = ref(false);
 const disabledDates = ref([]);
-// const checkInDate = ref();
-// const checkOutDate = ref();
-
 
 // Step 2
 const errorFields = ref([]);
@@ -45,25 +42,6 @@ const kurtaxePerAdult = 3;
 const kurtaxePerChild = 0;
 const manualPhoneCodeChange = ref(false);
 
-//TEST
-// // 🌟 Gäste-Informationen
-// const guestInfos = ref({
-  // salutation = '',
-  // nationality = '',
-  // firstName = '',
-  // lastName = '',
-  // email = '',
-  // phoneCountryCode = '',
-  // phoneNumber = '',
-  // kurtaxePerAdult = 3,
-  // kurtaxePerChild = 0,
-  // manualPhoneCodeChange = false,
-  // hasSubmitted = false,
-  // cars: []
-// })
-
-
-
 
 // Überprüfen ob Anzahl Stellplätze geändert wird
 watch(numberOfCars, async (newValue) => {
@@ -76,21 +54,6 @@ watch(numberOfCars, async (newValue) => {
   await nextTick(); // Erzwinge ein UI-Update in Vue
   console.log(`📌 Aktualisierte belegte Tage:`, disabledDates.value);
 });
-
-
-// watch(selectedDates, async (newValue) => {
-//   console.log(`🚀Neue selectedDates: ${newValue}`);
-//   const checkInDate = new Date (selectedDates.value[0] || null);
-//   const checkOutDate = new Date (selectedDates.value[1] || null);
-//   // const checkInDate = selectedDates.value[0];
-//   // const checkOutDate = selectedDates.value[1];
-//   console.log(`selectedDates:`, selectedDates.value[0], selectedDates.value[1]);
-//   console.log(`checkInDate:`, checkInDate);
-//   console.log(`checkOutDate:`, checkOutDate);
-  
-//   await nextTick(); // Erzwinge ein UI-Update in Vue
-//   console.log(`📌 Aktualisierte belegte Tage:`, disabledDates.value);
-// });
 
 
 
@@ -125,8 +88,6 @@ const submitBooking = async () => {
   
   try {
     const bookingData = {
-      // checkInDate: selectedDates.value[0]?.toISOString().split('T')[0] || null,
-      // checkOutDate: selectedDates.value[1]?.toISOString().split('T')[0] || null,
       checkInDate: selectedDates.value[0],
       checkOutDate: selectedDates.value[1],
       numberOfCars: numberOfCars.value,
@@ -138,7 +99,6 @@ const submitBooking = async () => {
 
     if (response.data.success && response.data.bookingId) {  
       bookingId.value = response.data.bookingId;
-      //ÜBERPRÜFEN LENGTH WAHRSCHEINLICH FALSCH
       cars.value = Array.from({ length: numberOfCars.value }, () => ({
         carPlate: '',
         adults: 1,
@@ -263,7 +223,6 @@ const completeGuestInfo = async () => {
     };
 
     console.log('📤 Gäste-Infos senden:', JSON.stringify(guestData, null, 2));
-    // await axios.post('/bookings/guest', guestData);
     await axios.post('/bookings/create', guestData);
     alert('Buchung erfolgreich abgeschlossen!');
     step.value = 1;
@@ -285,8 +244,7 @@ onMounted(fetchUnavailableDates);
     <button v-if="step===1" @click="deleteTables"> delete tables </button>
     <h2 v-if="step === 1">Buchungsformular</h2>
     <h2 v-if="step === 1">Camper Stellplätze byherger</h2>
-    <!-- <h2 v-if="step === 2">Gästeinformationen</h2> -->
-
+   
     <!-- 🌟 Schritt 1: Buchung -->
     <div v-if="step === 1">
  
@@ -327,13 +285,6 @@ onMounted(fetchUnavailableDates);
 
 <div v-if="step === 2" class="guest-info">
    <div class="info-container"> 
-<!-- HIER FEHLER: -->
-  <!-- <p><strong>Check-in:</strong> {{ formatDateTime(checkInDate, 'Check-in') }}</p>
-  <p><strong>Check-out:</strong> {{ formatDateTime(checkOutDate, 'Check-out') }}</p> -->
-  
-  <!-- <DateDisplay :date="checkInDate" label="Check-in ab" />
-  <DateDisplay :date="checkOutDate" label="Check-out bis" /> -->
-  
 
   <div class="info-row">
     <DateDisplay :date="checkInDate" label="Check-in ab" />

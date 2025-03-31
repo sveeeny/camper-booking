@@ -6,15 +6,14 @@ export class CreateBookingGuestDto {
   
   @IsNotEmpty()
   @IsString()
-  @IsIn(['Herr', 'Frau']) // ✅ Nur erlaubte Werte
-  salutation: string; // Herr, Frau
+  @IsIn(['Herr', 'Frau']) 
+  salutation: string; 
 
   @IsInt()
-  bookingId: string; // ID der bestehenden Buchung
+  bookingId: string; 
 
   @IsNotEmpty()
   @IsDateString()
- // @MinDate(new Date(), { message: "Buchungen nur für zukünftige Daten möglich." })
   checkInDate: string;
 
   @IsNotEmpty()
@@ -38,35 +37,29 @@ export class CreateBookingGuestDto {
 
   @IsNotEmpty()
   @IsString()
-  nationality: string; // ✅ Dropdown-Feld für Nationalität
+  nationality: string; 
 
   @IsNotEmpty()
   @IsEmail()
-  email: string; // ✅ E-Mail validieren
+  email: string; 
 
   @IsNotEmpty()
   @IsString()
-  phoneCountryCode: string; // ✅ Vorwahl (z.B. +41)
+  phoneCountryCode: string; 
 
   @IsNotEmpty()
   @Matches(/^[0-9]+$/, { message: "Telefonnummer darf nur Zahlen enthalten." })
   @MinLength(8, { message: "Telefonnummer muss mindestens 8 Ziffern haben." })
   @MaxLength(15, { message: "Telefonnummer darf maximal 15 Ziffern haben." })
-  phoneNumber: string; // ✅ Nur Zahlen erlaubt
-
-  // @IsNotEmpty()
-  // @Min(1)
-  // @Max(5)
-  // numberOfCars: number;
+  phoneNumber: string; 
 
   @IsNotEmpty()
-  totalPrice: number;  // ✅ Neues Feld für den Gesamtpreis
+  totalPrice: number;  
   
-
   @IsNotEmpty()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CarsDto)  // ✅ Erzwingt die richtige Typumwandlung!
+  @Type(() => CarsDto)  
   cars: CarsDto[];
 
 }
