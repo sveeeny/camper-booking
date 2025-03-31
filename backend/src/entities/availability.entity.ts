@@ -1,8 +1,8 @@
 import { Entity, Column, PrimaryColumn } from 'typeorm';
 
-@Entity()
+@Entity({ name: 'availability' })
 export class Availability {
-  @PrimaryColumn({ type: 'date' })  
+  @PrimaryColumn({ type: 'date' })
   date: string;
 
   @Column({ type: 'int', default: 0 })

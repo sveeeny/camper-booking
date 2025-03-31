@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Availability } from '../entitys/availability.entity';
+import { Availability } from '../entities/availability.entity';
 import { DataSource } from 'typeorm';
 
 

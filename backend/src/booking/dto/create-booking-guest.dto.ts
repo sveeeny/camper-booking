@@ -10,7 +10,7 @@ export class CreateBookingGuestDto {
   salutation: string; 
 
   @IsInt()
-  bookingId: string; 
+  bookingId: number; 
 
   @IsNotEmpty()
   @IsDateString()

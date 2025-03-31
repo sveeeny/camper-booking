@@ -9,6 +9,9 @@ import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from '../auth/roles.guard'; // ✅ Import des Role-Guards
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AvailabilityModule } from 'availability/availability.module';  
+import { Booking } from 'entities/booking.entity';
+import { Car } from 'entities/cars.entity';
+import { Availability } from 'entities/availability.entity';
 
 @Module({
   imports: [
@@ -20,7 +23,7 @@ import { AvailabilityModule } from 'availability/availability.module';
       username: process.env.DATABASE_USER,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      autoLoadEntities: true,
+      entities:[Booking, Car, Availability],
       synchronize: false,
       ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
     }),

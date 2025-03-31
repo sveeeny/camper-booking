@@ -3,18 +3,19 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BookingService } from './booking.service';
 import { BookingController } from './booking.controller';
 import { AvailabilityService } from '../availability/availability.service'; 
-import { Availability } from '../entitys/availability.entity'; 
+import { Availability } from '../entities/availability.entity'; 
 import { ConfigModule } from '@nestjs/config';  
-import { TableModule } from 'tables/table.module';
+import { Booking } from 'entities/booking.entity';
+import { Car } from 'entities/cars.entity';
+
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([Availability]),
-    TableModule 
+    TypeOrmModule.forFeature([Booking, Car, Availability]) 
   ],
   controllers: [BookingController],
   providers: [BookingService, AvailabilityService], 
-  exports: [BookingService],
+  exports: [TypeOrmModule, BookingService],
 })
 export class BookingModule {}

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Availability } from '../entitys/availability.entity';  // Importiere die Entity
+import { Availability } from '../entities/availability.entity';  // Importiere die Entity
 import { AvailabilityService } from './availability.service';
 import { AvailabilityController } from './availability.controller';
 
