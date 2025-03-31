@@ -6,7 +6,7 @@ export class Car {
   id: number;
 
   @Column()
-  bookingID: string; 
+  booking_id: string; 
 
   @Column()
   carPlate: string;

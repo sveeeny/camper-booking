@@ -1,4 +1,10 @@
 <script setup>
+
+
+
+//Diese Datei wird nicht mehr verwendet. Sie dient nur noch als Referenz
+
+
 import { ref, watch, computed, onMounted } from 'vue';
 import axios from '@/api';
 import { countries } from '@/countries';
