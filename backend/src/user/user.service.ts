@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { 
+  Injectable, 
+  NotFoundException, 
+  ConflictException, 
+  BadRequestException 
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
@@ -11,14 +16,73 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async getAllUsers(): Promise<User[]> {
-    return this.userRepository.find();
+  async getAllUsers(): Promise<Partial<User>[]> {
+    const users = await this.userRepository.find();
+    return users.map(({ id, email, role, createdAt, updatedAt }) => ({ 
+      id, email, role, createdAt, updatedAt 
+    })); // ✅ `passwordHash` wird ausgefiltert
   }
 
-  async createUser(email: string, password: string, role: 'admin' | 'host' = 'host'): Promise<User> {  // 👈 `username` entfernt
+  async getUserById(id: number): Promise<Partial<User>> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`Benutzer mit ID ${id} nicht gefunden.`);
+    }
+    return { id: user.id, email: user.email, role: user.role };
+  }
+
+  async createUser(email: string, password: string, role: 'admin' | 'host' = 'host'): Promise<Partial<User>> {
+    const existingUser = await this.userRepository.findOne({ where: { email } });
+    if (existingUser) {
+      throw new ConflictException('Ein Benutzer mit dieser E-Mail existiert bereits.');
+    }
+
+    if (!email || !password) {
+      throw new BadRequestException('E-Mail und Passwort sind erforderlich.');
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
     const user = this.userRepository.create({ email, passwordHash, role });
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+    
+    return { id: savedUser.id, email: savedUser.email, role: savedUser.role }; // ✅ Passwort wird nicht zurückgegeben
+  }
+
+  async updateUser(id: number, email?: string, password?: string): Promise<Partial<User>> {
+    console.log(`🚀 updateUser wurde aufgerufen für ID: ${id}`);
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`Benutzer mit ID ${id} nicht gefunden.`);
+    }
+  
+    if (email) {
+      const existingUser = await this.userRepository.findOne({ where: { email } });
+      if (existingUser && existingUser.id !== id) {
+        throw new ConflictException('Diese E-Mail ist bereits vergeben.');
+      }
+      user.email = email;
+    }
+  
+    if (password) {
+      user.passwordHash = await bcrypt.hash(password, 10);
+      console.log(`✅ Neues gehashtes Passwort für Benutzer ${id}:`, user.passwordHash);
+    }
+  
+    // **Hier fehlt das Speichern des geänderten Users in der DB**
+    await this.userRepository.save(user); // 🔥 Speichert die Änderungen in der DB!
+  
+    return { id: user.id, email: user.email, role: user.role };
+  }
+  
+
+  async deleteUser(id: number): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`Benutzer mit ID ${id} nicht gefunden.`);
+    }
+
+    await this.userRepository.delete(id);
+    return { message: `Benutzer mit ID ${id} wurde erfolgreich gelöscht.` };
   }
 
   async findUserByEmail(email: string): Promise<User | null> {
@@ -26,10 +90,16 @@ export class UserService {
   }
 
   async validateUser(email: string, password: string): Promise<User | null> {
-    const user = await this.findUserByEmail(email); 
-    if (user && (await bcrypt.compare(password, user.passwordHash))) {
-      return user;
+    const user = await this.findUserByEmail(email);
+    if (!user) {
+      throw new NotFoundException('Ungültige E-Mail oder Passwort.');
     }
-    return null;
+
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new NotFoundException('Ungültige E-Mail oder Passwort.');
+    }
+
+    return user;
   }
 }

@@ -5,19 +5,28 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 import { UserModule } from '../user/user.module';
+import { LocalStrategy } from './local.strategy';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { RolesGuard } from './roles.guard';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(), // ✅ Stellt sicher, dass .env geladen wird
     UserModule,
-    PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'supersecret', // 🔑 Setze dein eigenes Secret in der .env
-      signOptions: { expiresIn: '7d' }, // Token läuft in 7 Tagen ab
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '7d' },
+      }),
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [AuthService],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
+  exports: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
 })
 export class AuthModule {
   constructor() {
