@@ -20,4 +20,9 @@ export const completeBooking = async (bookingInfo) => {
   return api.post("/bookings/info", bookingInfo);
 };
 
+export const getUnavailableDates = async () => {
+  return api.get("/availability/dates");
+};
+
+
 export default api;

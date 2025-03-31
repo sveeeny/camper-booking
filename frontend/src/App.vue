@@ -3,6 +3,7 @@ import BookingForm from './components/BookingForm.vue'; // NEU: Buchungsformular
 </script>
 
 <template>
+  <!--
   <div>
     <a href="https://vite.dev" target="_blank">
       <img src="/vite.svg" class="logo" alt="Vite logo" />
@@ -12,7 +13,7 @@ import BookingForm from './components/BookingForm.vue'; // NEU: Buchungsformular
     </a>
   </div>
 
-  <!-- NEU: Buchungsformular einfügen -->
+   NEU: Buchungsformular einfügen -->
   <BookingForm />
 </template>
 
