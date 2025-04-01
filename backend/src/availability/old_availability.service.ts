@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Availability } from '../entities/availability.entity';
-import { DataSource, Between } from 'typeorm';
+import { DataSource } from 'typeorm';
 
 
 
@@ -17,53 +17,53 @@ export class AvailabilityService {
 
   // 📆 Kalenderansicht der Verfügbarkeit abrufen
   async getAvailabilityForYear(year: number): Promise<any[]> {
-    return this.availabilityRepository
-      .createQueryBuilder('availability')
-      .where('EXTRACT(YEAR FROM availability.date) = :year', { year })
-      .getMany();
-
+    return this.dataSource.query(
+      `SELECT * FROM availability WHERE EXTRACT(YEAR FROM date) = $1`,
+      [year]
+    );
   }
 
   // ❌ Alle belegten Tage abrufen
   async getUnavailableDates(numberOfCars: number): Promise<{ date: string }[]> {
     console.log(`🚀 Checking unavailable dates for ${numberOfCars} cars`);
     
-    const result = await this.availabilityRepository
-    .createQueryBuilder('availability')
-    .select('availability.date',  'date')
-    .where('availability.occupied + :numberOfCars > 5', { numberOfCars })
-    .getRawMany();
-
-    console.log('📌 Unavailable Dates Response:', result);
+    const result = await this.dataSource.query(
+      `SELECT date FROM availability WHERE occupied + $1 > 5`,
+      [numberOfCars]
+    );
+  
+    console.log(`📌 Unavailable Dates Response:`, result);
     return result;
-    
   }
   
 
   // ✅ Prüfen, ob für den Zeitraum Stellplätze verfügbar sind
   async isAvailable(checkInDate: string, checkOutDate: string, numberOfCars: number): Promise<boolean> {
-
-    const entries = await this.availabilityRepository.find({
-      where: {
-        date: Between(checkInDate, checkOutDate),
-      },
-    });
+    const totalOccupied = await this.dataSource.query(`
+      SELECT occupied
+      FROM availability
+      WHERE date >= $1 AND date < $2
+    `, [checkInDate, checkOutDate]);
     
-    const occupied = entries.length
-      ? Math.max(...entries.map((entry) => entry.occupied))
+    console.log(totalOccupied);
+    const occupied = totalOccupied.length > 0
+      ? Math.max(...totalOccupied.map((item) => item.occupied))
       : 0;
-    
-    return (occupied + numberOfCars) <= 5;
-    
-    console.log(`🔍 isAvailable() | Von ${checkInDate} bis ${checkOutDate} | Belegt: ${occupied} | Reservierung: ${numberOfCars} | Max: 5`);
+    const maxCapacity = 5;
 
-    
+    console.log(`🔍 isAvailable() | Von ${checkInDate} bis ${checkOutDate} | Belegt: ${occupied} | Reservierung: ${numberOfCars} | Max: ${maxCapacity}`);
+
+    return (occupied + numberOfCars) <= maxCapacity;
   }
 
   // ✅ Belegte Stellplätze für ein Datum abrufen
   async getOccupiedSpots(date: string): Promise<number> {
-    const entry = await this.availabilityRepository.findOneBy({ date });
-      return entry?.occupied ?? 0;
+    const entry = await this.dataSource.query(
+      `SELECT date, occupied FROM availability WHERE date = $1 LIMIT 1`,
+      [date]
+    );
+    
+    return entry ? entry.occupied : 0;
   }
 
   // 🛠 Verfügbarkeit für einen Zeitraum aktualisieren (hoch oder runter)
@@ -86,24 +86,36 @@ export class AvailabilityService {
 
   // ➕ Stellplätze für ein Datum erhöhen (Buchung)
   async increaseOccupiedSpots(date: string, spots: number): Promise<void> {
-    const entry = await this.availabilityRepository.findOneBy({ date });
+    const entry = await this.dataSource.query(
+      `SELECT occupied FROM availability WHERE date = $1 LIMIT 1`,
+      [date]
+    );
 
-    if (!entry) {
-      await this.availabilityRepository.insert({ date, occupied: spots });
+    if (entry.length === 0) {
+      await this.dataSource.query(
+        `INSERT INTO availability (date, occupied) VALUES ($1, $2)`,
+        [date, spots]
+      );
     } else {
-      entry.occupied += spots;
-      await this.availabilityRepository.save(entry);
+      await this.dataSource.query(
+        `UPDATE availability SET occupied = occupied + $1 WHERE date = $2`,
+        [spots, date]
+      );
     }
-    
   }
 
   // ➖ Stellplätze für ein Datum verringern (Stornierung)
   async decreaseOccupiedSpots(date: string, spots: number): Promise<void> {
-    const entry = await this.availabilityRepository.findOneBy({ date });
+    const entry = await this.dataSource.query(
+      `SELECT occupied FROM availability WHERE date = $1 LIMIT 1`,
+      [date]
+    );
 
-    if (entry) {
-      entry.occupied = Math.max(0, entry.occupied - spots);
-      await this.availabilityRepository.save(entry);
+    if (entry.length > 0) {
+      await this.dataSource.query(
+        `UPDATE availability SET occupied = GREATEST(0, occupied - $1) WHERE date = $2`,
+        [spots, date]
+      );
     }
   }
 

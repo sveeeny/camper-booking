@@ -1,32 +1,19 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { BookingModule } from '../booking/booking.module';
-import { UserModule } from '../user/user.module';
-import { AuthModule } from '../auth/auth.module';
-import { DataSource } from 'typeorm';
+import { BookingModule } from '@/booking/booking.module';
+import { UserModule } from '@/user/user.module';
+import { AuthModule } from '@/auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
-import { RolesGuard } from '../auth/roles.guard'; // ✅ Import des Role-Guards
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { AvailabilityModule } from 'availability/availability.module';  
-import { Booking } from 'entities/booking.entity';
-import { Car } from 'entities/cars.entity';
-import { Availability } from 'entities/availability.entity';
+import { RolesGuard } from '@/auth/roles.guard'; 
+import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
+import { AvailabilityModule } from '@/availability/availability.module';  
+import { AppDataSource } from 'data-source';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DATABASE_HOST,
-      port: Number(process.env.DATABASE_PORT),
-      username: process.env.DATABASE_USER,
-      password: process.env.DATABASE_PASSWORD,
-      database: process.env.DATABASE_NAME,
-      entities:[Booking, Car, Availability],
-      synchronize: false,
-      ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
-    }),
+    TypeOrmModule.forRoot(AppDataSource.options),
     BookingModule,
     UserModule,
     AuthModule,
@@ -44,18 +31,3 @@ import { Availability } from 'entities/availability.entity';
   ],
 })
 export class AppModule {}
-
-// ➤ Teste die Datenbankverbindung direkt nach dem Laden
-const dataSource = new DataSource({
-  type: 'postgres',
-  host: process.env.DATABASE_HOST,
-  port: Number(process.env.DATABASE_PORT),
-  username: process.env.DATABASE_USER,
-  password: process.env.DATABASE_PASSWORD,
-  database: process.env.DATABASE_NAME,
-  ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
-});
-dataSource
-  .initialize()
-  .then(() => console.log('✅ Datenbankverbindung erfolgreich!'))
-  .catch((err) => console.error('❌ Fehler bei der Datenbankverbindung:', err));

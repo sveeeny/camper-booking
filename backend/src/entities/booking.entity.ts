@@ -45,4 +45,5 @@ export class Booking {
 
   @OneToMany(() => Car, (car) => car.booking, { cascade: true })
   cars: Car[];
+
 }

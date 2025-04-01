@@ -1,6 +1,6 @@
 import { IsString, IsIn, IsInt, Min, Max, IsArray, IsEmail, IsNotEmpty, Matches, IsDateString, ValidateNested, MinLength,  MaxLength,  Validate,  ValidateIf,  MinDate} from 'class-validator';
 import { Type } from 'class-transformer';
-import { CarsDto } from './cars.dto';
+import { CarsDto } from '../dto/cars.dto';
 
 export class CreateBookingGuestDto {
   

@@ -6,6 +6,7 @@ import * as passport from 'passport';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { RolesGuard } from './auth/roles.guard';
 import { Reflector } from '@nestjs/core';
+import { AppDataSource } from 'data-source';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -76,6 +77,13 @@ async function bootstrap() {
   } else {
     Logger.warn('⚠️ Keine registrierten Routen gefunden! Überprüfe deine Controller.');
   }
+
+  AppDataSource.initialize()
+  .then(() => console.log('✅ Datenbankverbindung erfolgreich!'))
+  .catch((err) => console.error('❌ Fehler bei der Datenbankverbindung:', err));
+
+
+
 }
 
 bootstrap();
