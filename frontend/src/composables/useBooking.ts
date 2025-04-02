@@ -11,7 +11,7 @@ import {
 
 
 const numberOfCars = ref<number>(1);
-const selectedDates = ref<Date[]>([]);
+const selectedDates = ref<[Date, Date] | null>(null);
 const cars = ref<CarsDto[]>([]);
 const bookingId = ref<number | null>(null);
 
@@ -38,7 +38,8 @@ const basePricePerNight = 30;
 const kurtaxePerAdult = 3;
 const kurtaxePerChild = 0;
 
-const disabledDates = ref<string[]>([]);
+// const disabledDates = ref<string[]>([]);
+const disabledDates = ref<Date[]>([]);
 const manualPhoneCodeChange = ref(false);
 
 // Format-Date-Funktion
@@ -46,11 +47,11 @@ const formatDateToYMD = (date: Date | string): string =>
   typeof date === 'string' ? date : date.toISOString().split('T')[0];
 
 const checkInDate = computed<Date | null>(() =>
-  selectedDates.value[0] ? new Date(selectedDates.value[0]) : null
+  selectedDates.value ? selectedDates.value[0] : null
 );
 
 const checkOutDate = computed<Date | null>(() =>
-  selectedDates.value[1] ? new Date(selectedDates.value[1]) : null
+  selectedDates.value ? selectedDates.value[1] : null
 );
 
 // Preisberechnungen
@@ -117,7 +118,7 @@ watch(numberOfCars, async (newVal) => {
         );
 
         if (collision) {
-          selectedDates.value = [];
+          selectedDates.value = null;
         }
       }
     } catch (err) {
@@ -154,24 +155,24 @@ watch([guestInfo, cars], () => {
 }, { deep: true });
 
 
+
+
 const fetchUnavailableDates = async () => {
-  try {
-    const response = await axios.get('/availability/dates', {
-      params: { numberOfCars: numberOfCars.value },
-    });
-    disabledDates.value = response.data.map((entry: { date: string }) =>
-      formatDateToYMD(entry.date)
-    );
-    
-  } catch (error) {
-    console.error('❌ Fehler beim Laden der belegten Tage:', error); // eslint-disable-line no-console
-  }
+  const response = await axios.get('/availability/dates', {
+    params: { numberOfCars: numberOfCars.value },
+  });
+  disabledDates.value = response.data.map((entry: { date: string }) => new Date(entry.date));
 };
+
 
 
 // Step One
 const submitBookingStepOne = async (): Promise<boolean> => {
   try {
+    if (!selectedDates.value) {
+      errorMessage.value = '❌ Bitte wähle ein gültiges Datum.';
+      return false;
+    }
     const bookingData: CreateBookingCheckDto = {
       checkInDate: formatDateToYMD(selectedDates.value[0]),
       checkOutDate: formatDateToYMD(selectedDates.value[1]),

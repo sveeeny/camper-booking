@@ -1,63 +1,44 @@
-import { 
-  Controller, Get, Post, Body, Param, Delete, BadRequestException, Query 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Query,
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingGuestDto } from './dto/create-booking-guest.dto';
 import { CreateBookingCheckDto } from './dto/create-booking-check.dto';
-import { AvailabilityService } from '../availability/availability.service';
 import { Public } from 'decorators/public.decorator';
 
 @Public()
 @Controller('bookings')
 export class BookingController {
-  constructor(
-    private readonly bookingService: BookingService,
-    private readonly availabilityService: AvailabilityService
-  ) {}
+  constructor(private readonly bookingService: BookingService) {}
 
-  // 🏕 Verfügbarkeit prüfen
+  // 🏕 Verfügbarkeit prüfen (provisorische Reservierung)
   @Public()
   @Post('check')
-async checkAvailability(@Body() createBookingCheckDto: CreateBookingCheckDto) {  
-  console.log('🔍 Anfrage zur Verfügbarkeitsprüfung erhalten:', {
-    ...createBookingCheckDto,
-    checkInDate: createBookingCheckDto.checkInDate,
-    checkOutDate: createBookingCheckDto.checkOutDate
-  }); 
+  async checkAvailability(@Body() dto: CreateBookingCheckDto) {
     return this.bookingService.checkAvailability(
-        createBookingCheckDto.checkInDate, 
-        createBookingCheckDto.checkOutDate, 
-        createBookingCheckDto.numberOfCars  
+      dto.checkInDate,
+      dto.checkOutDate,
+      dto.numberOfCars
     );
-}
+  }
 
-  // 📌 NEUE Buchung abschließen und Gästedaten speichern
+  // 📌 Neue Buchung abschließen
   @Public()
   @Post('create')
-  async createBooking(@Body() createBookingGuestDto: CreateBookingGuestDto) {
-    console.log('📥 Gästeinformationen empfangen:', createBookingGuestDto);
-    return this.bookingService.createBooking(createBookingGuestDto);
+  async createBooking(@Body() dto: CreateBookingGuestDto) {
+    return this.bookingService.createBooking(dto);
   }
 
-  // 📆 Kalenderansicht der Verfügbarkeit
-  @Public()
-  @Get('calendar')
-  async getCalendarView(@Query('year') year: number) {
-    console.log(`📆 Kalenderdaten für ${year} abrufen...`);
-    if (!year) {
-      throw new BadRequestException('Ein gültiges Jahr muss angegeben werden.');
-    }
-    return this.availabilityService.getAvailabilityForYear(year);
-  }
-
-  // 🗑 Buchung stornieren
+  // ❌ Buchung stornieren und löschen
   @Public()
   @Delete(':id')
-  async cancelBooking(@Param('id') bookingId: number, @Query('year') year: number) {
-    console.log(`🗑 Storniere Buchung ${bookingId} für das Jahr ${year}`);
-    if (!year) {
-      throw new BadRequestException('Ein gültiges Jahr muss angegeben werden.');
-    }
-    return this.bookingService.deleteBooking(bookingId, year);
+  async cancelBooking(@Param('id') bookingId: number) {
+    return this.bookingService.deleteBooking(bookingId);
   }
 }

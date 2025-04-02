@@ -5,9 +5,9 @@ import { BookingController } from './booking.controller';
 import { AvailabilityService } from '../availability/availability.service'; 
 import { Availability } from '../entities/availability.entity'; 
 import { ConfigModule } from '@nestjs/config';  
-import { Booking } from 'entities/booking.entity';
-import { Car } from 'entities/cars.entity';
-
+import { Booking } from '@/entities/booking.entity';
+import { Car } from '@/entities/cars.entity';
+import { BookingDatesService } from './booking-dates.service';
 
 @Module({
   imports: [
@@ -15,7 +15,7 @@ import { Car } from 'entities/cars.entity';
     TypeOrmModule.forFeature([Booking, Car, Availability]) 
   ],
   controllers: [BookingController],
-  providers: [BookingService, AvailabilityService], 
+  providers: [BookingService, AvailabilityService, BookingDatesService], 
   exports: [TypeOrmModule, BookingService],
 })
 export class BookingModule {}

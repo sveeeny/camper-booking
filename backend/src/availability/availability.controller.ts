@@ -1,11 +1,14 @@
-import { Controller, Get, Query, ParseIntPipe } from '@nestjs/common';
-import { AvailabilityService } from 'availability/availability.service';
+import { Controller, Get, Param, Query, ParseIntPipe } from '@nestjs/common';
+import { AvailabilityService } from './availability.service';
 import { Public } from 'decorators/public.decorator';
 
+
+@Public()
 @Controller('availability')
 export class AvailabilityController {
   constructor(private readonly availabilityService: AvailabilityService) {}
 
+  // ❌ Belegte Tage abrufen
   @Public()
   @Get('dates')
   async getUnavailableDates(
@@ -13,4 +16,5 @@ export class AvailabilityController {
   ) {
     return this.availabilityService.getUnavailableDates(numberOfCars || 1);
   }
+
 }

@@ -9,19 +9,7 @@
 
     <Datepicker
       v-model="selectedDates"
-      :format="formatDate"
-      :range="{ noDisabledRange: true, minRange: 1, maxRange: 3, showLastInRange: true }"
-      :multi-calendars="{ count: 0 }"
-      :min-date="new Date()"
-      :disabled-dates="disabledDates"
-      :enable-time-picker="false"
-      :hide-offset-dates="false"
-      :prevent-min-max-navigation="true"
-      :clearable="false"
-      :always-clearable="false"
-      :action-row="{ showCancel: true, showPreview: true }"
-      placeholder="Check-in & Check-out auswählen"
-      auto-apply
+      v-bind="datepickerProps"
     />
 
     <p><strong>Grundpreis:</strong> CHF {{ basePriceCHF }}</p>
@@ -31,29 +19,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import { useBooking } from '@/composables/useBooking';
-
-// ✨ Formatfunktion mit Typ
-const formatDate = (dates: [Date, Date] | Date[] | null): string => {
-  if (!Array.isArray(dates) || dates.length !== 2) return '';
-
-  const [checkIn, checkOut] = dates.map((d) =>
-    d.toLocaleDateString('de-CH', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    })
-  );
-
-  return checkIn && checkOut ? `${checkIn} – ${checkOut}` : checkIn || '';
-};
+import { useDatepicker } from '@/composables/useDatepicker';
 
 const {
   numberOfCars,
-  selectedDates, // ← ist jetzt korrekt als Date[] getypt in useBooking
+  selectedDates,
   disabledDates,
   errorMessage,
   calculateBasePrice,
@@ -61,6 +35,16 @@ const {
 } = useBooking();
 
 const basePriceCHF = computed(() => calculateBasePrice());
+
+// 🆕 Datepicker-Logik aus Composable
+const { datepickerProps } = useDatepicker(disabledDates, selectedDates);
+
+
+
+// 🔄 Wenn sich disabledDates ändern, auch im Datepicker updaten
+// watch(disabledDates, (newDates) => {
+//   datepickerProps.disabledDates = newDates;
+// });
 
 onMounted(fetchUnavailableDates);
 </script>
