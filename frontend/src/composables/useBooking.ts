@@ -9,8 +9,8 @@ import {
 } from '@/types/booking';
 
 
+
 const numberOfCars = ref<number>(1);
-// useBooking.ts
 const selectedDates = ref<Date[]>([]);
 const cars = ref<CarsDto[]>([]);
 const bookingId = ref<number | null>(null);
@@ -121,7 +121,7 @@ watch(numberOfCars, async (newVal) => {
         }
       }
     } catch (err) {
-      console.error('Fehler beim Aktualisieren der belegten Tage', err);
+      console.error('Fehler beim Aktualisieren der belegten Tage', err); // eslint-disable-line no-console
     }
   }
 });
@@ -164,7 +164,7 @@ const fetchUnavailableDates = async () => {
     );
     
   } catch (error) {
-    console.error('❌ Fehler beim Laden der belegten Tage:', error);
+    console.error('❌ Fehler beim Laden der belegten Tage:', error); // eslint-disable-line no-console
   }
 };
 
@@ -203,7 +203,7 @@ const submitBookingStepOne = async (): Promise<boolean> => {
       errorMessage.value = 'Leider sind keine Stellplätze verfügbar.';
       return false;
     }
-  } catch (error) {
+  } catch (_) {     
     errorMessage.value = 'Fehler bei der Buchung!';
     return false;
   }
@@ -233,7 +233,7 @@ const submitBookingStepTwo = async (): Promise<boolean> => {
 
     await axios.post('/bookings/create', guestData);
     return true;
-  } catch (error) {
+  } catch (_) { 
     errorMessage.value = 'Fehler beim Speichern der Gäste-Informationen!';
     return false;
   }
