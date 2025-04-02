@@ -2,22 +2,28 @@
 import { computed } from 'vue';
 
 interface Props {
-  date: Date | null;
+  date: string | Date | null; // ← erlaubt jetzt auch string
   label?: string;
 }
 
 const props = defineProps<Props>();
 
-const formattedDate = computed(() => {
+const formattedDate = computed<string>(() => {
   if (!props.date) return '–';
-  return props.date.toLocaleDateString('de-CH', {
-    // weekday: 'long',
+
+  const dateObj = typeof props.date === 'string'
+    ? new Date(props.date)
+    : props.date;
+
+  return dateObj.toLocaleDateString('de-CH', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   });
 });
+
 </script>
+
 
 <template>
   <p>

@@ -1,5 +1,5 @@
 <script setup>
-import BookingForm from './components/BookingForm.vue'; // NEU: Buchungsformular importieren
+// import BookingForm from './components/old_BookingForm.vue'; // NEU: Buchungsformular importieren
 </script>
 
 <template>

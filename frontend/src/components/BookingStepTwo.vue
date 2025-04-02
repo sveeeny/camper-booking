@@ -93,25 +93,6 @@
             />
           </div>
         </div>
-
-
-        <!-- <div class="form-row">
-          <select
-            v-model="guestInfo.phoneCountryCode"
-            @change="manualPhoneCodeChange = true"
-            :class="{'error-border': errorFields.includes('Vorwahl')}"
-          >
-            <option v-for="country in countries" :key="country.code" :value="country.dialCode">
-              {{ country.name }} ({{ country.dialCode }})
-            </option>
-          </select>
-
-        </div>
-  
-        <div class="form-row">
-          <label>Telefonnummer:</label>
-          <input v-model="guestInfo.phoneNumber" :class="{'error-border': errorFields.includes('Telefonnummer')}" />
-        </div> -->
       </div>
   
       <hr>
@@ -145,42 +126,30 @@
     </div>
   </template>
   
-  <script setup>
-  import { useBooking } from '@/composables/useBooking';
-  import DateDisplay from '@/components/DateDisplay.vue';
-  import { countries } from '@/countries';
+<script setup lang="ts">
+import { useBooking } from '@/composables/useBooking';
+import DateDisplay from '@/components/DateDisplay.vue';
+import { countries } from '@/countries';
 
-  
-  const props = defineProps({
-    checkIn: Date,
-    checkOut: Date,
-    numberOfCars: Number,
-    cars: Array,
-    guest: Object,
-    errorFields: Array,
-    priceInfo: Object,
-  });
+const {
+  numberOfCars,
+  cars,
+  guestInfo,
+  errorFields,
+  errorMessage,
+  checkInDate,
+  checkOutDate,
+  priceInfo,
+  manualPhoneCodeChange,
+  submitBookingStepTwo,
+} = useBooking();
 
+const emit = defineEmits(['complete']);
 
-  const {
-    numberOfCars,
-    cars,
-    guestInfo,
-    errorFields,
-    errorMessage,
-    checkInDate,
-    checkOutDate,
-    calculateBasePrice,
-    calculateKurtaxe,
-    calculateTotalPrice,
-    submitBookingStepTwo,
-  } = useBooking();
-  
-  const emit = defineEmits(['complete']);
-  
-  const handleSubmit = async () => {
-    const success = await submitBookingStepTwo();
-    if (success) emit('complete');
-  };
-  </script>
+const handleSubmit = async () => {
+  const success = await submitBookingStepTwo();
+  if (success) emit('complete');
+};
+</script>
+
   

@@ -19,7 +19,11 @@ export class BookingController {
   @Public()
   @Post('check')
 async checkAvailability(@Body() createBookingCheckDto: CreateBookingCheckDto) {  
-    console.log('🔍 Anfrage zur Verfügbarkeitsprüfung erhalten:', createBookingCheckDto);
+  console.log('🔍 Anfrage zur Verfügbarkeitsprüfung erhalten:', {
+    ...createBookingCheckDto,
+    checkInDate: createBookingCheckDto.checkInDate,
+    checkOutDate: createBookingCheckDto.checkOutDate
+  }); 
     return this.bookingService.checkAvailability(
         createBookingCheckDto.checkInDate, 
         createBookingCheckDto.checkOutDate, 

@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, ParseIntPipe } from '@nestjs/common';
 import { AvailabilityService } from 'availability/availability.service';
 import { Public } from 'decorators/public.decorator';
 
@@ -8,8 +8,9 @@ export class AvailabilityController {
 
   @Public()
   @Get('dates')
-  async getUnavailableDates(@Query('numberOfCars') numberOfCars: string) {
-    const numCars = parseInt(numberOfCars, 10) || 1; // Standardwert: 1 Auto
-    return this.availabilityService.getUnavailableDates(numCars);
+  async getUnavailableDates(
+    @Query('numberOfCars', ParseIntPipe) numberOfCars: number,
+  ) {
+    return this.availabilityService.getUnavailableDates(numberOfCars || 1);
   }
 }

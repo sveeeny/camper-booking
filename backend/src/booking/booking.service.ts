@@ -9,6 +9,7 @@ import { Car } from '../entities/cars.entity';
 import { Availability } from '../entities/availability.entity';
 
 
+
 @Injectable()
 export class BookingService {
   private maxBookingFutureDays: number;
@@ -33,6 +34,8 @@ export class BookingService {
   }
 
 
+
+  
   // Buchung provisorisch speichern
   async checkAvailability(checkInDate: string, checkOutDate: string, numberOfCars: number) {
     const isStillAvailable = await this.availabilityService.isAvailable(checkInDate, checkOutDate, numberOfCars);
@@ -58,8 +61,8 @@ export class BookingService {
           this.carRepository.create({
             car_id: carId,
             carPlate: '',
-            checkInDate: currentNight.toISOString().split('T')[0],
-            checkOutDate: checkOut.toISOString().split('T')[0],
+            checkInDate: formatDateToYMD(currentNight),
+            checkOutDate: formatDateToYMD(checkOut),
             isCancelled: false,
             adults: 1,
             children: 0,
@@ -78,7 +81,7 @@ export class BookingService {
   
     while (availDate < end) {
       await this.availabilityService.increaseOccupiedSpots(
-        availDate.toISOString().split('T')[0],
+        formatDateToYMD(availDate),
         numberOfCars
       );
       availDate.setDate(availDate.getDate() + 1);
@@ -129,7 +132,7 @@ export class BookingService {
           where: {
             booking_id: dto.bookingId,
             car_id: carId,
-            checkInDate: checkInDate.toISOString().split('T')[0],
+            checkInDate: formatDateToYMD(checkInDate),
           },
           relations: ['booking'],
         });
@@ -137,7 +140,7 @@ export class BookingService {
         if (!car) continue;
   
         car.carPlate = carData.carPlate;
-        car.checkOutDate = checkOutDate.toISOString().split('T')[0];
+        car.checkOutDate = formatDateToYMD(checkOutDate);
         car.isCancelled = carData.isCancelled ?? false;
         car.adults = carData.adults;
         car.children = carData.children;
@@ -193,7 +196,7 @@ export class BookingService {
       const checkOut = new Date(car.checkOutDate);
   
       await this.availabilityRepository.decrement(
-        { date: checkIn.toISOString().split('T')[0] },
+        { date: formatDateToYMD(checkIn) },
         'occupied',
         1
       );
@@ -204,3 +207,6 @@ export class BookingService {
   
 
 }
+
+const formatDateToYMD = (date: Date | string): string =>
+  typeof date === 'string' ? date : date.toISOString().split('T')[0];

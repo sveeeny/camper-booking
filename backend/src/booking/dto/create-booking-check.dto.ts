@@ -1,16 +1,21 @@
-import { IsDateString, IsInt, IsNotEmpty, MinDate, Validate, Min, Max} from 'class-validator';
-import { TransactionAlreadyStartedError } from 'typeorm';
+import { IsDateString, IsInt, IsNotEmpty } from 'class-validator';
 import { Transform } from 'class-transformer';
 
-export class CreateBookingCheckDto {
+const formatDateToYMD = (value: string | Date): string => {
+  if (!value) return '';
+  return new Date(value).toISOString().split('T')[0];
+};
 
-    @IsNotEmpty()
-    @IsDateString()
-    checkInDate: string;
-  
-    @IsNotEmpty()
-    @IsDateString()
-    checkOutDate: string;
+export class CreateBookingCheckDto {
+  @IsNotEmpty()
+  @IsDateString()
+  @Transform(({ value }) => formatDateToYMD(value))
+  checkInDate: string;
+
+  @IsNotEmpty()
+  @IsDateString()
+  @Transform(({ value }) => formatDateToYMD(value))
+  checkOutDate: string;
 
   @IsInt()
   numberOfCars: number;
