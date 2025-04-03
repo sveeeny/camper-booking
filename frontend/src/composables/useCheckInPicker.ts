@@ -1,20 +1,11 @@
 // src/composables/useCheckInPicker.ts
 import { Ref, computed, ref } from 'vue';
+import { formatDateToYMD, normalizeDate } from './utils/dateUtils';
 
-// 📌 Hilfsfunktion: Datum auf Mitternacht setzen (lokal)
-function normalizeDate(date: Date): Date {
-  const copy = new Date(date);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
-}
-
-// 📌 Formatierfunktion: 'YYYY-MM-DD'
-function formatDateToYMD(date: Date | string): string {
-  return typeof date === 'string'
-    ? date
-    : normalizeDate(date).toISOString().split('T')[0];
-}
-
+/**
+ * Setup für den Check-in Datepicker.
+ * Blockiert Nächte aus `disabledNights` als Check-in-Daten.
+ */
 export function useCheckInPicker(
   disabledNights: Ref<Date[]>,
   onSelected?: (date: Date) => void
@@ -24,27 +15,29 @@ export function useCheckInPicker(
 
   const selectedCheckIn = ref<Date | null>(null);
 
-  // 🟥 Diese Tage sind als Check-in blockiert
+  // 🟥 Liste der deaktivierten Daten als 'YYYY-MM-DD'
   const disabledCheckInDates = computed(() =>
-    disabledNights.value.map((d) => formatDateToYMD(d))
+    disabledNights.value.map(formatDateToYMD)
   );
 
+  // ⛔ Deaktiviert Daten, die in der Liste vorkommen
   const isDateDisabled = (date: Date): boolean => {
     const ymd = formatDateToYMD(date);
     return disabledCheckInDates.value.includes(ymd);
   };
 
+  // ✅ Auswahl-Callback (optional)
   const onSelectCheckIn = (date: Date) => {
     selectedCheckIn.value = date;
-    console.log('✅ Check-in gewählt:', formatDateToYMD(date));
-    onSelected?.(date); // optionaler Callback
+    onSelected?.(date);
   };
 
+  // ♻️ Reset-Funktion für externen Einsatz
   const resetCheckIn = () => {
     selectedCheckIn.value = null;
-    console.log('♻️ Check-in wurde zurückgesetzt');
   };
 
+  // 📦 Props für <Datepicker />
   const datepickerProps = {
     format: (date: Date | null): string =>
       date
@@ -64,13 +57,11 @@ export function useCheckInPicker(
     autoApply: true,
     actionRow: { showCancel: false, showPreview: false },
     placeholder: 'Check-in auswählen',
-    transitions:false,
-    
+    transitions: false,
   };
 
   return {
     selectedCheckIn,
-    disabledCheckInDates,
     datepickerProps,
     onSelectCheckIn,
     resetCheckIn,

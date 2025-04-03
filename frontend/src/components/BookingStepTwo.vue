@@ -120,7 +120,7 @@
       </div>
   
       <!-- Weiter-Button -->
-      <button @click="handleSubmit">Weiter zur Zahlung</button>
+      <button @click="$emit('submit')">Weiter zur Zahlung</button>
       <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
   
     </div>
@@ -144,12 +144,15 @@ const {
   submitBookingStepTwo,
 } = useBooking();
 
-const emit = defineEmits(['complete']);
+const emit = defineEmits(['submit']);
 
 const handleSubmit = async () => {
   const success = await submitBookingStepTwo();
-  if (success) emit('complete');
+  if (success) {
+    emit('submit'); // ⬅️ das war bisher vermutlich nicht da
+  }
 };
+
 </script>
 
   

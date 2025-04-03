@@ -19,6 +19,12 @@
       :price-info="priceInfo"
       @submit="handleStepTwoSubmit"
     />
+
+    <BookingSummary
+      v-else-if="step === 3"
+      @confirm="handleSummaryConfirm"
+    />
+
   </div>
 </template>
 
@@ -27,6 +33,7 @@ import { ref } from 'vue';
 import BookingStepOne from './BookingStepOne.vue';
 import BookingStepTwo from './BookingStepTwo.vue';
 import { useBooking } from '@/composables/useBooking';
+import BookingSummary from './BookingSummary.vue';
 import type { CarsDto, CreateBookingGuestDto } from '@/types/booking';
 
 const step = ref<number>(1);
@@ -48,13 +55,23 @@ const {
 
 const handleStepOneSubmit = async () => {
   const success = await submitBookingStepOne();
+  console.log('Submit-Ergebnis Step One:', success); // ⬅️ neu
   if (success) step.value = 2;
 };
 
 const handleStepTwoSubmit = async () => {
-  await submitBookingStepTwo();
-  step.value = 1; // zurücksetzen nach erfolgreicher Buchung
+  const success = await submitBookingStepTwo();
+  console.log('Submit-Ergebnis Step Two:', success); // ⬅️ neu
+  if (success) step.value = 3;
 };
+
+const handleSummaryConfirm = () => {
+  // z. B. Stripe-Zahlung starten, oder weiterleiten
+  console.log('✅ Buchung bestätigt – weiter zur Zahlung');
+  // z. B. window.location.href = '/payment'
+};
+
+
 </script>
 
 <style scoped>
