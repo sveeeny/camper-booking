@@ -14,8 +14,10 @@ async function bootstrap() {
   const reflector = app.get(Reflector); // ✅ Reflector holen
 
   // 👉 CORS aktivieren
-  app.enableCors();
-
+  app.enableCors({
+    origin: ['http://localhost:5173', 'http://192.168.1.10:5173', 'http://172.27.219.139:5173' ],
+  });
+  
   // 👉 Globalen ValidationPipe aktivieren
   //app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
 
@@ -59,7 +61,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  await app.listen(3000, '0.0.0.0');
   Logger.log(`🚀 Server läuft auf http://localhost:3000`);
   Logger.log(`📖 Swagger UI verfügbar unter http://localhost:3000/api`);
 

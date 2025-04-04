@@ -37,6 +37,9 @@ export function useCheckInPicker(
     selectedCheckIn.value = null;
   };
 
+  //TEST
+  console.log('✅ Check-in Picker initialized', disabledCheckInDates.value);
+
   // 📦 Props für <Datepicker />
   const datepickerProps = {
     format: (date: Date | null): string =>
@@ -59,6 +62,9 @@ export function useCheckInPicker(
     placeholder: 'Check-in auswählen',
     transitions: false,
   };
+
+  //TEST
+  console.log('Check-in Props:', datepickerProps);
 
   return {
     selectedCheckIn,

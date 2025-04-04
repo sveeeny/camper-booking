@@ -1,10 +1,11 @@
+
 <script setup>
-// import BookingForm from './components/old_BookingForm.vue'; // NEU: Buchungsformular importieren
+
 </script>
 
 <template>
   <router-view />
-  <!-- <BookingForm /> -->
+
 </template>
 
 <style scoped>

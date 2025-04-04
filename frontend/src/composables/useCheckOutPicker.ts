@@ -21,22 +21,24 @@ export function useCheckOutPicker(
   // 📏 Berechnung der maximal möglichen Range basierend auf Belegung
   const definitiveRange = computed(() => {
     if (!checkInDate.value) return maxRange;
-
+  
     for (let i = 1; i <= maxRange; i++) {
-      const testDate = new Date(checkInDate.value);
-      testDate.setDate(testDate.getDate() + i);
-
-      const prev = new Date(testDate);
-      prev.setDate(prev.getDate() - 1);
-      const prevStr = formatDateToYMD(prev);
-
-      if (disabledYMD.value.includes(prevStr)) {
-        return i - 1;
-      }
+      const nights = Array.from({ length: i }, (_, offset) => {
+        const night = new Date(checkInDate.value!);
+        night.setDate(night.getDate() + offset);
+        return formatDateToYMD(night);
+      });
+  
+      const isBlocked = nights.some((night) =>
+        disabledYMD.value.includes(night)
+      );
+  
+      if (isBlocked) return i - 1;
     }
-
+  
     return maxRange;
   });
+  
 
   // ⛔ Deaktiviert Daten, wenn die Nacht davor blockiert ist
   const isDateDisabled = (date: Date): boolean => {
