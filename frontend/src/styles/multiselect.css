@@ -1,0 +1,95 @@
+/* Standard-Layout */
+.multiselect {
+  @apply mt-1 w-full border border-slate-300 dark:border-slate-600 rounded-md;
+  display: flex;
+  background-color: transparent;
+  box-sizing: border-box;
+  height: 2.5rem; /* h-10 = 40px */
+}
+
+/* Eingabefeld */
+.multiselect__single {
+  @apply text-base leading-6;
+  padding: 0;
+  margin: 0;
+  display: block;
+  align-items: center;
+  height: 100%;
+}
+
+/* Input innerhalb */
+.multiselect__input {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  line-height: 1.25rem;
+  box-sizing: border-box;
+}
+
+/* Tags-Wrapper */
+.multiselect__tags {
+  @apply bg-white dark:bg-slate-800 text-slate-800 dark:text-white rounded-md px-3 py-2 text-base leading-5;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  border: none;
+  box-sizing: border-box;
+}
+
+/* Fokus entfernen */
+.multiselect__input:focus {
+  box-shadow: none !important;
+}
+
+/* Dropdown-Optionen */
+.multiselect__option {
+  @apply px-3 py-2;
+  height: 40px;
+  line-height: 1.25rem;
+  display: flex;
+  align-items: center;
+  font-weight: normal;
+  cursor: pointer;
+  transition: none;
+  box-sizing: border-box;
+}
+
+.multiselect__option--selected {
+  background-color: #334155 !important;
+  color: white;
+}
+
+.multiselect__option--highlight {
+  background-color: #1d4ed8 !important;
+  color: white;
+  font-weight: normal;
+}
+
+/* Dropdown-Content */
+.multiselect__content-wrapper {
+  @apply dark:bg-slate-800 dark:border-slate-600;
+  text-align: left;
+  padding-left: 0.5rem;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  background-color: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Placeholder-Tipps entfernen */
+.multiselect__option span[aria-label*="Press enter to select"] {
+  display: none;
+}
+
+/* Blaufokus (außen) */
+.multiselect:focus-within {
+  @apply ring-2 ring-blue-400;
+  border-color: #60a5fa;
+}
