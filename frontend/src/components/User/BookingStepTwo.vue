@@ -11,7 +11,7 @@
         <div>
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Anrede</label>
           <select v-model="guestInfo.salutation" :class="inputClass(errorFields.includes('Anrede'))">
-            <option value="">-- Bitte wählen --</option>
+            <option value="">Bitte wählen</option>
             <option value="Herr">Herr</option>
             <option value="Frau">Frau</option>
           </select>
@@ -26,16 +26,28 @@
         </div>
       </div>
 
+
       <!-- Nationalität und E-Mail -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nationalität</label>
-          <select v-model="guestInfo.nationality" :class="inputClass(errorFields.includes('Nationalität'))">
-            <option value="">-- Bitte wählen --</option>
-            <option v-for="country in countries" :key="country.code" :value="country.code">
-              {{ country.name }}
-            </option>
-          </select>
+          <Multiselect
+            v-model="selectedNationality"
+            :options="countries"
+            :searchable="true"
+            :close-on-select="true"
+            placeholder="Nationalität wählen"
+            track-by="code"
+            label="name"
+            :class="['multiselect', { 'border-red-500': errorFields.includes('Nationalität') }]"
+          >
+            <template #option="{ option }">
+              {{ option.name }}
+            </template>
+            <template #singleLabel="{ option }">
+              {{ option.name }}
+            </template>
+          </Multiselect>
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">E-Mail</label>
@@ -103,7 +115,7 @@
       </div>
 
       <!-- Weiter Button -->
-      <div class="mt-6">
+      <!-- <div class="mt-6">
         <button
           @click="handleSubmit"
           class="w-full bg-slate-600 hover:bg-slate-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 py-2 px-4 rounded-md disabled:bg-slate-300 dark:disabled:bg-slate-500"
@@ -113,7 +125,7 @@
         <p v-if="errorMessage" class="text-red-600 text-sm mt-2 text-center">
           {{ errorMessage }}
         </p>
-      </div>
+      </div> -->
     </div>
 
     <!-- 📋 Buchungsinfos -->
@@ -148,7 +160,7 @@
   
 <script setup lang="ts">
 import { useBooking } from '@/composables/useBooking';
-import DateDisplay from '@/components/DateDisplay.vue';
+import DateDisplay from '@/components/User/DateDisplay.vue';
 import { countries } from '@/countries';
 import { computed } from 'vue';
 import { onMounted, ref, watch } from 'vue';
@@ -159,6 +171,7 @@ defineOptions({
     Multiselect,
   },
 });
+
 
 
 
@@ -220,6 +233,21 @@ const inputClass = (hasError: boolean) =>
   }`;
 
 
+const selectedNationality = ref<{ name: string; code: string; dialCode: string } | null>(null)
+
+watch(selectedNationality, (val) => {
+  guestInfo.value.nationality = val?.code || ''
+
+  // Nur automatisch setzen, wenn der Nutzer es nicht manuell überschreibt
+  if (!manualPhoneCodeChange.value && val?.dialCode) {
+    guestInfo.value.phoneCountryCode = val.dialCode
+  }
+})
+
+watch(() => guestInfo.value.nationality, (newVal) => {
+  const match = countries.find((c) => c.code === newVal)
+  selectedNationality.value = match || null
+})
 
 
 </script>

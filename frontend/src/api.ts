@@ -44,4 +44,20 @@ export const getUnavailableDates = async (
   });
 };
 
+
+export const deleteBookingViaFetch = async (bookingId: number) => {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://192.168.1.10:3000';
+  try {
+    await fetch(`${baseUrl}/bookings/${bookingId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true, // 🔑 das ist der entscheidende Unterschied
+    });
+  } catch (error) {
+    // Hier kein console.error – Fehler ignorieren, Browser wird eh geschlossen
+  }
+};
+
+
+
 export default api;

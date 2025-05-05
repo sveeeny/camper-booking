@@ -41,4 +41,14 @@ export class BookingController {
   async cancelBooking(@Param('id') bookingId: number) {
     return this.bookingService.deleteBooking(bookingId);
   }
+
+  @Public()
+  @Get('range')
+  async getBookingsInRange(
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    return this.bookingService.getBookingsInRange(from, to);
+  }
+
 }

@@ -23,7 +23,7 @@ export class BookingDatesService {
     return typeof date === 'string' ? date : date.toISOString().split('T')[0];
   }
 
-  // 🛎️ Reserviert alle Fahrzeug- und Verfügbarkeitsdaten
+  // 🛎️ Reserviert alle Fahrzeuge (1 Zeile pro Fahrzeug) + Verfügbarkeiten
   async reserveBookingDates(
     checkInDate: string,
     checkOutDate: string,
@@ -43,89 +43,67 @@ export class BookingDatesService {
       this.bookingRepository.create({ numberOfCars })
     );
 
-    const checkIn = new Date(checkInDate);
-    const endDate = new Date(checkOutDate);
-
     for (let carId = 1; carId <= numberOfCars; carId++) {
-      let currentNight = new Date(checkIn);
-
-      while (currentNight < endDate) {
-        const checkOut = new Date(currentNight);
-        checkOut.setDate(checkOut.getDate() + 1);
-
-        await this.carRepository.save(
-          this.carRepository.create({
-            car_id: carId,
-            carPlate: '',
-            checkInDate: this.formatDateToYMD(currentNight),
-            checkOutDate: this.formatDateToYMD(checkOut),
-            isCancelled: false,
-            adults: 1,
-            children: 0,
-            touristTax: 0,
-            booking: booking,
-          })
-        );
-
-        currentNight.setDate(currentNight.getDate() + 1);
-      }
+      await this.carRepository.save(
+        this.carRepository.create({
+          car_id: carId,
+          carPlate: '',
+          checkInDate,
+          checkOutDate,
+          isCancelled: false,
+          adults: 1,
+          children: 0,
+          touristTax: 0,
+          booking,
+        })
+      );
     }
 
+    // 📆 Blockiere belegte Nächte (von checkIn bis vor checkOut)
     let availDate = new Date(checkInDate);
+    const endDate = new Date(checkOutDate);
     while (availDate < endDate) {
-      await this.availabilityService.updateSpots(availDate, numberOfCars);
+      await this.availabilityService.updateSpots(this.formatDateToYMD(availDate), numberOfCars);
       availDate.setDate(availDate.getDate() + 1);
     }
 
     return { success: true, bookingId: booking.booking_id };
   }
 
-  // 🚗 Fahrzeugdaten aktualisieren
+  // 🚗 Fahrzeugdaten aktualisieren (ein Datensatz pro Fahrzeug)
   async updateCarEntries(
     bookingId: number,
     checkInDate: string,
     checkOutDate: string,
     cars: CarsDto[]
   ): Promise<void> {
-    const checkIn = new Date(checkInDate);
-    const checkOut = new Date(checkOutDate);
-    const numberOfNights = (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24);
-
     for (let i = 0; i < cars.length; i++) {
       const carData = cars[i];
       const carId = i + 1;
-      let currentNight = new Date(checkIn);
 
-      for (let n = 0; n < numberOfNights; n++) {
-        const currentCheckIn = new Date(currentNight);
-        const currentCheckOut = new Date(currentNight);
-        currentCheckOut.setDate(currentCheckOut.getDate() + 1);
+      const car = await this.carRepository.findOne({
+        where: {
+          booking_id: bookingId,
+          car_id: carId,
+        },
+        relations: ['booking'],
+      });
 
-        const car = await this.carRepository.findOne({
-          where: {
-            booking_id: bookingId,
-            car_id: carId,
-            checkInDate: this.formatDateToYMD(currentCheckIn),
-          },
-          relations: ['booking'],
-        });
+      if (!car) continue;
 
-        if (!car) continue;
+      car.carPlate = carData.carPlate;
+      car.checkInDate = checkInDate;
+      car.checkOutDate = checkOutDate;
+      car.isCancelled = carData.isCancelled ?? false;
+      car.adults = carData.adults;
+      car.children = carData.children;
+      car.touristTax = carData.touristTax;
 
-        car.carPlate = carData.carPlate;
-        car.checkOutDate = this.formatDateToYMD(currentCheckOut);
-        car.isCancelled = carData.isCancelled ?? false;
-        car.adults = carData.adults;
-        car.children = carData.children;
-        car.touristTax = carData.touristTax;
-
-        await this.carRepository.save(car);
-        currentNight.setDate(currentNight.getDate() + 1);
-      }
+      await this.carRepository.save(car);
     }
   }
 
-  // ❌ Buchung stornieren (isCancelled setzen & Verfügbarkeit anpassen)
+  // ❌ Buchung stornieren (und Verfügbarkeiten korrigieren)
   async cancelCarEntries(bookingId: number): Promise<void> {
     const cars = await this.carRepository.find({
       where: { booking_id: bookingId },

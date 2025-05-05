@@ -1,4 +1,7 @@
 <template>
+
+
+
   <div class="booking-form">
     <BookingStepOne
       v-if="step === 1"
@@ -26,15 +29,34 @@
     />
 
   </div>
+
+  
+  <BookingTimeline
+  :step="step - 1"
+  :can-proceed="true"
+  @next="handleNext"
+  @prev="step--"
+/>
+
+
+
+
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import BookingStepOne from './BookingStepOne.vue';
-import BookingStepTwo from './BookingStepTwo.vue';
+import { ref, computed } from 'vue';
+import BookingStepOne from '@/components/User/BookingStepOne.vue';
+import BookingStepTwo from '@/components/User/BookingStepTwo.vue';
 import { useBooking } from '@/composables/useBooking';
-import BookingSummary from './BookingSummary.vue';
+import BookingSummary from '@/components/User/BookingSummary.vue';
 import type { CarsDto, CreateBookingGuestDto } from '@/types/booking';
+import { useBeforeUnload } from '@/composables/useBeforeUnload';
+import BookingTimeline from '@/components/User/BookingTimeline.vue';
+
+
+
+const warnOnUnload = ref(true); // z. B. true während Eingabe, false nach Abschluss
+useBeforeUnload(warnOnUnload);
 
 const step = ref<number>(1);
 
@@ -70,6 +92,19 @@ const handleSummaryConfirm = () => {
   console.log('✅ Buchung bestätigt – weiter zur Zahlung');
   // z. B. window.location.href = '/payment'
 };
+
+
+
+const handleNext = async () => {
+  if (step.value === 1) {
+    await handleStepOneSubmit();
+  } else if (step.value === 2) {
+    await handleStepTwoSubmit();
+  } else {
+    step.value++;
+  }
+};
+
 
 
 </script>

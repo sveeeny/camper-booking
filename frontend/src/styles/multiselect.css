@@ -5,6 +5,7 @@
   background-color: transparent;
   box-sizing: border-box;
   height: 2.5rem; /* h-10 = 40px */
+  position: relative;
 }
 
 /* Eingabefeld */
@@ -93,3 +94,36 @@
   @apply ring-2 ring-blue-400;
   border-color: #60a5fa;
 }
+
+
+.multiselect__select {
+  transform: rotate(90deg);
+  @apply text-slate-500;
+  width: 1.5rem;
+  height: 100%;
+  top: 0;
+  right: 0.75rem; /* weiter nach rechts */
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+
+.multiselect__select::before {
+  
+  content: "";
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-style: solid;
+  border-width: 2px 2px 0 0;
+  transform: rotate(45deg);
+  border-color: currentColor;
+  color: inherit;
+  margin-top: 2px;
+}
+

@@ -8,6 +8,10 @@ import { Booking } from '../entities/booking.entity';
 import { Car } from '../entities/cars.entity';
 import { Availability } from '../entities/availability.entity';
 import { BookingDatesService } from './booking-dates.service';
+import { Between } from 'typeorm';
+import { eachDayOfInterval, subDays, format } from 'date-fns'; // sicherstellen, dass @types/date-fns NICHT installiert ist
+import { LessThanOrEqual, MoreThan } from 'typeorm';
+// import eachDayOfInterval from 'date-fns/eachDayOfInterval';
 
 
 
@@ -35,7 +39,7 @@ export class BookingService {
     this.tableCreationThresholdDays = this.configService.get<number>('TABLE_CREATION_THRESHOLD_DAYS', 365);
   }
   
-
+  
 
   //Neue checkAvailability
   async checkAvailability(checkInDate: string, checkOutDate: string, numberOfCars: number) {
@@ -76,7 +80,9 @@ export class BookingService {
     return { message: 'Buchung erfolgreich gespeichert!', bookingId: booking.booking_id };
   }
   
-  //HARD DELETE
+  
+
+  // HARD DELETE
   async deleteBooking(bookingId: number): Promise<{ message: string }> {
     const booking = await this.bookingRepository.findOne({
       where: { booking_id: bookingId },
@@ -87,18 +93,64 @@ export class BookingService {
       throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
     }
   
-    // Alle zugehörigen Fahrzeuge werden dank "cascade: true" automatisch gelöscht
+    const numberOfCars = booking.numberOfCars;
+    const checkIn = booking.cars[0]?.checkInDate;
+    const checkOut = booking.cars[0]?.checkOutDate;
+  
+    if (!checkIn || !checkOut) {
+      throw new Error('Check-in/out-Daten nicht vorhanden.');
+    }
+  
+    const nights = eachDayOfInterval({
+      start: new Date(checkIn),
+      end: subDays(new Date(checkOut), 1),
+    });
+  
+    for (const date of nights) {
+      const formatted = format(date, 'yyyy-MM-dd'); // ⬅️ hier string für DB
+      const availability = await this.availabilityRepository.findOne({
+        where: { date: formatted },
+      });
+  
+      if (availability) {
+        availability.occupied = Math.max(0, availability.occupied - numberOfCars);
+        await this.availabilityRepository.save(availability);
+      }
+    }
+  
     await this.bookingRepository.remove(booking);
   
     return { message: `Buchung ${bookingId} wurde vollständig gelöscht.` };
   }
   
-  //Neue cancelBooking
-  async cancelBooking(bookingId: number): Promise<{ message: string }> {
-    await this.bookingDatesService.cancelCarEntries(bookingId);
-    return { message: `Buchung ${bookingId} wurde storniert.` };
-  }
   
+  
+
+  //Neue cancelBooking
+  async getBookingsInRange(from: string, to: string) {
+    const cars = await this.carRepository.find({
+      where: {
+        isCancelled: false,
+        checkInDate: LessThanOrEqual(to),
+        checkOutDate: MoreThan(from),
+      },
+      relations: ['booking'],
+    });
+  
+    return cars.map((car) => ({
+      id: car.booking.booking_id,
+      guestName: `${car.booking.firstName} ${car.booking.lastName}`,
+      spot: car.car_id,
+      checkIn: car.checkInDate,
+      checkOut: car.checkOutDate,
+      carPlate: car.carPlate,
+      adults: car.adults,
+      children: car.children,
+    }));
+  }
+
+
+
 }
 
 const formatDateToYMD = (date: Date | string): string =>

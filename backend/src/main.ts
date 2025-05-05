@@ -5,13 +5,10 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as passport from 'passport';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { RolesGuard } from './auth/roles.guard';
-import { Reflector } from '@nestjs/core';
 import { AppDataSource } from 'data-source';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
-  const reflector = app.get(Reflector); // ✅ Reflector holen
 
   // 👉 CORS aktivieren
   app.enableCors({

@@ -4,6 +4,7 @@ import { Car } from './cars.entity';
 
 @Entity('bookings')
 export class Booking {
+  // @PrimaryGeneratedColumn("uuid")
   @PrimaryGeneratedColumn()
   booking_id: number;
 

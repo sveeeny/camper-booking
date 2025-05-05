@@ -12,7 +12,7 @@ import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import { nextTick } from 'vue';
 import { format, formatDate } from 'date-fns'
-import DateDisplay from '@/components/DateDisplay.vue';
+import DateDisplay from '@/components/User/DateDisplay.vue';
 
 // Daten formatieren
 const checkInDate = computed(() => {

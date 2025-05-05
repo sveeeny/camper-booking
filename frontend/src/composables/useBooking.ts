@@ -7,6 +7,8 @@ import {
   CreateBookingGuestDto,
   CarsDto,
 } from '@/types/booking';
+import { parseYMDStringToLocalDate } from './utils/dateUtils';
+
 
 
 
@@ -92,40 +94,8 @@ watch(
   }
 );
 
-// 🔄 Anzahl Fahrzeuge → neue belegte Tage laden & Datum ggf. zurücksetzen
-watch(numberOfCars, async (newVal) => {
-  if (newVal > 0) {
-    try {
-      const response = await axios.get('/availability/dates', {
-        params: { numberOfCars: newVal },
-      });
 
-      const dates = response.data.map((entry: { date: string }) => entry.date);
-      disabledDates.value = dates;
 
-      if (checkInDate.value && checkOutDate.value) {
-        const selectedRange: string[] = [];
-        const current = new Date(checkInDate.value);
-        const end = new Date(checkOutDate.value);
-
-        while (current < end) {
-          selectedRange.push(formatDateToYMD(current));
-          current.setDate(current.getDate() + 1);
-        }
-
-        const collision = dates.some((date: string) =>
-          selectedRange.includes(date)
-        );
-
-        if (collision) {
-          selectedDates.value = null;
-        }
-      }
-    } catch (err) {
-      console.error('Fehler beim Aktualisieren der belegten Tage', err); // eslint-disable-line no-console
-    }
-  }
-});
 
 // Validierung Gästeinfos
 const validateGuestInfo = (): string[] => {
@@ -157,14 +127,88 @@ watch([guestInfo, cars], () => {
 
 
 
+// const fetchUnavailableDates = async () => {
+//   const response = await axios.get('/availability/dates', {
+//     params: { numberOfCars: numberOfCars.value },
+//   });
+//   disabledDates.value = response.data.map((entry: { date: string }) =>
+//     parseYMDStringToLocalDate(entry.date)
+//   );
+  
+// };
+
 const fetchUnavailableDates = async () => {
-  const response = await axios.get('/availability/dates', {
-    params: { numberOfCars: numberOfCars.value },
-  });
-  disabledDates.value = response.data.map((entry: { date: string }) => new Date(entry.date));
+  try {
+    const response = await axios.get('/availability/dates', {
+      params: { numberOfCars: numberOfCars.value },
+    });
+
+    const dates = response.data.map((entry: { date: string }) =>
+      parseYMDStringToLocalDate(entry.date)
+    );
+    disabledDates.value = dates;
+
+    // ❌ Ggf. Auswahl zurücksetzen, wenn Kollision mit neuer Verfügbarkeit
+    if (checkInDate.value && checkOutDate.value) {
+      const selectedRange: string[] = [];
+      const current = new Date(checkInDate.value);
+      const end = new Date(checkOutDate.value);
+
+      while (current < end) {
+        selectedRange.push(formatDateToYMD(current));
+        current.setDate(current.getDate() + 1);
+      }
+
+      const unavailableStrings = dates.map(formatDateToYMD);
+      const collision = unavailableStrings.some((d: string) =>
+        selectedRange.includes(d)
+      );
+
+      if (collision) {
+        selectedDates.value = null;
+      }
+    }
+  } catch (err) {
+    console.error('Fehler beim Aktualisieren der belegten Tage', err); // eslint-disable-line no-console
+  }
 };
 
+// 🔄 Anzahl Fahrzeuge → neue belegte Tage laden & Datum ggf. zurücksetzen
+// watch(numberOfCars, async (newVal) => {
+//   if (newVal > 0) {
+//     try {
+//       const response = await axios.get('/availability/dates', {
+//         params: { numberOfCars: newVal },
+//       });
 
+//       const dates = response.data.map((entry: { date: string }) => entry.date);
+//       disabledDates.value = dates;
+
+//       if (checkInDate.value && checkOutDate.value) {
+//         const selectedRange: string[] = [];
+//         const current = new Date(checkInDate.value);
+//         const end = new Date(checkOutDate.value);
+
+//         while (current < end) {
+//           selectedRange.push(formatDateToYMD(current));
+//           current.setDate(current.getDate() + 1);
+//         }
+
+//         const collision = dates.some((date: string) =>
+//           selectedRange.includes(date)
+//         );
+
+//         if (collision) {
+//           selectedDates.value = null;
+//         }
+//       }
+//     } catch (err) {
+//       console.error('Fehler beim Aktualisieren der belegten Tage', err); // eslint-disable-line no-console
+//     }
+//   }
+// });
+
+watch(numberOfCars, fetchUnavailableDates);
 
 // Step One
 const submitBookingStepOne = async (): Promise<boolean> => {

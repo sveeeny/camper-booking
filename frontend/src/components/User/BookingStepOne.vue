@@ -51,15 +51,6 @@
         <p class="text-xs text-slate-500">(exkl. Kurtaxe)</p>
       </div>
 
-      <!-- ▶️ Weiter -->
-      <button
-        class="w-full bg-slate-600 hover:bg-slate-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 py-2 px-4 rounded disabled:bg-slate-300 dark:disabled:bg-slate-500"
-        :disabled="!checkInDate || !checkOutDate"
-        @click="applyDates"
-      >
-        Weiter
-      </button>
-
       <!-- ❌ Fehleranzeige -->
       <p v-if="errorMessage" class="text-red-600 text-sm mt-2 text-center">
         {{ errorMessage }}
@@ -83,11 +74,11 @@
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
-
 import { useBooking } from '@/composables/useBooking';
 import { useCheckInPicker } from '@/composables/useCheckInPicker';
 import { useCheckOutPicker } from '@/composables/useCheckOutPicker';
 import { isDateRangeAvailable } from '@/composables/utils/isDateRangeAvailable';
+
 
 const emit = defineEmits<{
   (e: 'next'): void;
@@ -166,4 +157,15 @@ const resetDates = () => {
 };
 
 onMounted(fetchUnavailableDates);
+onMounted(() => {
+  if (!checkInDate.value && selectedDates.value) {
+    const [start, end] = selectedDates.value;
+    checkInDate.value = start;
+    nextTick(() => {
+      selectedRange.value = [start, end];
+    });
+  }
+});
+
+
 </script>
