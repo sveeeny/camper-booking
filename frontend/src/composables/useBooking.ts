@@ -1,4 +1,7 @@
 // src/composables/useBooking.ts
+
+// Wichtig: mode (guest | host) wird erst innerhalb von useBooking() verwendet!
+
 import { ref, computed, watch } from 'vue';
 import axios from '@/api';
 import { countries } from '@/countries';
@@ -8,7 +11,8 @@ import {
   CarsDto,
 } from '@/types/booking';
 import { parseYMDStringToLocalDate } from './utils/dateUtils';
-
+import { validateGuestInfo } from '@/composables/useValidators';
+import { useUserStore } from '@/store/userStore';
 
 
 
@@ -61,9 +65,23 @@ const calculateBasePrice = (): number => {
   if (
     !checkInDate.value || !checkOutDate.value ||
     isNaN(checkInDate.value.getTime()) || isNaN(checkOutDate.value.getTime())
-  ) {return 0;}  
-  const diff = checkOutDate.value.getTime() - checkInDate.value.getTime();
-  const nights = diff / (1000 * 60 * 60 * 24);
+  ) { return 0; }
+
+
+  const nights = Math.floor(
+    (Date.UTC(
+      checkOutDate.value.getFullYear(),
+      checkOutDate.value.getMonth(),
+      checkOutDate.value.getDate()
+    ) -
+      Date.UTC(
+        checkInDate.value.getFullYear(),
+        checkInDate.value.getMonth(),
+        checkInDate.value.getDate()
+      )) /
+    (1000 * 60 * 60 * 24)
+  );
+
   return nights * numberOfCars.value * basePricePerNight;
 };
 
@@ -96,47 +114,6 @@ watch(
 
 
 
-
-// Validierung Gästeinfos
-const validateGuestInfo = (): string[] => {
-  const errors: string[] = [];
-
-  if (!guestInfo.value.salutation) errors.push('Anrede');
-  if (!guestInfo.value.firstName.trim()) errors.push('Vorname');
-  if (!guestInfo.value.lastName.trim()) errors.push('Nachname');
-  if (!guestInfo.value.email.includes('@')) errors.push('E-Mail');
-  if (!guestInfo.value.nationality) errors.push('Nationalität');
-  if (!guestInfo.value.phoneCountryCode) errors.push('Vorwahl');
-  if (guestInfo.value.phoneNumber.trim().length < 8)
-    errors.push('Telefonnummer');
-
-  cars.value.forEach((car, i) => {
-    if (!car.carPlate.trim()) errors.push(`Autokennzeichen für Auto ${i + 1}`);
-    if (car.adults < 1) errors.push(`Erwachsene für Auto ${i + 1}`);
-    if (car.children < 0) errors.push(`Kinder für Auto ${i + 1}`);
-  });
-
-  return errors;
-};
-
-watch([guestInfo, cars], () => {
-  if (!hasSubmitted.value) return;
-  errorFields.value = validateGuestInfo();
-}, { deep: true });
-
-
-
-
-// const fetchUnavailableDates = async () => {
-//   const response = await axios.get('/availability/dates', {
-//     params: { numberOfCars: numberOfCars.value },
-//   });
-//   disabledDates.value = response.data.map((entry: { date: string }) =>
-//     parseYMDStringToLocalDate(entry.date)
-//   );
-  
-// };
-
 const fetchUnavailableDates = async () => {
   try {
     const response = await axios.get('/availability/dates', {
@@ -151,8 +128,9 @@ const fetchUnavailableDates = async () => {
     // ❌ Ggf. Auswahl zurücksetzen, wenn Kollision mit neuer Verfügbarkeit
     if (checkInDate.value && checkOutDate.value) {
       const selectedRange: string[] = [];
-      const current = new Date(checkInDate.value);
+      const current = new Date((checkInDate.value));
       const end = new Date(checkOutDate.value);
+
 
       while (current < end) {
         selectedRange.push(formatDateToYMD(current));
@@ -173,40 +151,6 @@ const fetchUnavailableDates = async () => {
   }
 };
 
-// 🔄 Anzahl Fahrzeuge → neue belegte Tage laden & Datum ggf. zurücksetzen
-// watch(numberOfCars, async (newVal) => {
-//   if (newVal > 0) {
-//     try {
-//       const response = await axios.get('/availability/dates', {
-//         params: { numberOfCars: newVal },
-//       });
-
-//       const dates = response.data.map((entry: { date: string }) => entry.date);
-//       disabledDates.value = dates;
-
-//       if (checkInDate.value && checkOutDate.value) {
-//         const selectedRange: string[] = [];
-//         const current = new Date(checkInDate.value);
-//         const end = new Date(checkOutDate.value);
-
-//         while (current < end) {
-//           selectedRange.push(formatDateToYMD(current));
-//           current.setDate(current.getDate() + 1);
-//         }
-
-//         const collision = dates.some((date: string) =>
-//           selectedRange.includes(date)
-//         );
-
-//         if (collision) {
-//           selectedDates.value = null;
-//         }
-//       }
-//     } catch (err) {
-//       console.error('Fehler beim Aktualisieren der belegten Tage', err); // eslint-disable-line no-console
-//     }
-//   }
-// });
 
 watch(numberOfCars, fetchUnavailableDates);
 
@@ -218,6 +162,7 @@ const submitBookingStepOne = async (): Promise<boolean> => {
       return false;
     }
     const bookingData: CreateBookingCheckDto = {
+
       checkInDate: formatDateToYMD(selectedDates.value[0]),
       checkOutDate: formatDateToYMD(selectedDates.value[1]),
       numberOfCars: numberOfCars.value,
@@ -248,44 +193,73 @@ const submitBookingStepOne = async (): Promise<boolean> => {
       errorMessage.value = 'Leider sind keine Stellplätze verfügbar.';
       return false;
     }
-  } catch (_) {     
+  } catch (_) {
     errorMessage.value = 'Fehler bei der Buchung!';
     return false;
   }
 };
 
-// Step Two
-const submitBookingStepTwo = async (): Promise<boolean> => {
-  hasSubmitted.value = true;
-  const errors = validateGuestInfo();
-  errorFields.value = errors;
 
-  if (errors.length > 0) {
-    errorMessage.value = '❌ Bitte fülle alle Pflichtfelder korrekt aus.';
-    return false;
-  }
 
-  try {
-    // ➤ Saubere Kopie aller Daten zum Senden
-    const guestData: CreateBookingGuestDto = {
-      ...guestInfo.value,
-      totalPrice: calculateTotalPrice(),
-      cars: cars.value.map((car) => ({
-        ...car,
-        touristTax: car.adults * kurtaxePerAdult + car.children * kurtaxePerChild,
-      })),
-    };
-
-    await axios.post('/bookings/create', guestData);
-    return true;
-  } catch (_) { 
-    errorMessage.value = 'Fehler beim Speichern der Gäste-Informationen!';
-    return false;
-  }
-};
 
 
 export function useBooking() {
+  const userStore = useUserStore();
+  const mode: 'guest' | 'host' = userStore.isHost ? 'host' : 'guest';
+
+  console.log('🚀 useBooking() gestartet mit mode:', mode);
+  const validateGuestInfoLocal = (): string[] => {
+    return validateGuestInfo(guestInfo.value, cars.value, mode);
+  };
+
+  watch([guestInfo, cars], () => {
+    if (!hasSubmitted.value) return;
+    errorFields.value = validateGuestInfoLocal();
+  }, { deep: true });
+
+  const submitBookingStepTwo = async (): Promise<boolean> => {
+    hasSubmitted.value = true;
+    const errors = validateGuestInfoLocal();
+    errorFields.value = errors;
+
+    if (errors.length > 0) {
+      errorMessage.value = '❌ Bitte fülle alle Pflichtfelder korrekt aus.';
+      return false;
+    }
+
+    try {
+      if (mode === 'host') {
+        // 🧪 Nur für manuelle Host-Buchungen: sinnvolle Default-Werte setzen
+        guestInfo.value.salutation ||= 'Herr';
+        guestInfo.value.email ||= 'host@example.com';
+        guestInfo.value.nationality ||= 'NA';
+        guestInfo.value.phoneCountryCode ||= '+41';
+        guestInfo.value.phoneNumber ||= '00000000';
+
+        cars.value.forEach((car, index) => {
+          car.carPlate ||= `HOST-${index + 1}`;
+          car.adults ||= 1;
+          car.children ||= 0;
+        });
+      }
+
+      const guestData: CreateBookingGuestDto = {
+        ...guestInfo.value,
+        totalPrice: calculateTotalPrice(),
+        cars: cars.value.map((car) => ({
+          ...car,
+          touristTax: car.adults * kurtaxePerAdult + car.children * kurtaxePerChild,
+        })),
+      };
+
+      await axios.post('/bookings/create', guestData);
+      return true;
+    } catch (_) {
+      errorMessage.value = 'Fehler beim Speichern der Gäste-Informationen!';
+      return false;
+    }
+  };
+
   return {
     numberOfCars,
     selectedDates,
@@ -304,8 +278,8 @@ export function useBooking() {
     calculateBasePrice,
     calculateKurtaxe,
     calculateTotalPrice,
-    validateGuestInfo,
     submitBookingStepOne,
     submitBookingStepTwo,
   };
 }
+

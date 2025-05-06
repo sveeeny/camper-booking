@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import GuestBookingView from '../views/GuestBookingView.vue';
 import HostDashboard from '../views/HostDashboard.vue';
 import CancelBookingView from '../views/CancelBookingView.vue';
+import { useUserStore } from '@/store/userStore';
 
 const routes = [
   { path: '/', component: GuestBookingView },
@@ -10,6 +11,7 @@ const routes = [
   {
     path: '/host',
     component: () => import('@/views/HostDashboard.vue'),
+    meta: { requiresAuth: true }, // 👈 wichtig
     children: [
       {
         path: '',
@@ -19,7 +21,7 @@ const routes = [
       {
         path: 'buchung-hinzufuegen',
         name: 'HostBookingForm',
-        component: () => import('@/components/Host/HostBookingForm.vue'),
+        component: () => import('@/components/User/SlimBookingForm.vue'),
       },
       {
         path: 'wochenansicht',
@@ -28,12 +30,36 @@ const routes = [
       },
     ],
   },
-  
+
+  {
+    path: '/login',
+    name: 'HostLogin',
+    component: () => import('@/views/HostLoginView.vue'),
+  },
+
+
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
 });
+
+router.beforeEach((to, _, next) => {
+  const userStore = useUserStore();
+
+  // ⛔ Wenn eingeloggt und auf Login-Seite → weiterleiten
+  if (to.path === '/login' && userStore.isLoggedIn) {
+    return next('/host');
+  }
+
+  // 🔒 Auth-geschützte Routen
+  if (to.meta.requiresAuth && !userStore.isLoggedIn) {
+    return next('/login');
+  }
+
+  next();
+});
+
 
 export default router;

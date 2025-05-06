@@ -2,6 +2,13 @@
   <div class="max-w-7xl mx-auto px-4 py-6">
     <h1 class="text-3xl font-bold text-slate-800 dark:text-white mb-6 text-center">Host-Dashboard</h1>
 
+    <!-- 🔐 Logout oben rechts -->
+    <div class="flex justify-end items-center p-4">
+      <button @click="handleLogout" class="buttonClass">
+        Logout
+      </button>
+    </div>
+
     <!-- Wenn wir uns in der "Liste" oder "Woche" befinden: Ansichtsauswahl + Inhalt -->
     <template v-if="isOverviewRoute">
       <!-- 🔘 Ansichtsauswahl -->
@@ -24,9 +31,15 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import HostBookingList from '@/components/Host/HostBookingList.vue';
 import HostBookingWeekView from '@/components/Host/HostBookingWeekView.vue';
+import { useUserStore } from '@/store/userStore';
+
+
+const router = useRouter();
+const userStore = useUserStore();
+
 
 const route = useRoute();
 const view = ref<'list' | 'week'>('list');
@@ -38,9 +51,14 @@ const isOverviewRoute = computed(() =>
 
 // Button-Styling
 const buttonClass = (active: boolean) =>
-  `px-4 py-2 rounded-md font-medium ${
-    active
-      ? 'bg-blue-600 text-white'
-      : 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-white'
+  `px-4 py-2 rounded-md font-medium ${active
+    ? 'bg-blue-600 text-white'
+    : 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-white'
   }`;
+
+// 🔓 Logout-Logik
+const handleLogout = () => {
+  userStore.logout();
+  router.push('/login');
+};
 </script>

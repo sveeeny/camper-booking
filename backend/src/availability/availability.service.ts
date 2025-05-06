@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, Between } from 'typeorm';
 import { Availability } from '../entities/availability.entity';
 import { ConfigService } from '@nestjs/config';
+import { LessThan, MoreThanOrEqual } from 'typeorm';
 
 const formatDateToYMD = (date: Date | string): string =>
   typeof date === 'string' ? date : date.toISOString().split('T')[0];
@@ -14,7 +15,7 @@ export class AvailabilityService {
     private readonly availabilityRepository: Repository<Availability>,
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   // 📅 Kalenderansicht eines Jahres
   async getAvailabilityForYear(year: number): Promise<any[]> {
@@ -29,7 +30,7 @@ export class AvailabilityService {
     const today = new Date();
     const formattedToday = formatDateToYMD(today);
     const maxSpots = this.configService.get<number>('MAX_SPOTS', 5); // Standard: 5
-  
+
     const result = await this.availabilityRepository
       .createQueryBuilder('availability')
       .select(`TO_CHAR(availability.date, 'YYYY-MM-DD')`, 'date')
@@ -39,10 +40,10 @@ export class AvailabilityService {
       })
       .andWhere('availability.date >= :today', { today: formattedToday }) // keine Vergangenheit
       .getRawMany();
-  
+
     return result;
   }
-  
+
   // async getUnavailableDates(numberOfCars: number): Promise<{ date: string }[]> {
   //   console.log(`🚀 Checking unavailable dates for ${numberOfCars} cars`);
 
@@ -56,24 +57,33 @@ export class AvailabilityService {
   //   return result;
   // }
 
+
   // ✅ Verfügbarkeit prüfen
-  async isAvailable(checkInDate: string, checkOutDate: string, numberOfCars: number): Promise<boolean> {
-    const entries = await this.availabilityRepository.find({
-      where: { date: Between(checkInDate, checkOutDate) },
-    });
+async isAvailable(checkInDate: string, checkOutDate: string, numberOfCars: number): Promise<boolean> {
+  // 🛠️ checkOutDate - 1 Tag → Nur die belegten Nächte zählen
+  const endDate = new Date(checkOutDate);
+  endDate.setDate(endDate.getDate() - 1);
+  const endDateYMD = formatDateToYMD(endDate);
 
-    const occupied = entries.length
-      ? Math.max(...entries.map((entry) => entry.occupied))
-      : 0;
+  const entries = await this.availabilityRepository.find({
+    where: {
+      date: Between(checkInDate, endDateYMD),
+    },
+  });
 
-    const result = (occupied + numberOfCars) <= 5;
+  const occupied = entries.length
+    ? Math.max(...entries.map((entry) => entry.occupied))
+    : 0;
 
-    console.log(
-      `🔍 isAvailable() | ${checkInDate} → ${checkOutDate} | Belegt: ${occupied} | Reservierung: ${numberOfCars} | Verfügbar: ${result}`
-    );
+  const result = (occupied + numberOfCars) <= 5;
 
-    return result;
-  }
+  console.log(
+    `🔍 isAvailable() | ${checkInDate} → ${checkOutDate} | Geprüft bis: ${endDateYMD} | Belegt: ${occupied} | Reservierung: ${numberOfCars} | Verfügbar: ${result}`
+  );
+
+  return result;
+}
+
 
   // 🔢 Belegte Stellplätze für ein Datum abrufen
   async getOccupiedSpots(date: string | Date): Promise<number> {

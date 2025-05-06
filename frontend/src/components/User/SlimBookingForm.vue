@@ -43,22 +43,24 @@
 
 </template>
 
+
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import BookingStepOne from '@/components/User/BookingStepOne.vue';
 import BookingStepTwo from '@/components/User/BookingStepTwo.vue';
-import { useBooking } from '@/composables/useBooking';
 import BookingSummary from '@/components/User/BookingSummary.vue';
-import type { CarsDto, CreateBookingGuestDto } from '@/types/booking';
-import { useBeforeUnload } from '@/composables/useBeforeUnload';
 import BookingTimeline from '@/components/User/BookingTimeline.vue';
+import { useBeforeUnload } from '@/composables/useBeforeUnload';
+import { useBooking } from '@/composables/useBooking';
 
 
 
-const warnOnUnload = ref(true); // z. B. true während Eingabe, false nach Abschluss
+
+
+// 🛑 Kein überschreiben! props.mode direkt verwenden
+const step = ref(1);
+const warnOnUnload = ref(true);
 useBeforeUnload(warnOnUnload);
-
-const step = ref<number>(1);
 
 const {
   numberOfCars,
@@ -77,23 +79,17 @@ const {
 
 const handleStepOneSubmit = async () => {
   const success = await submitBookingStepOne();
-  console.log('Submit-Ergebnis Step One:', success); // ⬅️ neu
   if (success) step.value = 2;
 };
 
 const handleStepTwoSubmit = async () => {
   const success = await submitBookingStepTwo();
-  console.log('Submit-Ergebnis Step Two:', success); // ⬅️ neu
   if (success) step.value = 3;
 };
 
 const handleSummaryConfirm = () => {
-  // z. B. Stripe-Zahlung starten, oder weiterleiten
   console.log('✅ Buchung bestätigt – weiter zur Zahlung');
-  // z. B. window.location.href = '/payment'
 };
-
-
 
 const handleNext = async () => {
   if (step.value === 1) {
@@ -104,10 +100,8 @@ const handleNext = async () => {
     step.value++;
   }
 };
-
-
-
 </script>
+
 
 <style scoped>
 .booking-form {
