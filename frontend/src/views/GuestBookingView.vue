@@ -6,5 +6,5 @@
 </template>
 
 <script setup lang="ts">
-import SlimBookingForm from '@/components/User/SlimBookingForm.vue';
+import SlimBookingForm from '@/components/User/BookingForm.vue';
 </script>

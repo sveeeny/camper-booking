@@ -21,7 +21,7 @@ const routes = [
       {
         path: 'buchung-hinzufuegen',
         name: 'HostBookingForm',
-        component: () => import('@/components/User/SlimBookingForm.vue'),
+        component: () => import('@/components/User/BookingForm.vue'),
       },
       {
         path: 'wochenansicht',
