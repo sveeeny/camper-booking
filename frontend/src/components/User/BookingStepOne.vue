@@ -9,10 +9,8 @@
       <!-- 🚗 Anzahl Fahrzeuge -->
       <div class="w-full">
         <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">Anzahl Fahrzeuge</label>
-        <select
-          v-model="numberOfCars"
-          class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-2 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
+        <select v-model="numberOfCars"
+          class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-2 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
           <option v-for="n in 5" :key="n" :value="n">{{ n }}</option>
         </select>
       </div>
@@ -20,27 +18,22 @@
       <!-- 📅 Datepicker -->
       <div class="w-full">
         <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">
+          {{ 'Maximal 3 Nächte' }}
+        </label>
+        <br>
+        <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">
           {{ checkInDate ? 'Check-out Datum wählen' : 'Check-in Datum wählen' }}
         </label>
 
         <div class="relative min-h-[300px]">
           <!-- Check-in -->
           <div v-show="!checkInDate" class="absolute inset-0">
-            <Datepicker
-              v-model="checkInDate"
-              v-bind="checkInProps"
-              ref="checkInPickerRef"
-            />
+            <Datepicker v-model="checkInDate" v-bind="checkInProps" :markers="checkInMarkers" ref="checkInPickerRef"  />
           </div>
 
           <!-- Check-out -->
           <div v-show="checkInDate" class="absolute inset-0">
-            <Datepicker
-              v-model="selectedRange"
-              v-bind="checkOutProps"
-              ref="checkOutPickerRef"
-              @cleared="resetDates"
-            />
+            <Datepicker v-model="selectedRange" v-bind="checkOutProps" :markers="checkOutMarkers" ref="checkOutPickerRef" @cleared="resetDates" />
           </div>
         </div>
       </div>
@@ -58,7 +51,8 @@
     </div>
 
     <!-- Rechte Seite: Infobereich / Bildplatzhalter -->
-    <div class="hidden md:flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+    <div
+      class="hidden md:flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
       <div class="text-slate-400 dark:text-slate-500 p-8 text-center">
         <p class="text-sm">Hier könnte ein Bild, eine Beschreibung oder Slideshow stehen.</p>
       </div>
@@ -80,6 +74,7 @@ import { useCheckOutPicker } from '@/composables/useCheckOutPicker';
 import { isDateRangeAvailable } from '@/composables/utils/isDateRangeAvailable';
 
 
+
 const emit = defineEmits<{
   (e: 'next'): void;
 }>();
@@ -94,6 +89,9 @@ const {
   fetchUnavailableDates,
 } = useBooking();
 
+
+
+
 const basePriceCHF = computed(() => calculateBasePrice());
 
 const checkInDate = ref<Date | null>(null);
@@ -105,9 +103,10 @@ const checkOutDate = computed(() =>
 const checkInPickerRef = ref<InstanceType<typeof Datepicker> | null>(null);
 const checkOutPickerRef = ref<InstanceType<typeof Datepicker> | null>(null);
 
-const { datepickerProps: checkInProps } = useCheckInPicker(disabledDates);
-const { selectedRange: rangeFromPicker, datepickerProps: checkOutProps } =
+  const { datepickerProps: checkInProps, markers: checkInMarkers } = useCheckInPicker(disabledDates);
+  const { selectedRange: rangeFromPicker, datepickerProps: checkOutProps, markers: checkOutMarkers } =
   useCheckOutPicker(checkInDate, disabledDates, 3);
+
 
 // ⏱️ Synchronisiere Range vom Datepicker mit zentralem State
 watch(rangeFromPicker, (val) => {

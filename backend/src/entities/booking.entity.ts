@@ -32,8 +32,12 @@ export class Booking {
   @Column({ nullable: true })
   email: string;
 
+  //Später löschen (wird durch status ersetzt)
   @Column({ default: false })
   paymentConfirmed: boolean;
+
+  @Column({ default: 'pending' })
+  status: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   totalPrice: number;

@@ -9,6 +9,7 @@ import { RolesGuard } from '@/auth/roles.guard';
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
 import { AvailabilityModule } from '@/availability/availability.module';  
 import { AppDataSource } from 'data-source';
+import { StripeModule } from '@/stripe/stripe.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AppDataSource } from 'data-source';
     UserModule,
     AuthModule,
     AvailabilityModule,
+    StripeModule,
   ],
   providers: [
     {

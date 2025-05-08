@@ -6,16 +6,21 @@ import {
   Param,
   Delete,
   Query,
+  Patch
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingGuestDto } from './dto/create-booking-guest.dto';
 import { CreateBookingCheckDto } from './dto/create-booking-check.dto';
 import { Public } from 'decorators/public.decorator';
+import { BookingDatesService } from './booking-dates.service';
+import { publicDecrypt } from 'crypto';
 
 @Public()
 @Controller('bookings')
 export class BookingController {
-  constructor(private readonly bookingService: BookingService) {}
+  constructor(
+    private readonly bookingService: BookingService,
+    private readonly bookingDatesService: BookingDatesService) { }
 
   // 🏕 Verfügbarkeit prüfen (provisorische Reservierung)
   @Public()
@@ -50,5 +55,30 @@ export class BookingController {
   ) {
     return this.bookingService.getBookingsInRange(from, to);
   }
+  @Public()
+  @Patch(':id/update')
+  async updateBookingDatesAndCars(
+    @Param('id') bookingId: number,
+    @Body() dto: CreateBookingCheckDto,
+  ) {
+    return this.bookingDatesService.updateBookingDatesAndCars(bookingId, dto);
+  }
+
+  @Public()
+  @Get(':id/status')
+  async getBookingStatus(@Param('id') bookingId: number) {
+    return this.bookingService.getBookingStatus(bookingId);
+  }
+
+  // In booking.controller.ts
+  @Public()
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') bookingId: number,
+    @Body() body: { status: string },
+  ) {
+    return this.bookingService.updateStatus(bookingId, body.status);
+  }
+
 
 }

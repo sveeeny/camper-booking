@@ -4,9 +4,10 @@ import { Availability } from '../entities/availability.entity';  // Importiere d
 import { AvailabilityService } from './availability.service';
 import { AvailabilityController } from './availability.controller';
 import { ConfigModule } from '@nestjs/config';
+import { Car } from '@/entities/cars.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Availability]),
+  imports: [TypeOrmModule.forFeature([Availability, Car]),
     ConfigModule
   ], // Hier das Repository registrieren
   controllers: [AvailabilityController],

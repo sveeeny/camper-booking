@@ -6,6 +6,7 @@ import { Booking } from '../entities/booking.entity';
 import { Car } from '../entities/cars.entity';
 import { AvailabilityService } from '../availability/availability.service';
 import { CarsDto } from './dto/cars.dto';
+import { CreateBookingCheckDto } from './dto/create-booking-check.dto';
 
 @Injectable()
 export class BookingDatesService {
@@ -17,7 +18,7 @@ export class BookingDatesService {
     private readonly carRepository: Repository<Car>,
 
     private readonly availabilityService: AvailabilityService
-  ) {}
+  ) { }
 
   private formatDateToYMD(date: Date | string): string {
     return typeof date === 'string' ? date : date.toISOString().split('T')[0];
@@ -128,4 +129,68 @@ export class BookingDatesService {
       );
     }
   }
+
+  async updateBookingDatesAndCars(
+    bookingId: number,
+    dto: CreateBookingCheckDto,
+  ): Promise<void> {
+    const existingCars = await this.carRepository.find({
+      where: { booking_id: bookingId, isCancelled: false },
+    });
+  
+    if (existingCars.length === 0) {
+      throw new NotFoundException('Keine bestehenden Fahrzeuge gefunden.');
+    }
+  
+    const oldCheckIn = existingCars[0].checkInDate;
+    const oldCheckOut = existingCars[0].checkOutDate;
+    const oldNumberOfCars = existingCars.length;
+  
+    // 1️⃣ Alte Reservierungen freigeben
+    await this.availabilityService.updateAvailability(
+      oldCheckIn,
+      oldCheckOut,
+      oldNumberOfCars,
+      false, // ➖ Freigeben
+    );
+  
+    // 2️⃣ Alte Fahrzeuge löschen
+    await this.carRepository.delete({ booking_id: bookingId });
+  
+    // 3️⃣ Booking aktualisieren (Anzahl Fahrzeuge)
+    const booking = await this.bookingRepository.findOneBy({ booking_id: bookingId });
+    if (!booking) {
+      throw new NotFoundException('Buchung nicht gefunden.');
+    }
+    booking.numberOfCars = dto.numberOfCars;
+    await this.bookingRepository.save(booking);
+  
+    // 4️⃣ Neue Reservierungen setzen (Verfügbarkeit)
+    await this.availabilityService.updateAvailability(
+      dto.checkInDate,
+      dto.checkOutDate,
+      dto.numberOfCars,
+      true, // ➕ Belegen
+    );
+  
+    // 5️⃣ Neue Fahrzeuge anlegen
+    for (let carId = 1; carId <= dto.numberOfCars; carId++) {
+      await this.carRepository.save(
+        this.carRepository.create({
+          car_id: carId,
+          carPlate: '',
+          checkInDate: dto.checkInDate,
+          checkOutDate: dto.checkOutDate,
+          isCancelled: false,
+          adults: 1,
+          children: 0,
+          touristTax: 0,
+          booking,
+        })
+      );
+    }
+  }
+  
+
+
 }

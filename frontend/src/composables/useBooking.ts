@@ -14,7 +14,9 @@ import { parseYMDStringToLocalDate } from './utils/dateUtils';
 import { validateGuestInfo } from '@/composables/useValidators';
 import { useUserStore } from '@/store/userStore';
 
-
+const lastSavedCheckInDate = ref<string | null>(null);
+const lastSavedCheckOutDate = ref<string | null>(null);
+const lastSavedNumberOfCars = ref<number | null>(null);
 
 const numberOfCars = ref<number>(1);
 const selectedDates = ref<[Date, Date] | null>(null);
@@ -112,6 +114,19 @@ watch(
   }
 );
 
+// In useBooking.ts hinzufügen:
+
+const cancelIncompleteBookingIfNeeded = async () => {
+  if (bookingId.value) {
+    try {
+      await axios.delete(`/bookings/${bookingId.value}`);
+      console.log(`❌ Unvollständige Buchung ${bookingId.value} wurde gelöscht.`);
+    } catch (err) {
+      console.error('Fehler beim Löschen der Buchung:', err);
+    }
+  }
+};
+
 
 
 const fetchUnavailableDates = async () => {
@@ -154,6 +169,19 @@ const fetchUnavailableDates = async () => {
 
 watch(numberOfCars, fetchUnavailableDates);
 
+const createEmptyCars = (count: number, checkIn: string, checkOut: string) => {
+  return Array.from({ length: count }, () => ({
+    carPlate: '',
+    adults: 1,
+    children: 0,
+    isCancelled: false,
+    checkInDate: checkIn,
+    checkOutDate: checkOut,
+    touristTax: 0,
+  }));
+};
+
+
 // Step One
 const submitBookingStepOne = async (): Promise<boolean> => {
   try {
@@ -161,6 +189,43 @@ const submitBookingStepOne = async (): Promise<boolean> => {
       errorMessage.value = '❌ Bitte wähle ein gültiges Datum.';
       return false;
     }
+
+
+    if (bookingId.value) {
+      console.log('🔄 Vorhandene Buchung erkannt:', bookingId.value);
+
+      const bookingData: CreateBookingCheckDto = {
+        checkInDate: formatDateToYMD(selectedDates.value[0]),
+        checkOutDate: formatDateToYMD(selectedDates.value[1]),
+        numberOfCars: numberOfCars.value,
+      };
+
+      const hasDateChanged =
+        bookingData.checkInDate !== lastSavedCheckInDate.value ||
+        bookingData.checkOutDate !== lastSavedCheckOutDate.value;
+
+      const hasCarsChanged =
+        bookingData.numberOfCars !== lastSavedNumberOfCars.value;
+
+      if (!hasDateChanged && !hasCarsChanged) {
+        console.log('✅ Keine Änderung – alles bleibt wie es ist.');
+        return true;
+      }
+
+      console.log('🛠 Änderungen erkannt – sende Update.');
+      await axios.patch(`/bookings/${bookingId.value}/update`, bookingData);
+
+      cars.value = createEmptyCars(bookingData.numberOfCars, bookingData.checkInDate, bookingData.checkOutDate);
+
+      // Snapshots aktualisieren:
+      lastSavedCheckInDate.value = bookingData.checkInDate;
+      lastSavedCheckOutDate.value = bookingData.checkOutDate;
+      lastSavedNumberOfCars.value = bookingData.numberOfCars;
+
+      return true;
+    }
+
+
     const bookingData: CreateBookingCheckDto = {
 
       checkInDate: formatDateToYMD(selectedDates.value[0]),
@@ -173,19 +238,15 @@ const submitBookingStepOne = async (): Promise<boolean> => {
     if (response.data.success && response.data.bookingId) {
       bookingId.value = response.data.bookingId;
 
-      cars.value = Array.from({ length: numberOfCars.value }, () => ({
-        carPlate: '',
-        adults: 1,
-        children: 0,
-        isCancelled: false,
-        checkInDate: bookingData.checkInDate,
-        checkOutDate: bookingData.checkOutDate,
-        touristTax: 0,
-      }));
+      cars.value = createEmptyCars(bookingData.numberOfCars, bookingData.checkInDate, bookingData.checkOutDate);
 
       guestInfo.value.bookingId = response.data.bookingId;
       guestInfo.value.checkInDate = bookingData.checkInDate;
       guestInfo.value.checkOutDate = bookingData.checkOutDate;
+
+      lastSavedCheckInDate.value = bookingData.checkInDate;
+      lastSavedCheckOutDate.value = bookingData.checkOutDate;
+      lastSavedNumberOfCars.value = bookingData.numberOfCars;
 
       errorMessage.value = '';
       return true;
@@ -200,6 +261,36 @@ const submitBookingStepOne = async (): Promise<boolean> => {
 };
 
 
+const resetBookingState = () => {
+  numberOfCars.value = 1;
+  selectedDates.value = null;
+  cars.value = [];
+  bookingId.value = null;
+
+  guestInfo.value = {
+    salutation: 'Herr',
+    firstName: '',
+    lastName: '',
+    nationality: '',
+    email: '',
+    phoneCountryCode: '',
+    phoneNumber: '',
+    bookingId: 0,
+    checkInDate: '',
+    checkOutDate: '',
+    totalPrice: 0,
+    cars: [],
+  };
+
+  errorMessage.value = '';
+  errorFields.value = [];
+  hasSubmitted.value = false;
+
+  // Optional: auch die Snapshots für Check-in/out resetten, wenn du sie verwendest:
+  if (typeof lastSavedCheckInDate !== 'undefined') lastSavedCheckInDate.value = null;
+  if (typeof lastSavedCheckOutDate !== 'undefined') lastSavedCheckOutDate.value = null;
+  if (typeof lastSavedNumberOfCars !== 'undefined') lastSavedNumberOfCars.value = null;
+};
 
 
 
@@ -280,6 +371,8 @@ export function useBooking() {
     calculateTotalPrice,
     submitBookingStepOne,
     submitBookingStepTwo,
+    cancelIncompleteBookingIfNeeded,
+    resetBookingState,
   };
 }
 

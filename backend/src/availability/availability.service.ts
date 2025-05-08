@@ -4,6 +4,8 @@ import { Repository, DataSource, Between } from 'typeorm';
 import { Availability } from '../entities/availability.entity';
 import { ConfigService } from '@nestjs/config';
 import { LessThan, MoreThanOrEqual } from 'typeorm';
+import { Car } from '@/entities/cars.entity';
+
 
 const formatDateToYMD = (date: Date | string): string =>
   typeof date === 'string' ? date : date.toISOString().split('T')[0];
@@ -13,6 +15,10 @@ export class AvailabilityService {
   constructor(
     @InjectRepository(Availability)
     private readonly availabilityRepository: Repository<Availability>,
+    
+    @InjectRepository(Car) // NEU??
+    private readonly carRepository: Repository<Car>,
+    
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
   ) { }
@@ -44,45 +50,72 @@ export class AvailabilityService {
     return result;
   }
 
-  // async getUnavailableDates(numberOfCars: number): Promise<{ date: string }[]> {
-  //   console.log(`🚀 Checking unavailable dates for ${numberOfCars} cars`);
-
-  //   const result = await this.availabilityRepository
-  //     .createQueryBuilder('availability')
-  //     .select(`TO_CHAR(availability.date, 'YYYY-MM-DD')`, 'date')
-  //     .where('availability.occupied + :numberOfCars > 5', { numberOfCars })
-  //     .getRawMany();
-
-  //   console.log('📌 Unavailable Dates Response:', result);
-  //   return result;
-  // }
-
 
   // ✅ Verfügbarkeit prüfen
-async isAvailable(checkInDate: string, checkOutDate: string, numberOfCars: number): Promise<boolean> {
-  // 🛠️ checkOutDate - 1 Tag → Nur die belegten Nächte zählen
-  const endDate = new Date(checkOutDate);
-  endDate.setDate(endDate.getDate() - 1);
-  const endDateYMD = formatDateToYMD(endDate);
 
-  const entries = await this.availabilityRepository.find({
-    where: {
-      date: Between(checkInDate, endDateYMD),
-    },
-  });
+  async isAvailable(
+    checkInDate: string,
+    checkOutDate: string,
+    numberOfCars: number,
+    bookingId?: number,  // optional
+  ): Promise<boolean> {
+    const start = new Date(checkInDate);
+    const end = new Date(checkOutDate);
+    end.setDate(end.getDate() - 1);
+  
+    // 1️⃣ Hole alle Availability-Daten für den Bereich
+    const entries = await this.availabilityRepository.find({
+      where: {
+        date: Between(
+          formatDateToYMD(start),
+          formatDateToYMD(end)
+        ),
+      },
+    });
+  
+    const availabilityMap = new Map(
+      entries.map((entry) => [entry.date, entry.occupied])
+    );
+  
+    // 2️⃣ Hole alte Fahrzeuganzahl aus der Cars-Tabelle (falls bookingId angegeben)
+    let previousCarCount = 0;
+    if (bookingId) {
+      const cars = await this.carRepository.find({
+        where: {
+          booking_id: bookingId,
+          isCancelled: false,
+        },
+      });
+      previousCarCount = cars.length;
+    }
+  
+    const nights: string[] = [];
+    const loopDate = new Date(start);
+  
+    while (loopDate <= end) {
+      const ymd = formatDateToYMD(loopDate);
+      nights.push(ymd);
+  
+      const occupied = availabilityMap.get(ymd) || 0;
+      // NEU: Rechne eigene Buchung raus
+      const occupiedWithoutCurrent = occupied - previousCarCount;
+      const willBeOccupied = occupiedWithoutCurrent + numberOfCars;
+  
+      console.log(
+        `🛏️ Prüfe Nacht: ${ymd} | Belegt (gesamt): ${occupied} | - eigene: ${previousCarCount} | + neu: ${numberOfCars} | Ergebnis: ${willBeOccupied} von max 5`
+      );
+  
+      if (willBeOccupied > 5) {
+        return false;
+      }
+  
+      loopDate.setDate(loopDate.getDate() + 1);
+    }
+  
+    return true;
+  }
+  
 
-  const occupied = entries.length
-    ? Math.max(...entries.map((entry) => entry.occupied))
-    : 0;
-
-  const result = (occupied + numberOfCars) <= 5;
-
-  console.log(
-    `🔍 isAvailable() | ${checkInDate} → ${checkOutDate} | Geprüft bis: ${endDateYMD} | Belegt: ${occupied} | Reservierung: ${numberOfCars} | Verfügbar: ${result}`
-  );
-
-  return result;
-}
 
 
   // 🔢 Belegte Stellplätze für ein Datum abrufen

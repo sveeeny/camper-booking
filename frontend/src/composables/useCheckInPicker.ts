@@ -1,6 +1,8 @@
 // src/composables/useCheckInPicker.ts
 import { Ref, computed, ref } from 'vue';
 import { formatDateToYMD, normalizeDate } from './utils/dateUtils';
+import { useBooking } from '@/composables/useBooking';
+import type { DatePickerMarker } from '@vuepic/vue-datepicker';
 
 /**
  * Setup für den Check-in Datepicker.
@@ -19,6 +21,24 @@ export function useCheckInPicker(
   const disabledCheckInDates = computed(() =>
     disabledNights.value.map(formatDateToYMD)
   );
+
+
+  const { numberOfCars } = useBooking();
+
+  const markers = computed<DatePickerMarker[]>(() =>
+    disabledNights.value.map((date) => ({
+      date,
+      type: 'dot',
+      tooltip: [{
+        text: `Kein Platz für ${numberOfCars.value} weitere Fahrzeuge`,
+        color: 'red', 
+        options: { markDisabled: true}
+      }],
+    }))
+  );
+  
+  
+
 
   // ⛔ Deaktiviert Daten, die in der Liste vorkommen
   const isDateDisabled = (date: Date): boolean => {
@@ -71,5 +91,6 @@ export function useCheckInPicker(
     datepickerProps,
     onSelectCheckIn,
     resetCheckIn,
+    markers,
   };
 }

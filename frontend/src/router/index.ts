@@ -7,6 +7,17 @@ import { useUserStore } from '@/store/userStore';
 
 const routes = [
   { path: '/', component: GuestBookingView },
+  {
+    path: '/success',
+    name: 'BookingSuccess',
+    component: () => import('@/views/BookingSuccessView.vue'),
+  },
+  {
+    path: '/payment-cancelled',
+    name: 'PaymentCancelled',
+    component: () => import('@/views/CancelPaymentView.vue'),
+  },
+  
   { path: '/stornieren', component: CancelBookingView },
   {
     path: '/host',

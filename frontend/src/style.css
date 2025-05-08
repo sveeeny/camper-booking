@@ -105,57 +105,57 @@ button:focus-visible {
 }
 
 /* 🔥 Stil für Stellplatz-Container */
-.car-container {
+/* .car-container {
   background: #f8f8f8;
   padding: 15px;
   border-radius: 8px;
   margin-top: 15px;
-}
+} */
 
 /* 🔥 Stil für guest-Container */
-.guest-container {
+/* .guest-container {
   background: #f8f8f8;
   padding: 15px;
   border-radius: 8px;
   margin-top: 15px;
-}
+} */
 
 /* 🔥 Stil für calendar-Container */
-.info-container {
+/* .info-container {
   background: #f8f8f8;
   padding: 15px;
   border-radius: 8px;
   margin-top: 15px;
   margin-bottom: 0px;
   text-align: right;
-}
+} */
 
-.info-row {
+/* .info-row {
   display: flex;
   justify-content: flex-end;
   align-items: right;
-}
+} */
 
-.info-row p {
+/* .info-row p {
   margin: 0;
   text-align: right;
-}
+} */
 
-.info-extra {
+/* .info-extra {
   color: #666;
   white-space: nowrap;
   text-align: right;
-}
+} */
 
 
-.price-container {
+/* .price-container {
   background: #f8f8f8;
   padding: 15px;
   border-radius: 8px;
   margin-top: 15px;
   margin-bottom: 15px;
   text-align: right;
-}
+} */
 
 
 /* ✅ Trennlinien */

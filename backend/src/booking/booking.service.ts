@@ -149,9 +149,35 @@ export class BookingService {
     }));
   }
 
+  async getBookingStatus(bookingId: number): Promise<{ status: string }> {
+    const booking = await this.bookingRepository.findOne({
+      where: { booking_id: bookingId },
+    });
+  
+    if (!booking) {
+      throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
+    }
+  
+    return { status: booking.status };
+  }
+  
 
+  async updateStatus(bookingId: number, newStatus: string) {
+    const booking = await this.bookingRepository.findOne({
+      where: { booking_id: bookingId },
+    });
+  
+    if (!booking) {
+      throw new NotFoundException('Buchung nicht gefunden');
+    }
+  
+    booking.status = newStatus;
+    await this.bookingRepository.save(booking);
+  
+    return { message: `Status auf ${newStatus} gesetzt.` };
+  }
+  
 
 }
 
-const formatDateToYMD = (date: Date | string): string =>
-  typeof date === 'string' ? date : date.toISOString().split('T')[0];
+

@@ -9,11 +9,12 @@ export function useBeforeUnload(
   enabled: boolean | Ref<boolean> = true,
   onCleanup?: () => void
 ) {
-  const { bookingId } = useBooking();
+  const { bookingId, resetBookingState } = useBooking();
 
   const attemptDelete = () => {
     if (bookingId.value) {
       deleteBookingViaFetch(bookingId.value);
+      resetBookingState();  // NEU: Frontend zurücksetzen
     }
     if (onCleanup) onCleanup();
   };
@@ -32,25 +33,41 @@ export function useBeforeUnload(
     }
   };
 
-  onMounted(() => {
+  const addListeners = () => {
     window.addEventListener('beforeunload', beforeUnloadHandler);
     window.addEventListener('popstate', popstateHandler);
-  });
+  };
 
-  onBeforeUnmount(() => {
+  const removeListeners = () => {
     window.removeEventListener('beforeunload', beforeUnloadHandler);
     window.removeEventListener('popstate', popstateHandler);
-  });
+  };
+
+  onMounted(addListeners);
+  onBeforeUnmount(removeListeners);
 
   if (typeof enabled !== 'boolean') {
     watch(enabled, (newVal) => {
       if (newVal) {
-        window.addEventListener('beforeunload', beforeUnloadHandler);
-        window.addEventListener('popstate', popstateHandler);
+        addListeners();
       } else {
-        window.removeEventListener('beforeunload', beforeUnloadHandler);
-        window.removeEventListener('popstate', popstateHandler);
+        removeListeners();
       }
     });
   }
+
+  // ✅ WICHTIG: Exporte die Remove-Funktion
+  return { removeBeforeUnload: removeListeners };
+}
+
+export async function confirmAndCancelBookingIfNeeded(message: string, next: () => void) {
+  const confirmed = window.confirm(message);
+  if (!confirmed) return;
+
+  const { cancelIncompleteBookingIfNeeded, resetBookingState } = useBooking();
+
+  await cancelIncompleteBookingIfNeeded();   // 🗑️ Backend löschen
+  resetBookingState();                       // 🔄 Frontend zurücksetzen
+
+  next();  // Weiterleitung etc.
 }
