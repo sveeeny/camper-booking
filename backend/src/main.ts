@@ -10,7 +10,7 @@ async function bootstrap() {
 
   // 👉 CORS aktivieren
   app.enableCors({
-    origin: ['http://localhost:5173', 'http://192.168.1.10:5173', 'http://172.27.219.139:5173' ],
+    origin: ['http://localhost:5173', 'http://192.168.1.10:5173', 'http://172.27.219.139:5173', 'http://localhost', 'http://206.81.26.136' ],
   });
   
   // TODO: evtl👉 Globalen ValidationPipe aktivieren

@@ -1,0 +1,27 @@
+services:
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: camper-booking-backend
+    restart: unless-stopped
+    networks:
+      - internal
+    ports:
+      - 3000:3000
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: camper-booking-frontend
+    restart: unless-stopped
+    networks:
+      - internal
+    ports:
+      - 80:80
+
+networks:
+  internal:
+    driver: bridge
