@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, Between } from 'typeorm';
 import { Availability } from '../entities/availability.entity';
 import { ConfigService } from '@nestjs/config';
-import { LessThan, MoreThanOrEqual } from 'typeorm';
 import { Car } from '@/entities/cars.entity';
 
 
@@ -57,7 +56,7 @@ export class AvailabilityService {
     checkInDate: string,
     checkOutDate: string,
     numberOfCars: number,
-    bookingId?: number,  // optional
+    bookingId?: string,  // optional
   ): Promise<boolean> {
     const start = new Date(checkInDate);
     const end = new Date(checkOutDate);

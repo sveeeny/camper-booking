@@ -1,12 +1,16 @@
-// src/bookings/entities/booking.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  CreateDateColumn,
+} from 'typeorm';
 import { Car } from './cars.entity';
 
 @Entity('bookings')
 export class Booking {
-  // @PrimaryGeneratedColumn("uuid")
-  @PrimaryGeneratedColumn()
-  booking_id: number;
+  @PrimaryGeneratedColumn('uuid')
+  booking_id: string;  
 
   @CreateDateColumn()
   createdAt: Date;
@@ -32,9 +36,11 @@ export class Booking {
   @Column({ nullable: true })
   email: string;
 
-  //Später löschen (wird durch status ersetzt)
-  @Column({ default: false })
-  paymentConfirmed: boolean;
+  @Column({ type: 'enum', enum: ['guest', 'host'], default: 'guest' })
+  source: 'guest' | 'host';
+
+  @Column({ type: 'text', nullable: true })
+  notizen: string;  
 
   @Column({ default: 'pending' })
   status: string;
@@ -48,7 +54,15 @@ export class Booking {
   @Column({ type: 'int', default: 1 })
   numberOfCars: number;
 
+  @Column({ nullable: true })
+  createdByIp: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  statusUpdatedAt: Date;
+
+  @Column({ nullable: true })
+  cancelReason: string;
+
   @OneToMany(() => Car, (car) => car.booking, { cascade: true })
   cars: Car[];
-
 }

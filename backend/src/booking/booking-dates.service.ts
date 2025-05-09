@@ -29,7 +29,7 @@ export class BookingDatesService {
     checkInDate: string,
     checkOutDate: string,
     numberOfCars: number
-  ): Promise<{ success: boolean; message?: string; bookingId?: number }> {
+  ): Promise<{ success: boolean; message?: string; bookingId?: string }> {
     const isStillAvailable = await this.availabilityService.isAvailable(
       checkInDate,
       checkOutDate,
@@ -44,10 +44,10 @@ export class BookingDatesService {
       this.bookingRepository.create({ numberOfCars })
     );
 
-    for (let carId = 1; carId <= numberOfCars; carId++) {
+    for (let carSlot = 1; carSlot <= numberOfCars; carSlot++) {
       await this.carRepository.save(
         this.carRepository.create({
-          car_id: carId,
+          car_slot: carSlot,
           carPlate: '',
           checkInDate,
           checkOutDate,
@@ -73,19 +73,19 @@ export class BookingDatesService {
 
   // 🚗 Fahrzeugdaten aktualisieren (ein Datensatz pro Fahrzeug)
   async updateCarEntries(
-    bookingId: number,
+    bookingId: string,
     checkInDate: string,
     checkOutDate: string,
     cars: CarsDto[]
   ): Promise<void> {
     for (let i = 0; i < cars.length; i++) {
       const carData = cars[i];
-      const carId = i + 1;
+      const carSlot = i + 1;
 
       const car = await this.carRepository.findOne({
         where: {
           booking_id: bookingId,
-          car_id: carId,
+          car_slot: carSlot,
         },
         relations: ['booking'],
       });
@@ -105,7 +105,7 @@ export class BookingDatesService {
   }
 
   // ❌ Buchung stornieren (und Verfügbarkeiten korrigieren)
-  async cancelCarEntries(bookingId: number): Promise<void> {
+  async cancelCarEntries(bookingId: string): Promise<void> {
     const cars = await this.carRepository.find({
       where: { booking_id: bookingId },
     });
@@ -131,7 +131,7 @@ export class BookingDatesService {
   }
 
   async updateBookingDatesAndCars(
-    bookingId: number,
+    bookingId: string,
     dto: CreateBookingCheckDto,
   ): Promise<void> {
     const existingCars = await this.carRepository.find({
@@ -174,10 +174,10 @@ export class BookingDatesService {
     );
   
     // 5️⃣ Neue Fahrzeuge anlegen
-    for (let carId = 1; carId <= dto.numberOfCars; carId++) {
+    for (let carSlot = 1; carSlot <= dto.numberOfCars; carSlot++) {
       await this.carRepository.save(
         this.carRepository.create({
-          car_id: carId,
+          car_slot: carSlot,
           carPlate: '',
           checkInDate: dto.checkInDate,
           checkOutDate: dto.checkOutDate,

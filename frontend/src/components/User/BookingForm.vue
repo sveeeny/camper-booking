@@ -1,6 +1,7 @@
 <template>
 
-<BookingOverlay v-if="showPaymentOverlay" />
+  <BookingOverlay v-if="showPaymentOverlay" :status="overlayStatus" />
+
   <div class="booking-form">
     <BookingStepOne v-if="step === 1" v-model:numberOfCars="numberOfCars" v-model:dates="selectedDates"
       :error-message="errorMessage" @next="handleStepOneSubmit" />
@@ -34,6 +35,8 @@ import BookingOverlay from './BookingOverlay.vue';
 import router from '@/router';
 
 const showPaymentOverlay = ref(false);
+const overlayStatus = ref<'processing' | 'cancelled'>('processing');
+
 
 onMounted(() => {
   const route = useRoute();
@@ -100,6 +103,8 @@ const handleSummaryConfirm = async () => {
 
     // ✅ Overlay einblenden
     showPaymentOverlay.value = true;
+    overlayStatus.value = 'processing';
+
 
     const checkStatus = async () => {
       if (stripeWindow?.closed) {
@@ -116,6 +121,7 @@ const handleSummaryConfirm = async () => {
             router.push('/success');
           } else {
             console.log('❌ Zahlung abgebrochen oder nicht abgeschlossen');
+            overlayStatus.value = 'cancelled';
             showPaymentOverlay.value = false;
             alert('Die Zahlung wurde abgebrochen oder nicht abgeschlossen.');
           }

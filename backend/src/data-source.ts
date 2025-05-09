@@ -16,7 +16,13 @@ export const AppDataSource = new DataSource({
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
   entities: [Booking, Car, Availability, User],
+  
+  //Für Migrationen
+  // migrations: ['src/migrations/*.ts'],
+  
+  //Für Production
   migrations: ['dist/migrations/*.js'],
+  
   synchronize: false,
   ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });

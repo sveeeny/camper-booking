@@ -21,7 +21,7 @@ const lastSavedNumberOfCars = ref<number | null>(null);
 const numberOfCars = ref<number>(1);
 const selectedDates = ref<[Date, Date] | null>(null);
 const cars = ref<CarsDto[]>([]);
-const bookingId = ref<number | null>(null);
+const bookingId = ref<string | null>(null);
 
 const guestInfo = ref<CreateBookingGuestDto>({
   salutation: '' as CreateBookingGuestDto['salutation'],

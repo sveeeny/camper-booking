@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 
 interface Props {
-  date: string | Date | null; // ← erlaubt jetzt auch string
+  date: string | Date | null; 
   label?: string;
 }
 

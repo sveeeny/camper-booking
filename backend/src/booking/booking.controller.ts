@@ -13,7 +13,7 @@ import { CreateBookingGuestDto } from './dto/create-booking-guest.dto';
 import { CreateBookingCheckDto } from './dto/create-booking-check.dto';
 import { Public } from 'decorators/public.decorator';
 import { BookingDatesService } from './booking-dates.service';
-import { publicDecrypt } from 'crypto';
+
 
 @Public()
 @Controller('bookings')
@@ -43,7 +43,7 @@ export class BookingController {
   // ❌ Buchung stornieren und löschen
   @Public()
   @Delete(':id')
-  async cancelBooking(@Param('id') bookingId: number) {
+  async cancelBooking(@Param('id') bookingId: string) {
     return this.bookingService.deleteBooking(bookingId);
   }
 
@@ -58,7 +58,7 @@ export class BookingController {
   @Public()
   @Patch(':id/update')
   async updateBookingDatesAndCars(
-    @Param('id') bookingId: number,
+    @Param('id') bookingId: string,
     @Body() dto: CreateBookingCheckDto,
   ) {
     return this.bookingDatesService.updateBookingDatesAndCars(bookingId, dto);
@@ -66,7 +66,7 @@ export class BookingController {
 
   @Public()
   @Get(':id/status')
-  async getBookingStatus(@Param('id') bookingId: number) {
+  async getBookingStatus(@Param('id') bookingId: string) {
     return this.bookingService.getBookingStatus(bookingId);
   }
 
@@ -74,7 +74,7 @@ export class BookingController {
   @Public()
   @Patch(':id/status')
   async updateStatus(
-    @Param('id') bookingId: number,
+    @Param('id') bookingId: string,
     @Body() body: { status: string },
   ) {
     return this.bookingService.updateStatus(bookingId, body.status);

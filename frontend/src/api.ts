@@ -12,13 +12,13 @@ const api = axios.create({
 // 🔁 Rückgabetypen
 export type CheckAvailabilityResponse = {
   success: boolean;
-  bookingId?: number;
+  bookingId?: string;
   message?: string;
 };
 
 export type CreateBookingResponse = {
   message: string;
-  bookingId: number;
+  bookingId: string;
 };
 
 // 🔍 Verfügbarkeit prüfen
@@ -45,7 +45,7 @@ export const getUnavailableDates = async (
 };
 
 
-export const deleteBookingViaFetch = async (bookingId: number) => {
+export const deleteBookingViaFetch = async (bookingId: string) => {
   const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://192.168.1.10:3000';
   try {
     await fetch(`${baseUrl}/bookings/${bookingId}`, {

@@ -1,5 +1,4 @@
-import {
-  IsDateString, IsInt, IsNotEmpty, Min,} from 'class-validator';
+import { IsDateString, IsInt, IsNotEmpty, Min } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 // 💡 Hilfsfunktion zur Datumskonvertierung

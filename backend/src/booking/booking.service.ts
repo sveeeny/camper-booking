@@ -11,7 +11,7 @@ import { BookingDatesService } from './booking-dates.service';
 import { Between } from 'typeorm';
 import { eachDayOfInterval, subDays, format } from 'date-fns'; // sicherstellen, dass @types/date-fns NICHT installiert ist
 import { LessThanOrEqual, MoreThan } from 'typeorm';
-// import eachDayOfInterval from 'date-fns/eachDayOfInterval';
+
 
 
 
@@ -83,7 +83,7 @@ export class BookingService {
   
 
   // HARD DELETE
-  async deleteBooking(bookingId: number): Promise<{ message: string }> {
+  async deleteBooking(bookingId: string): Promise<{ message: string }> {
     const booking = await this.bookingRepository.findOne({
       where: { booking_id: bookingId },
       relations: ['cars'],
@@ -149,7 +149,7 @@ export class BookingService {
     }));
   }
 
-  async getBookingStatus(bookingId: number): Promise<{ status: string }> {
+  async getBookingStatus(bookingId: string): Promise<{ status: string }> {
     const booking = await this.bookingRepository.findOne({
       where: { booking_id: bookingId },
     });
@@ -162,7 +162,7 @@ export class BookingService {
   }
   
 
-  async updateStatus(bookingId: number, newStatus: string) {
+  async updateStatus(bookingId: string, newStatus: string) {
     const booking = await this.bookingRepository.findOne({
       where: { booking_id: bookingId },
     });

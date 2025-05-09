@@ -1,6 +1,6 @@
 import {
-  IsString, IsIn, IsInt, Min, Max, IsArray, IsEmail, IsNotEmpty, Matches,
-  IsDateString, ValidateNested, MinLength, MaxLength, Validate
+  IsString, IsIn, IsArray, IsEmail, IsNotEmpty, Matches,
+  IsDateString, ValidateNested, MinLength, MaxLength, Validate, IsUUID
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { CarsDto } from '../dto/cars.dto';
@@ -17,8 +17,8 @@ export class CreateBookingGuestDto {
   @IsIn(['Herr', 'Frau'])
   salutation: string;
 
-  @IsInt()
-  bookingId: number;
+  @IsUUID()
+  bookingId: string;
 
   @IsNotEmpty()
   @IsDateString()

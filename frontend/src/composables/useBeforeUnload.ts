@@ -3,7 +3,7 @@
 import { onMounted, onBeforeUnmount, watch } from 'vue';
 import { Ref } from 'vue';
 import { useBooking } from './useBooking';
-import { deleteBookingViaFetch } from '@/api'; // 🔁 Import aus zentraler API-Datei
+import { deleteBookingViaFetch } from '@/api'; 
 
 export function useBeforeUnload(
   enabled: boolean | Ref<boolean> = true,
@@ -14,7 +14,7 @@ export function useBeforeUnload(
   const attemptDelete = () => {
     if (bookingId.value) {
       deleteBookingViaFetch(bookingId.value);
-      resetBookingState();  // NEU: Frontend zurücksetzen
+      resetBookingState();  
     }
     if (onCleanup) onCleanup();
   };
@@ -56,7 +56,7 @@ export function useBeforeUnload(
     });
   }
 
-  // ✅ WICHTIG: Exporte die Remove-Funktion
+ 
   return { removeBeforeUnload: removeListeners };
 }
 

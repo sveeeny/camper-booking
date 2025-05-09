@@ -9,7 +9,7 @@ export class StripeService {
   private stripe: Stripe;
 
   constructor(private configService: ConfigService) {
-    //LIVE
+    //TODO: bei live wechseln
     // const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
 
     //TEST
@@ -22,7 +22,9 @@ export class StripeService {
     this.stripe = new Stripe(secretKey);
   }
 
-  async createCheckoutSession(bookingId: number, amountInRappen: number): Promise<string> {
+
+  
+  async createCheckoutSession(bookingId: string, amountInRappen: number): Promise<string> {
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [
@@ -40,7 +42,7 @@ export class StripeService {
       success_url: `${process.env.FRONTEND_URL}/success?bookingId=${bookingId}`,
       cancel_url: `${process.env.FRONTEND_URL}/payment-cancelled`,
       metadata: {
-        bookingId: bookingId.toString(),
+        bookingId
       },
     });
   

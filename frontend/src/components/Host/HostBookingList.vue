@@ -2,12 +2,13 @@
   <div class="max-w-4xl mx-auto px-4 py-6">
     <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-4">Buchungen</h2>
 
-    <!-- 📅 Datumsauswahl -->
+    
     <!-- 📅 Heute-Button -->
     <button @click="selectToday" class="mt-2 text-sm text-blue-600 hover:underline">
       Heute auswählen
     </button>
 
+    <!-- 📅 Datumsauswahl -->
     <div class="mb-4">
       <Datepicker 
         v-model="selectedDate" 
@@ -65,7 +66,7 @@ import '@vuepic/vue-datepicker/dist/main.css';
 import { useRouter } from 'vue-router';
 import { useHostBookings } from '@/composables/Host/useHostBookings';
 import { format } from 'date-fns';
-import { normalizeDate, formatDateToYMD, formatDateLocalYMD, formatToCH } from '@/composables/utils/dateUtils';
+import { normalizeDate, formatDateLocalYMD, formatToCH } from '@/composables/utils/dateUtils';
 
 const highlightToday = computed(() => ({
   dates: [new Date()],
@@ -89,7 +90,7 @@ const fetchData = () => {
   if (!selectedDate.value || !(selectedDate.value instanceof Date)) return;
 
   console.log('📅 selectedDate (raw):', selectedDate.value);
-  const ymd = formatDateLocalYMD(selectedDate.value); // ✅ keine UTC-Verschiebung!
+  const ymd = formatDateLocalYMD(selectedDate.value); 
   console.log('📤 sending to API:', ymd);
   loadBookings(ymd, ymd);
 

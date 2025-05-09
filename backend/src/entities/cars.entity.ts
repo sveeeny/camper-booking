@@ -1,14 +1,18 @@
-// src/cars/entities/car.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Booking } from './booking.entity';
 
 @Entity('cars')
 export class Car {
-  @PrimaryGeneratedColumn({ name: 'car_row_id' })
-  id: number;
-
+  @PrimaryGeneratedColumn('uuid')
+  car_id: string;  
   @Column()
-  car_id: number; // z. B. 1, 2, 3 …
+  car_slot: number; 
 
   @Column()
   carPlate: string;
@@ -32,10 +36,9 @@ export class Car {
   touristTax: number;
 
   @ManyToOne(() => Booking, (booking) => booking.cars, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'booking_id' }) // exakt so wie es in der DB heißt
+  @JoinColumn({ name: 'booking_id' })
   booking: Booking;
-  
+
   @Column()
-  booking_id: number; // muss exakt gleich heißen
-  
+  booking_id: string; 
 }

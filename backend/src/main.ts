@@ -3,8 +3,6 @@ import { AppModule } from './app/app.module';
 import { BadRequestException, ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as passport from 'passport';
-import { JwtAuthGuard } from './auth/jwt-auth.guard';
-import { RolesGuard } from './auth/roles.guard';
 import { AppDataSource } from 'data-source';
 
 async function bootstrap() {
@@ -15,8 +13,8 @@ async function bootstrap() {
     origin: ['http://localhost:5173', 'http://192.168.1.10:5173', 'http://172.27.219.139:5173' ],
   });
   
-  // 👉 Globalen ValidationPipe aktivieren
-  //app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
+  // TODO: evtl👉 Globalen ValidationPipe aktivieren
+  // app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
 
   console.log("⚠️ ValidationPipe wurde aktiviert!");
   app.useGlobalPipes(

@@ -1,6 +1,6 @@
 // src/composables/useCheckOutPicker.ts
 import { Ref, ref, computed } from 'vue';
-import { formatDateToYMD, formatToCH, normalizeDate } from './utils/dateUtils';
+import { formatDateToYMD, formatToCH } from './utils/dateUtils';
 import type { DatePickerMarker } from '@vuepic/vue-datepicker';
 
 /**
