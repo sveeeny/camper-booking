@@ -10,7 +10,7 @@ async function bootstrap() {
 
   // 👉 CORS aktivieren
   app.enableCors({
-    origin: ['http://localhost:5173', 'http://192.168.1.10:5173', 'http://172.27.219.139:5173', 'http://localhost', 'http://206.81.26.136' ],
+    origin: ['http://localhost:5173', 'http://192.168.1.10:5173', 'http://172.27.219.139:5173', 'http://localhost', 'https://booking.byherger.ch' ],
   });
   
   // TODO: evtl👉 Globalen ValidationPipe aktivieren
@@ -54,7 +54,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('swagger', app, document);
 
   await app.listen(3000, '0.0.0.0');
   Logger.log(`🚀 Server läuft auf http://localhost:3000`);
