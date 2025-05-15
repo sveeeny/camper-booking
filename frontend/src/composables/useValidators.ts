@@ -4,18 +4,20 @@ import type { CreateBookingGuestDto, CarsDto } from '@/types/booking';
 export function validateGuestInfo(
   guest: CreateBookingGuestDto,
   cars: CarsDto[],
-  mode: 'guest' | 'host'
+  mode: 'guest' | 'host' // ✅ ganz normaler String-Parameter
 ): string[] {
-    console.log('🧪 Validierungsmodus:', mode); 
+  console.log('🧪 Validierungsmodus:', mode);
+
   const errors: string[] = [];
 
   // Name ist Pflicht – immer!
   if (!guest.firstName.trim()) errors.push('Vorname');
   if (!guest.lastName.trim()) errors.push('Nachname');
 
-  if (mode !== 'host' &&  'admin') {
-    console.log('🧪 Validierungsmodus in IF:', mode); 
-    if (!guest.salutation) errors.push('Anrede'),console.log('VALIDIERT');
+  if (mode === 'guest') {
+    console.log('🧪 Validierung für Gast-Buchung aktiv');
+
+    if (!guest.salutation) errors.push('Anrede');
     if (!guest.email.includes('@')) errors.push('E-Mail');
     if (!guest.nationality) errors.push('Nationalität');
     if (!guest.phoneCountryCode) errors.push('Vorwahl');

@@ -1,20 +1,19 @@
-// composables/useBeforeUnload.ts
-
 import { onMounted, onBeforeUnmount, watch } from 'vue';
 import { Ref } from 'vue';
-import { useBooking } from './useBooking';
+import { useBookingStore } from '@/store/bookingStore';
 import { deleteBookingViaFetch } from '@/api'; 
 
 export function useBeforeUnload(
   enabled: boolean | Ref<boolean> = true,
   onCleanup?: () => void
 ) {
-  const { bookingId, resetBookingState } = useBooking();
+  const bookingStore = useBookingStore();
 
   const attemptDelete = () => {
-    if (bookingId.value) {
-      deleteBookingViaFetch(bookingId.value);
-      resetBookingState();  
+    if (bookingStore.bookingId) {
+      deleteBookingViaFetch(bookingStore.bookingId);
+      localStorage.removeItem('pendingBooking'); // 🧹 zusätzlich löschen
+      bookingStore.$reset();                     // 🧼 Store zurücksetzen
     }
     if (onCleanup) onCleanup();
   };
@@ -56,7 +55,6 @@ export function useBeforeUnload(
     });
   }
 
- 
   return { removeBeforeUnload: removeListeners };
 }
 
@@ -64,10 +62,13 @@ export async function confirmAndCancelBookingIfNeeded(message: string, next: () 
   const confirmed = window.confirm(message);
   if (!confirmed) return;
 
-  const { cancelIncompleteBookingIfNeeded, resetBookingState } = useBooking();
+  const bookingStore = useBookingStore();
 
-  await cancelIncompleteBookingIfNeeded();   // 🗑️ Backend löschen
-  resetBookingState();                       // 🔄 Frontend zurücksetzen
+  if (bookingStore.bookingId) {
+    await deleteBookingViaFetch(bookingStore.bookingId);
+    localStorage.removeItem('pendingBooking');
+  }
 
-  next();  // Weiterleitung etc.
+  bookingStore.$reset();
+  next();
 }

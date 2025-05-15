@@ -70,7 +70,6 @@ export class BookingController {
     return this.bookingService.getBookingStatus(bookingId);
   }
 
-  // In booking.controller.ts
   @Public()
   @Patch(':id/status')
   async updateStatus(
@@ -79,6 +78,13 @@ export class BookingController {
   ) {
     return this.bookingService.updateStatus(bookingId, body.status);
   }
+
+  @Public()
+  @Get(':id')
+  async getBookingById(@Param('id') bookingId: string) {
+    return this.bookingService.getBookingById(bookingId);
+  }
+
 
 
 }

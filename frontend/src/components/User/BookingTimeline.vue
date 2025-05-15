@@ -1,24 +1,17 @@
 <template>
   <div class="w-full">
 
-    <!-- ✅ Nur bei Schritt 2: Bestätigungen -->
-    <div v-if="step === 2" class="mb-6 bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 space-y-3 text-sm md:text-base">
+    <!-- ✅ Nur bei Schritt 2 UND nicht host/admin -->
+    <div v-if="props.step === 2 && !isHostOrAdmin"
+      class="mb-6 bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 space-y-3 text-sm md:text-base">
 
       <label class="flex items-start space-x-2">
-        <input
-          type="checkbox"
-          v-model="confirmCorrectInfo"
-          class="mt-1 accent-blue-500"
-        />
+        <input type="checkbox" v-model="confirmCorrectInfo" class="mt-1 accent-blue-500" />
         <span>Ich bestätige, dass alle Angaben korrekt sind.</span>
       </label>
 
       <label class="flex items-start space-x-2">
-        <input
-          type="checkbox"
-          v-model="acceptRules"
-          class="mt-1 accent-blue-500"
-        />
+        <input type="checkbox" v-model="acceptRules" class="mt-1 accent-blue-500" />
         <span>
           Ich akzeptiere die
           <button @click="showRules = true" type="button" class="underline text-blue-600 hover:text-blue-800">
@@ -55,13 +48,11 @@
       </button>
 
       <!-- ✅ Zahlung: Sperre wenn nicht bestätigt -->
-      <button v-else @click="handleConfirm"
-        :disabled="step === 2 && !bothConfirmed"
-        class="bg-green-600 hover:bg-green-700 text-white dark:bg-green-600 dark:hover:bg-green-700 py-2 px-4
-        rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Zur Zahlung
+      <button v-else @click="handleConfirm" :disabled="requiresConfirmation && !bothConfirmed" class="bg-green-600 hover:bg-green-700 text-white dark:bg-green-600 dark:hover:bg-green-700 py-2 px-4
+         rounded-md disabled:opacity-50 disabled:cursor-not-allowed">
+        {{ isHostOrAdmin ? 'Buchung speichern' : 'Zur Zahlung' }}
       </button>
+
     </div>
 
     <!-- Timeline -->
@@ -87,36 +78,51 @@
   </div>
 </template>
 
+
+
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed } from 'vue';
+import { bookingSteps, type BookingStepLabel } from '@/constants/bookingSteps';
+import { useBookingStore } from '@/store/bookingStore';
+import { storeToRefs } from 'pinia';
 
-const { step, canProceed } = defineProps<{
-  step: number
-  canProceed?: boolean,
-}>()
+const { mode } = storeToRefs(useBookingStore());
 
-const emit = defineEmits(['prev', 'next', 'confirm'])
+const isHostOrAdmin = computed(() => mode.value === 'host');
 
-const steps = [
-  'Zeitraum & Fahrzeug',
-  'Gästeinfos & Insassen',
-  'Buchungsübersicht',
-  'Zahlung',
-]
 
-// 🆕 Logik für Bestätigung
-const confirmCorrectInfo = ref(false)
-const acceptRules = ref(false)
-const errorMessage = ref('')
-const showRules = ref(false)
 
-const bothConfirmed = computed(() => confirmCorrectInfo.value && acceptRules.value)
+const props = defineProps<{
+  step: number;
+  canProceed?: boolean;
+}>();
+
+const requiresConfirmation = computed(() => props.step === 2 && !isHostOrAdmin.value);
+
+const emit = defineEmits<{
+  (e: 'prev'): void;
+  (e: 'next'): void;
+  (e: 'confirm'): void;
+}>();
+
+// 🧭 Zentrale Schrittbezeichnungen
+const steps = bookingSteps;
+const currentStepLabel = computed<BookingStepLabel>(() => steps[props.step]);
+
+// ✅ Bestätigungen bei Schritt 2 (Zahlung)
+const confirmCorrectInfo = ref(false);
+const acceptRules = ref(false);
+const errorMessage = ref('');
+const showRules = ref(false);
+
+const bothConfirmed = computed(() => confirmCorrectInfo.value && acceptRules.value);
 
 const handleConfirm = () => {
-  if (step === 2 && !bothConfirmed.value) {
-    errorMessage.value = 'Bitte bestätigen Sie alle Punkte, um fortzufahren.'
-    return
-  }
-  emit('confirm')
-}
+  if (!isHostOrAdmin){
+  if (props.step === 2 && !bothConfirmed.value) {
+    errorMessage.value = 'Bitte bestätigen Sie alle Punkte, um fortzufahren.';
+    return;
+  }}
+  emit('confirm');
+};
 </script>

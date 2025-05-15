@@ -135,19 +135,16 @@ import { useBooking } from '@/composables/useBooking';
 import DateDisplay from '@/components/User/DateDisplay.vue';
 import { countries } from '@/countries';
 import { computed } from 'vue';
-import { onMounted, ref, watch } from 'vue';
 import Multiselect from 'vue-multiselect';
+import { useBookingStore } from '@/store/bookingStore';
+import { storeToRefs } from 'pinia';
+
 
 defineOptions({
   components: {
     Multiselect,
   },
 });
-
-
-
-
-
 
 const {
   numberOfCars,
@@ -158,42 +155,19 @@ const {
   checkInDate,
   checkOutDate,
   priceInfo,
-  manualPhoneCodeChange,
   submitBookingStepTwo,
 } = useBooking();
 
-
-const guestCountry = computed({
-  get: () => {
-    return countries.find(c => c.code === guestInfo.value.nationality) || null;
-  },
-  set: (val) => {
-    guestInfo.value.nationality = val?.code || '';
-    if (!manualPhoneCodeChange.value && val?.dialCode) {
-      guestInfo.value.phoneCountryCode = val.dialCode;
-    }
-  }
-});
-
-
-const guestDialCode = computed({
-  get: () => {
-    return dialCodes.value.find(d => d.dialCode === guestInfo.value.phoneCountryCode) || null;
-  },
-  set: (val) => {
-    guestInfo.value.phoneCountryCode = val?.dialCode || '';
-  }
-});
-
+const bookingStore = useBookingStore();
+const { manualPhoneCodeChange } = storeToRefs(bookingStore);
+const { setManualPhoneCodeChange } = bookingStore;
 
 
 const emit = defineEmits(['submit']);
 
 const handleSubmit = async () => {
   const success = await submitBookingStepTwo();
-  if (success) {
-    emit('submit'); // ⬅️ das war bisher vermutlich nicht da
-  }
+  if (success) emit('submit');
 };
 
 const dialCodes = computed(() =>
@@ -201,18 +175,31 @@ const dialCodes = computed(() =>
     name: c.name,
     dialCode: c.dialCode,
   }))
-)
+);
 
+const guestCountry = computed({
+  get: () => countries.find((c) => c.code === guestInfo.value.nationality) || null,
+  set: (val) => {
+    guestInfo.value.nationality = val?.code || '';
+    if (!manualPhoneCodeChange.value && val?.dialCode) {
+      guestInfo.value.phoneCountryCode = val.dialCode;
+    }
+  },
+});
 
-const countryLabel = (option: { name: string; dialCode: string }) => {
-  // 👇 Im Dropdown: Land + Vorwahl
-  return `${option.name} (${option.dialCode})`;
-};
+const guestDialCode = computed({
+  get: () => dialCodes.value.find((d) => d.dialCode === guestInfo.value.phoneCountryCode) || null,
+  set: (val) => {
+    guestInfo.value.phoneCountryCode = val?.dialCode || '';
+    setManualPhoneCodeChange(true);
+  },
+});
 
+const countryLabel = (option: { name: string; dialCode: string }) =>
+  `${option.name} (${option.dialCode})`;
 
 const inputClass = (hasError: boolean) =>
-  `mt-1 w-full px-3 py-2 border rounded-md bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 ${hasError ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
+  `mt-1 w-full px-3 py-2 border rounded-md bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+    hasError ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
   }`;
-
-
 </script>

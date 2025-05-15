@@ -35,11 +35,14 @@ export const useUserStore = defineStore('user', {
     role: '' as 'host' | 'admin' | '',
   }),
 
+  // userStore.ts
   getters: {
-    isHost: (state) => state.role === 'host',
+    isHost: (state) => state.role === 'host' || state.role === 'admin',
     isAdmin: (state) => state.role === 'admin',
     isLoggedIn: (state) => !!state.token,
+    getEffectiveRole: (state) => state.role === 'admin' ? 'host' : state.role,
   },
+
 
   actions: {
     login(token: string, rememberMe: boolean) {

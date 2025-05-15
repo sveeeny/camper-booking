@@ -42,7 +42,7 @@ export class Booking {
   @Column({ type: 'text', nullable: true })
   notizen: string;  
 
-  @Column({ default: 'pending' })
+  @Column({ default: 'draft' })
   status: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })

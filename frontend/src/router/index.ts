@@ -15,9 +15,9 @@ const routes = [
   {
     path: '/payment-cancelled',
     name: 'PaymentCancelled',
-    component: () => import('@/views/CancelPaymentView.vue'),
+    component: () => import('@/views/GuestBookingView.vue'),
   },
-  
+
   { path: '/stornieren', component: CancelBookingView },
   {
     path: '/host',
@@ -39,6 +39,12 @@ const routes = [
         name: 'HostBookingWeekView',
         component: () => import('@/components/Host/HostBookingWeekView.vue'),
       },
+      {
+        path: '/host/buchung/:id',
+        name: 'HostBookingDetail',
+        component: () => import('@/components/Host/HostBookingDetail.vue'),
+      },
+
     ],
   },
 

@@ -67,6 +67,7 @@
 <script setup lang="ts">
 import { useBooking } from '@/composables/useBooking';
 import { computed } from 'vue';
+import { formatToCH } from '@/composables/utils/dateUtils';
 
 const {
   checkInDate,
@@ -77,18 +78,10 @@ const {
   cars,
 } = useBooking();
 
-const formatDate = (date: Date | null) =>
-  date
-    ? date.toLocaleDateString('de-CH', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    })
-    : '–';
-
-const checkInDateFormatted = computed(() => formatDate(checkInDate.value));
-const checkOutDateFormatted = computed(() => formatDate(checkOutDate.value));
+const checkInDateFormatted = computed(() => formatToCH(checkInDate.value));
+const checkOutDateFormatted = computed(() => formatToCH(checkOutDate.value));
 </script>
+
 
 <style scoped>
 .booking-summary {

@@ -28,12 +28,21 @@
         <div class="relative min-h-[300px]">
           <!-- Check-in -->
           <div v-show="!checkInDate" class="absolute inset-0">
-            <Datepicker v-model="checkInDate" v-bind="checkInProps" :markers="checkInMarkers" ref="checkInPickerRef"  />
+            <Datepicker 
+            v-model="checkInDate" 
+            v-bind="checkInProps" 
+            :markers="checkInMarkers" 
+            ref="checkInPickerRef"  />
           </div>
 
           <!-- Check-out -->
           <div v-show="checkInDate" class="absolute inset-0">
-            <Datepicker v-model="selectedRange" v-bind="checkOutProps" :markers="checkOutMarkers" ref="checkOutPickerRef" @cleared="resetDates" />
+            <Datepicker 
+            v-model="selectedRange" 
+            v-bind="checkOutProps" 
+            :markers="checkOutMarkers" 
+            ref="checkOutPickerRef" 
+            @cleared="resetDates" />
           </div>
         </div>
       </div>
@@ -63,34 +72,29 @@
 
 
 
-
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
-import { useBooking } from '@/composables/useBooking';
+
 import { useCheckInPicker } from '@/composables/useCheckInPicker';
 import { useCheckOutPicker } from '@/composables/useCheckOutPicker';
 import { isDateRangeAvailable } from '@/composables/utils/isDateRangeAvailable';
-
-
+import { useBooking } from '@/composables/useBooking';
 
 const emit = defineEmits<{
   (e: 'next'): void;
 }>();
 
-
+// 🔁 Verwende zentralen Booking-Store über useBooking()
 const {
   numberOfCars,
-  disabledDates,
   selectedDates,
   errorMessage,
-  calculateBasePrice,
+  unavailableDatesAsDates,
   fetchUnavailableDates,
+  calculateBasePrice,
 } = useBooking();
-
-
-
 
 const basePriceCHF = computed(() => calculateBasePrice());
 
@@ -103,10 +107,12 @@ const checkOutDate = computed(() =>
 const checkInPickerRef = ref<InstanceType<typeof Datepicker> | null>(null);
 const checkOutPickerRef = ref<InstanceType<typeof Datepicker> | null>(null);
 
-  const { datepickerProps: checkInProps, markers: checkInMarkers } = useCheckInPicker(disabledDates);
-  const { selectedRange: rangeFromPicker, datepickerProps: checkOutProps, markers: checkOutMarkers } =
-  useCheckOutPicker(checkInDate, disabledDates, 3);
-
+const { datepickerProps: checkInProps, markers: checkInMarkers } = useCheckInPicker(unavailableDatesAsDates);
+const {
+  selectedRange: rangeFromPicker,
+  datepickerProps: checkOutProps,
+  markers: checkOutMarkers,
+} = useCheckOutPicker(checkInDate, unavailableDatesAsDates, 3);
 
 // ⏱️ Synchronisiere Range vom Datepicker mit zentralem State
 watch(rangeFromPicker, (val) => {
@@ -123,7 +129,7 @@ watch(checkInDate, (val) => {
   }
 });
 
-// 📆 Aktualisiere zentralen Datumszustand
+// 🔄 Aktualisiere zentralen Datumszustand
 watch(selectedRange, (val) => {
   const [start, end] = val || [];
   if (start instanceof Date && end instanceof Date) {
@@ -131,24 +137,32 @@ watch(selectedRange, (val) => {
   }
 });
 
-// 🚗 Prüfe nach Änderung, ob Range noch verfügbar ist
-watch(disabledDates, (newDisabledDates) => {
+// ⛔ Blockierte Ranges sofort zurücksetzen
+watch(unavailableDatesAsDates, (newDisabledDates) => {
   if (checkInDate.value && checkOutDate.value) {
-    const isAvailable = isDateRangeAvailable(
-      checkInDate.value,
-      checkOutDate.value,
-      newDisabledDates
-    );
+    const isAvailable = isDateRangeAvailable(checkInDate.value, checkOutDate.value, newDisabledDates ?? []);
     if (!isAvailable) resetDates();
   }
 });
 
-const applyDates = () => {
-  if (checkInDate.value && checkOutDate.value) {
-    selectedDates.value = [checkInDate.value, checkOutDate.value];
-    emit('next');
+// Reagiere auf Änderung der Fahrzeuganzahl
+watch(numberOfCars, async (newVal, oldVal) => {
+  if (newVal !== oldVal) {
+    await fetchUnavailableDates();
+
+    if (selectedDates.value) {
+      const [start, end] = selectedDates.value;
+      const stillAvailable = isDateRangeAvailable(start, end, unavailableDatesAsDates.value);
+
+      if (!stillAvailable) {
+        resetDates();
+      }
+    }
   }
-};
+});
+
+
+
 
 const resetDates = () => {
   checkInDate.value = null;
@@ -156,6 +170,7 @@ const resetDates = () => {
 };
 
 onMounted(fetchUnavailableDates);
+
 onMounted(() => {
   if (!checkInDate.value && selectedDates.value) {
     const [start, end] = selectedDates.value;
@@ -165,6 +180,4 @@ onMounted(() => {
     });
   }
 });
-
-
 </script>

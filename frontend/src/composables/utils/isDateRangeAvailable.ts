@@ -6,12 +6,17 @@ export function isDateRangeAvailable(
   checkOut: Date,
   disabled: Date[]
 ): boolean {
-  const disabledYMD = disabled.map((d) => formatDateToYMD(d));
+  // 🛠 Alle Disabled-Daten ins YMD-Format
+  const disabledYMD = disabled.map(formatDateToYMD);
+
   const current = new Date(checkIn);
 
+  // Prüfe jede Nacht bis zur Nacht vor dem Check-out
   while (current < checkOut) {
     const ymd = formatDateToYMD(current);
-    if (disabledYMD.includes(ymd)) return false;
+    if (disabledYMD.includes(ymd)) {
+      return false;
+    }
     current.setDate(current.getDate() + 1);
   }
 

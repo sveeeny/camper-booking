@@ -3,9 +3,28 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { formatDateToYMD } from '@/composables/utils/dateUtils';
 import { useHostBookings } from '@/composables/Host/useHostBookings';
 import type { HostBooking } from '@/composables/Host/useHostBookings';
+import { useRouter } from 'vue-router';
+import HostBookingDetail from '@/components/Host/HostBookingDetail.vue'; // ⬅️ Import
+
+const selectedBookingId = ref<string | null>(null);
+
+const showBookingDetail = (id: string) => {
+  selectedBookingId.value = id;
+};
+
+const closeDetail = () => {
+  selectedBookingId.value = null;
+};
+
 
 const { bookings, loadBookings } = useHostBookings();
 const MAX_SPOTS = 5;
+
+// const router = useRouter();
+
+// const goToDetail = (id: string) => {
+//   router.push(`/host/buchung/${id}`);
+// };
 
 // 📅 Wochenlogik
 const today = new Date();
@@ -63,16 +82,26 @@ const getSpotColor = (free: number): string => {
   return 'bg-emerald-200 text-emerald-800 dark:bg-emerald-700 dark:text-white';
 };
 
-const getBookingClass = (bookingId: number) => {
+const getBookingClass = (booking: HostBooking) => {
+  // 🔴 Unbezahlte Buchungen immer rot
+  if (booking.status !== 'paid') {
+    return 'bg-red-300 text-red-900 dark:bg-red-600 dark:text-white';
+  }
+
+  // 🎨 Farbrotation für bezahlte Buchungen
   const classes = [
-    'bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-white',
-    'bg-green-100 text-green-800 dark:bg-green-700 dark:text-white',
-    'bg-yellow-100 text-yellow-800 dark:bg-yellow-600 dark:text-white',
-    'bg-pink-100 text-pink-800 dark:bg-pink-700 dark:text-white',
-    'bg-purple-100 text-purple-800 dark:bg-purple-700 dark:text-white',
+    'bg-blue-200 text-blue-900 dark:bg-blue-600 dark:text-white',
+    'bg-green-200 text-green-900 dark:bg-green-600 dark:text-white',
+    'bg-yellow-200 text-yellow-900 dark:bg-yellow-600 dark:text-white',
+    'bg-pink-200 text-pink-900 dark:bg-pink-600 dark:text-white',
+    'bg-purple-200 text-purple-900 dark:bg-purple-600 dark:text-white',
   ];
-  return classes[bookingId % classes.length];
+
+  // Hash aus UUID berechnen
+  const hash = Array.from(booking.id).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return classes[hash % classes.length];
 };
+
 
 // 📊 Gantt-Zeilenberechnung
 type PositionedBooking = HostBooking & { offset: number; length: number };
@@ -145,17 +174,12 @@ const nextWeek = () => {
     </div>
 
     <!-- 📅 Gantt-Grid -->
-    <div
-      class="grid"
-      :style="`grid-template-columns: 120px repeat(${daysOfWeek.length}, 1fr);`"
-    >
+    <div class="grid" :style="`grid-template-columns: 120px repeat(${daysOfWeek.length}, 1fr);`">
       <!-- 🧠 Kopfzeile -->
-      <div class="p-2 font-medium border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-800">Plätze frei</div>
-      <div
-        v-for="(day, i) in daysOfWeek"
-        :key="'head-' + i"
-        class="p-2 border border-slate-200 dark:border-slate-600 text-sm bg-slate-100 dark:bg-slate-800 font-medium text-slate-700 dark:text-white"
-      >
+      <div class="p-2 font-medium border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-800">Plätze
+        frei</div>
+      <div v-for="(day, i) in daysOfWeek" :key="'head-' + i"
+        class="p-2 border border-slate-200 dark:border-slate-600 text-sm bg-slate-100 dark:bg-slate-800 font-medium text-slate-700 dark:text-white">
         {{ formatDay(day) }}
       </div>
 
@@ -163,12 +187,9 @@ const nextWeek = () => {
       <div class="p-2 font-medium border-l border-b border-slate-200 dark:border-slate-600 min-h-12 flex items-center">
         Frei
       </div>
-      <div
-        v-for="(free, i) in freeSpotsPerDay"
-        :key="'free-' + i"
+      <div v-for="(free, i) in freeSpotsPerDay" :key="'free-' + i"
         class="p-2 text-center font-semibold border-b border-r border-slate-200 dark:border-slate-600 min-h-12 flex items-center justify-center"
-        :class="getSpotColor(free)"
-      >
+        :class="getSpotColor(free)">
         {{ free }}
       </div>
 
@@ -178,27 +199,24 @@ const nextWeek = () => {
         <div></div>
 
         <!-- Zellen -->
-        <div
-          v-for="i in daysOfWeek.length"
-          :key="'cell-' + rowIndex + '-' + i"
-          class="relative min-h-12"
-        ></div>
+        <div v-for="i in daysOfWeek.length" :key="'cell-' + rowIndex + '-' + i" class="relative min-h-12"></div>
 
         <!-- 📌 Buchungen im Grid platzieren -->
         <template v-for="booking in row" :key="booking.carPlate + booking.checkIn">
           <div
-            class="text-sm text-black dark:text-white px-2 py-[6px] m-[2px] overflow-hidden whitespace-nowrap flex flex-col justify-center leading-tight h-half rounded-xl"
-            :class="getBookingClass(booking.id)"
-            :style="{
+            class="cursor-pointer text-sm text-black dark:text-white px-2 py-[6px] m-[2px] overflow-hidden whitespace-nowrap flex flex-col justify-center leading-tight h-half rounded-xl"
+            :class="getBookingClass(booking)" :style="{
               gridColumn: booking.offset + 2 + ' / span ' + booking.length,
               gridRow: rowIndex + 3,
-            }"
-          >
+            }" @click="showBookingDetail(booking.id)">
             <span class="font-bold">{{ booking.carPlate }}</span>
             <span class="text-xs">{{ booking.guestName }}</span>
           </div>
+          
+
         </template>
       </template>
     </div>
   </div>
+  <HostBookingDetail v-if="selectedBookingId" :booking-id="selectedBookingId" @close="closeDetail" />
 </template>

@@ -74,7 +74,7 @@ const handleBackToDashboard = async () => {
 
 
 // 🔓 Logout-Logik
-const { cancelIncompleteBookingIfNeeded } = useBooking();
+// const { cancelIncompleteBookingIfNeeded } = useBooking();
 
 const handleLogout = async () => {
   await confirmAndCancelBookingIfNeeded(

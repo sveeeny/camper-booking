@@ -23,40 +23,40 @@ export class BookingService {
   constructor(
     @InjectRepository(Booking)
     private readonly bookingRepository: Repository<Booking>,
-  
+
     @InjectRepository(Car)
     private readonly carRepository: Repository<Car>,
-  
+
     @InjectRepository(Availability)
     private readonly availabilityRepository: Repository<Availability>,
-  
+
     private readonly configService: ConfigService,
     private readonly availabilityService: AvailabilityService,
-  
+
     private readonly bookingDatesService: BookingDatesService,
   ) {
     this.maxBookingFutureDays = this.configService.get<number>('MAX_BOOKING_FUTURE_DAYS', 540);
     this.tableCreationThresholdDays = this.configService.get<number>('TABLE_CREATION_THRESHOLD_DAYS', 365);
   }
-  
-  
+
+
 
   //Neue checkAvailability
   async checkAvailability(checkInDate: string, checkOutDate: string, numberOfCars: number) {
     return this.bookingDatesService.reserveBookingDates(checkInDate, checkOutDate, numberOfCars);
   }
-  
-  
+
+
   //Neue createBooking
   async createBooking(dto: CreateBookingGuestDto): Promise<any> {
     const booking = await this.bookingRepository.findOne({
       where: { booking_id: dto.bookingId },
     });
-  
+
     if (!booking) {
       throw new NotFoundException('Buchung nicht gefunden');
     }
-  
+
     // ➕ Gästeinfos speichern
     booking.salutation = dto.salutation;
     booking.firstName = dto.firstName;
@@ -66,9 +66,9 @@ export class BookingService {
     booking.phoneNumber = dto.phoneNumber;
     booking.email = dto.email;
     booking.totalPrice = dto.totalPrice;
-  
+
     await this.bookingRepository.save(booking);
-  
+
     // ➕ Fahrzeugeinträge aktualisieren (→ ausgelagert)
     await this.bookingDatesService.updateCarEntries(
       dto.bookingId,
@@ -76,11 +76,11 @@ export class BookingService {
       dto.checkOutDate,
       dto.cars,
     );
-  
+
     return { message: 'Buchung erfolgreich gespeichert!', bookingId: booking.booking_id };
   }
-  
-  
+
+
 
   // HARD DELETE
   async deleteBooking(bookingId: string): Promise<{ message: string }> {
@@ -88,45 +88,45 @@ export class BookingService {
       where: { booking_id: bookingId },
       relations: ['cars'],
     });
-  
+
     if (!booking) {
       throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
     }
-  
+
     const numberOfCars = booking.numberOfCars;
     const checkIn = booking.cars[0]?.checkInDate;
     const checkOut = booking.cars[0]?.checkOutDate;
-  
+
     if (!checkIn || !checkOut) {
       throw new Error('Check-in/out-Daten nicht vorhanden.');
     }
-  
+
     const nights = eachDayOfInterval({
       start: new Date(checkIn),
       end: subDays(new Date(checkOut), 1),
     });
-  
+
     for (const date of nights) {
       const formatted = format(date, 'yyyy-MM-dd'); // ⬅️ hier string für DB
       const availability = await this.availabilityRepository.findOne({
         where: { date: formatted },
       });
-  
+
       if (availability) {
         availability.occupied = Math.max(0, availability.occupied - numberOfCars);
         await this.availabilityRepository.save(availability);
       }
     }
-  
+
     await this.bookingRepository.remove(booking);
-  
+
     return { message: `Buchung ${bookingId} wurde vollständig gelöscht.` };
   }
-  
-  
-  
 
-  //Neue cancelBooking
+
+
+
+
   async getBookingsInRange(from: string, to: string) {
     const cars = await this.carRepository.find({
       where: {
@@ -136,7 +136,7 @@ export class BookingService {
       },
       relations: ['booking'],
     });
-  
+
     return cars.map((car) => ({
       id: car.booking.booking_id,
       guestName: `${car.booking.firstName} ${car.booking.lastName}`,
@@ -146,6 +146,7 @@ export class BookingService {
       carPlate: car.carPlate,
       adults: car.adults,
       children: car.children,
+      status: car.booking.status,
     }));
   }
 
@@ -153,30 +154,73 @@ export class BookingService {
     const booking = await this.bookingRepository.findOne({
       where: { booking_id: bookingId },
     });
-  
+
     if (!booking) {
       throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
     }
-  
+
     return { status: booking.status };
   }
-  
+
 
   async updateStatus(bookingId: string, newStatus: string) {
     const booking = await this.bookingRepository.findOne({
       where: { booking_id: bookingId },
     });
-  
+
     if (!booking) {
       throw new NotFoundException('Buchung nicht gefunden');
     }
-  
+
     booking.status = newStatus;
     await this.bookingRepository.save(booking);
-  
+
     return { message: `Status auf ${newStatus} gesetzt.` };
   }
-  
+
+  async getBookingById(bookingId: string) {
+    const booking = await this.bookingRepository.findOne({
+      where: { booking_id: bookingId },
+    });
+
+    if (!booking) {
+      throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
+    }
+
+    const cars = await this.carRepository.find({
+      where: { booking_id: bookingId, isCancelled: false },
+    });
+
+    return {
+      id: booking.booking_id,
+      checkIn: cars[0]?.checkInDate ?? null,
+      checkOut: cars[0]?.checkOutDate ?? null,
+      status: booking.status,
+      spot: cars[0]?.car_slot ?? null, // zur Not: null, wenn kein Auto vorhanden
+
+      guestName: `${booking.firstName} ${booking.lastName}`,
+      guest: {
+        salutation: booking.salutation,
+        firstName: booking.firstName,
+        lastName: booking.lastName,
+        nationality: booking.nationality,
+        email: booking.email,
+        phoneCountryCode: booking.phoneCountryCode,
+        phoneNumber: booking.phoneNumber,
+      },
+
+      cars: cars.map((car) => ({
+        carPlate: car.carPlate,
+        adults: car.adults,
+        children: car.children,
+      })),
+
+      priceBase: Number(booking.totalPrice ?? 0) - cars.reduce((acc, c) => acc + Number(c.touristTax ?? 0), 0),
+      priceTax: cars.reduce((acc, c) => acc + Number(c.touristTax ?? 0), 0),
+      priceTotal: Number(booking.totalPrice ?? 0),
+    };
+  }
+
 
 }
 

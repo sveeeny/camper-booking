@@ -2,7 +2,7 @@
   <div class="max-w-4xl mx-auto px-4 py-6">
     <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-4">Buchungen</h2>
 
-    
+
     <!-- 📅 Heute-Button -->
     <button @click="selectToday" class="mt-2 text-sm text-blue-600 hover:underline">
       Heute auswählen
@@ -10,15 +10,8 @@
 
     <!-- 📅 Datumsauswahl -->
     <div class="mb-4">
-      <Datepicker 
-        v-model="selectedDate" 
-        placeholder="Datum wählen" 
-        :format="formatToCH" 
-        :enableTimePicker="false"
-        :clearable="true" 
-        :auto-apply="true" 
-        :highlight="highlightToday"
-      />
+      <Datepicker v-model="selectedDate" placeholder="Datum wählen" :format="formatToCH" :enableTimePicker="false"
+        :clearable="true" :auto-apply="true" :highlight="highlightToday" />
 
     </div>
 
@@ -40,7 +33,8 @@
         <tr v-else-if="filteredBookings.length === 0">
           <td colspan="5" class="p-4 text-center text-slate-500">Keine Buchungen an diesem Tag</td>
         </tr>
-        <tr v-for="booking in filteredBookings" :key="booking.id + booking.spot" class="border-t">
+        <tr v-for="booking in filteredBookings" :key="booking.id + booking.spot"
+          class="border-t hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer" @click="showBookingDetail(booking.id)">
           <td class="p-2">{{ booking.guestName }}</td>
           <td class="p-2">{{ formatDate(booking.checkIn) }}</td>
           <td class="p-2">{{ formatDate(booking.checkOut) }}</td>
@@ -57,6 +51,12 @@
       </button>
     </div>
   </div>
+  <HostBookingDetail
+  v-if="selectedBookingId"
+  :booking-id="selectedBookingId"
+  @close="closeDetail"
+/>
+
 </template>
 
 <script setup lang="ts">
@@ -67,6 +67,19 @@ import { useRouter } from 'vue-router';
 import { useHostBookings } from '@/composables/Host/useHostBookings';
 import { format } from 'date-fns';
 import { normalizeDate, formatDateLocalYMD, formatToCH } from '@/composables/utils/dateUtils';
+import HostBookingDetail from '@/components/Host/HostBookingDetail.vue';
+
+const selectedBookingId = ref<string | null>(null);
+
+const showBookingDetail = (id: string) => {
+  selectedBookingId.value = id;
+};
+
+const closeDetail = () => {
+  selectedBookingId.value = null;
+};
+
+
 
 const highlightToday = computed(() => ({
   dates: [new Date()],
@@ -77,6 +90,7 @@ const selectToday = () => {
   today.setHours(0, 0, 0, 0);
   selectedDate.value = today;
 };
+
 
 
 // 📅 Auswahl
@@ -90,7 +104,7 @@ const fetchData = () => {
   if (!selectedDate.value || !(selectedDate.value instanceof Date)) return;
 
   console.log('📅 selectedDate (raw):', selectedDate.value);
-  const ymd = formatDateLocalYMD(selectedDate.value); 
+  const ymd = formatDateLocalYMD(selectedDate.value);
   console.log('📤 sending to API:', ymd);
   loadBookings(ymd, ymd);
 
