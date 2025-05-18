@@ -2,12 +2,12 @@ import axios, { AxiosResponse } from 'axios';
 import type {
   CreateBookingCheckDto,
   CreateBookingGuestDto,
-} from './types/booking';
-
+} from '@/types';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://192.168.1.10:3000',
 });
+
 
 // 🔁 Rückgabetypen
 export type CheckAvailabilityResponse = {
@@ -61,3 +61,17 @@ export const deleteBookingViaFetch = async (bookingId: string) => {
 
 
 export default api;
+
+// ⬇️ ganz am Ende von api.ts, **nach** dem default export hinzufügen:
+
+import { useUserStore } from '@/store/userStore';
+
+// Interceptor hinzufügen
+api.interceptors.request.use((config) => {
+  const userStore = useUserStore();
+  const token = userStore.token;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});

@@ -1,5 +1,7 @@
 // src/composables/useValidators.ts
-import type { CreateBookingGuestDto, CarsDto } from '@/types/booking';
+import type { CreateBookingGuestDto, CarsDto } from '@/types';
+
+
 
 export function validateGuestInfo(
   guest: CreateBookingGuestDto,

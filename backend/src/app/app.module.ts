@@ -5,11 +5,12 @@ import { BookingModule } from '@/booking/booking.module';
 import { UserModule } from '@/user/user.module';
 import { AuthModule } from '@/auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
-import { RolesGuard } from '@/auth/roles.guard'; 
+import { RolesGuard } from '@/auth/roles.guard';
 import { JwtAuthGuard } from '@/auth/jwt-auth.guard';
-import { AvailabilityModule } from '@/availability/availability.module';  
+import { AvailabilityModule } from '@/availability/availability.module';
 import { AppDataSource } from 'data-source';
 import { StripeModule } from '@/stripe/stripe.module';
+import { SettingsModule } from '@/settings/settings.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { StripeModule } from '@/stripe/stripe.module';
     AuthModule,
     AvailabilityModule,
     StripeModule,
+    SettingsModule,
   ],
   providers: [
     {
@@ -32,4 +34,4 @@ import { StripeModule } from '@/stripe/stripe.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

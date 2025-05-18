@@ -9,6 +9,7 @@ import './styles/multiselect.css';
 
 import { useUserStore } from '@/store/userStore'; // 🔑 Importiere den Store
 
+
 const app = createApp(App);
 
 const pinia = createPinia();

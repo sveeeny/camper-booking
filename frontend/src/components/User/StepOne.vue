@@ -1,26 +1,22 @@
+<!-- src/components/User/StepOne.vue -->
 <template>
   <div class="max-w-4xl mx-auto p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-
     <!-- Linke Seite: Formulardaten -->
     <div class="flex flex-col gap-6">
       <!-- 🧭 Titel -->
       <h3 class="text-xl font-semibold text-slate-600 dark:text-slate-300">Buchung starten</h3>
 
       <!-- 🚗 Anzahl Fahrzeuge -->
-      <div class="w-full">
+      <div>
         <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">Anzahl Fahrzeuge</label>
-        <select v-model="numberOfCars"
-          class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-2 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <select v-model="numberOfCars" class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-2 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
           <option v-for="n in 5" :key="n" :value="n">{{ n }}</option>
         </select>
       </div>
 
       <!-- 📅 Datepicker -->
-      <div class="w-full">
-        <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">
-          {{ 'Maximal 3 Nächte' }}
-        </label>
-        <br>
+      <div>
+        <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">Maximal 3 Nächte</label>
         <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">
           {{ checkInDate ? 'Check-out Datum wählen' : 'Check-in Datum wählen' }}
         </label>
@@ -28,21 +24,18 @@
         <div class="relative min-h-[300px]">
           <!-- Check-in -->
           <div v-show="!checkInDate" class="absolute inset-0">
-            <Datepicker 
-            v-model="checkInDate" 
-            v-bind="checkInProps" 
-            :markers="checkInMarkers" 
-            ref="checkInPickerRef"  />
+            <Datepicker v-model="checkInDate" v-bind="checkInProps" :markers="checkInMarkers" ref="checkInPickerRef" />
           </div>
 
           <!-- Check-out -->
           <div v-show="checkInDate" class="absolute inset-0">
-            <Datepicker 
-            v-model="selectedRange" 
-            v-bind="checkOutProps" 
-            :markers="checkOutMarkers" 
-            ref="checkOutPickerRef" 
-            @cleared="resetDates" />
+            <Datepicker
+              v-model="selectedRange"
+              v-bind="checkOutProps"
+              :markers="checkOutMarkers"
+              ref="checkOutPickerRef"
+              @cleared="resetDates"
+            />
           </div>
         </div>
       </div>
@@ -59,9 +52,8 @@
       </p>
     </div>
 
-    <!-- Rechte Seite: Infobereich / Bildplatzhalter -->
-    <div
-      class="hidden md:flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+    <!-- Rechte Seite: Platz für Medien -->
+    <div class="hidden md:flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
       <div class="text-slate-400 dark:text-slate-500 p-8 text-center">
         <p class="text-sm">Hier könnte ein Bild, eine Beschreibung oder Slideshow stehen.</p>
       </div>
@@ -69,24 +61,21 @@
   </div>
 </template>
 
-
-
-
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 
+import { useBooking } from '@/composables/useBooking';
 import { useCheckInPicker } from '@/composables/useCheckInPicker';
 import { useCheckOutPicker } from '@/composables/useCheckOutPicker';
 import { isDateRangeAvailable } from '@/composables/utils/isDateRangeAvailable';
-import { useBooking } from '@/composables/useBooking';
 
 const emit = defineEmits<{
   (e: 'next'): void;
 }>();
 
-// 🔁 Verwende zentralen Booking-Store über useBooking()
+// 📦 Zentrale Buchungslogik
 const {
   numberOfCars,
   selectedDates,
@@ -98,38 +87,33 @@ const {
 
 const basePriceCHF = computed(() => calculateBasePrice());
 
+// 📅 Datepicker-Setup
 const checkInDate = ref<Date | null>(null);
 const selectedRange = ref<[Date] | [Date, Date] | null>(null);
-const checkOutDate = computed(() =>
-  selectedRange.value && selectedRange.value.length === 2 ? selectedRange.value[1] : null
-);
+const checkOutDate = computed(() => selectedRange.value?.[1] ?? null);
 
+// ⌨️ Refs für Kalendersteuerung
 const checkInPickerRef = ref<InstanceType<typeof Datepicker> | null>(null);
 const checkOutPickerRef = ref<InstanceType<typeof Datepicker> | null>(null);
 
+// 🧠 Picker-Logik
 const { datepickerProps: checkInProps, markers: checkInMarkers } = useCheckInPicker(unavailableDatesAsDates);
 const {
   selectedRange: rangeFromPicker,
   datepickerProps: checkOutProps,
   markers: checkOutMarkers,
-} = useCheckOutPicker(checkInDate, unavailableDatesAsDates, 3);
+} = useCheckOutPicker(checkInDate, unavailableDatesAsDates);
 
-// ⏱️ Synchronisiere Range vom Datepicker mit zentralem State
-watch(rangeFromPicker, (val) => {
-  selectedRange.value = val;
-});
+// 🔁 Reaktivität
+watch(rangeFromPicker, (val) => selectedRange.value = val);
 
-// 📅 Bei Check-in → Check-out vorbereiten + öffnen
 watch(checkInDate, (val) => {
   if (val) {
     selectedRange.value = [val];
-    nextTick(() => {
-      checkOutPickerRef.value?.openMenu();
-    });
+    nextTick(() => checkOutPickerRef.value?.openMenu());
   }
 });
 
-// 🔄 Aktualisiere zentralen Datumszustand
 watch(selectedRange, (val) => {
   const [start, end] = val || [];
   if (start instanceof Date && end instanceof Date) {
@@ -137,32 +121,23 @@ watch(selectedRange, (val) => {
   }
 });
 
-// ⛔ Blockierte Ranges sofort zurücksetzen
-watch(unavailableDatesAsDates, (newDisabledDates) => {
+watch(unavailableDatesAsDates, (newDisabled) => {
   if (checkInDate.value && checkOutDate.value) {
-    const isAvailable = isDateRangeAvailable(checkInDate.value, checkOutDate.value, newDisabledDates ?? []);
+    const isAvailable = isDateRangeAvailable(checkInDate.value, checkOutDate.value, newDisabled);
     if (!isAvailable) resetDates();
   }
 });
 
-// Reagiere auf Änderung der Fahrzeuganzahl
 watch(numberOfCars, async (newVal, oldVal) => {
   if (newVal !== oldVal) {
     await fetchUnavailableDates();
-
     if (selectedDates.value) {
       const [start, end] = selectedDates.value;
       const stillAvailable = isDateRangeAvailable(start, end, unavailableDatesAsDates.value);
-
-      if (!stillAvailable) {
-        resetDates();
-      }
+      if (!stillAvailable) resetDates();
     }
   }
 });
-
-
-
 
 const resetDates = () => {
   checkInDate.value = null;
@@ -171,13 +146,12 @@ const resetDates = () => {
 
 onMounted(fetchUnavailableDates);
 
+// 🔄 Wiederherstellen (z. B. bei Stripe-Abbruch)
 onMounted(() => {
   if (!checkInDate.value && selectedDates.value) {
     const [start, end] = selectedDates.value;
     checkInDate.value = start;
-    nextTick(() => {
-      selectedRange.value = [start, end];
-    });
+    nextTick(() => selectedRange.value = [start, end]);
   }
 });
 </script>

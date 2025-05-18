@@ -3,6 +3,11 @@ import { Ref, computed, ref } from 'vue';
 import { formatDateToYMD, normalizeDate } from './utils/dateUtils';
 import { useBooking } from '@/composables/useBooking';
 import type { DatePickerMarker } from '@vuepic/vue-datepicker';
+import { useSettingsStore } from '@/store/settingsStore';
+
+
+
+
 
 /**
  * Setup für den Check-in Datepicker.
@@ -16,6 +21,19 @@ export function useCheckInPicker(
   today.setHours(0, 0, 0, 0);
 
   const selectedCheckIn = ref<Date | null>(null);
+
+  //Settings laden
+  const settingsStore = useSettingsStore();
+  const bookingAdvanceDays = computed(() => settingsStore.settings?.bookingAdvanceDays ?? 180);
+  const maxNights = computed(() => settingsStore.settings?.maxNights ?? 14);
+
+  const maxCheckInDate = computed(() => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + bookingAdvanceDays.value - maxNights.value);
+    return date;
+  });
+
 
   // 🟥 Liste der deaktivierten Daten als 'YYYY-MM-DD'
   const disabledCheckInDates = computed(() =>
@@ -31,13 +49,13 @@ export function useCheckInPicker(
       type: 'dot',
       tooltip: [{
         text: `Kein Platz für ${numberOfCars.value} weitere Fahrzeuge`,
-        color: 'red', 
-        options: { markDisabled: true}
+        color: 'red',
+        options: { markDisabled: true }
       }],
     }))
   );
-  
-  
+
+
 
 
   // ⛔ Deaktiviert Daten, die in der Liste vorkommen
@@ -65,12 +83,13 @@ export function useCheckInPicker(
     format: (date: Date | null): string =>
       date
         ? date.toLocaleDateString('de-CH', {
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric',
-          })
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        })
         : '',
     minDate: today,
+    maxDate: maxCheckInDate.value,
     disabledDates: isDateDisabled,
     enableTimePicker: false,
     hideOffsetDates: false,

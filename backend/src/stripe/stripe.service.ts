@@ -40,7 +40,7 @@ export class StripeService {
         },
       ],
       success_url: `${process.env.FRONTEND_URL}/success?bookingId=${bookingId}`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment-cancelled`,
+      cancel_url: `${process.env.FRONTEND_URL}/`,
       metadata: {
         bookingId
       },

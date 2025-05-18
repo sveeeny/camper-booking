@@ -1,9 +1,22 @@
 // src/store/bookingStore.ts
+// src/store/bookingStore.ts
 import { defineStore } from 'pinia';
-import type { CarsDto, CreateBookingGuestDto, PriceInfo, BookingState, BookingStatus } from '@/types/booking';
-import { initialBookingState } from '@/types/booking';
+import {
+  initialBookingState,
+  emptyGuestInfo,
+} from '@/types';
+
+import type {
+  BookingState,
+  CarsDto,
+  CreateBookingGuestDto,
+  BookingStatus,
+  PriceInfo,
+} from '@/types';
+
 import { parseYMDStringToLocalDate } from '@/composables/utils/dateUtils';
 import { useUserStore } from './userStore';
+
 
 export const useBookingStore = defineStore('booking', {
   state: (): BookingState => ({ ...initialBookingState }),

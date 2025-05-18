@@ -4,13 +4,15 @@ import { storeToRefs } from 'pinia';
 import { useBookingStore } from '@/store/bookingStore';
 import axios from '@/api';
 import { parseYMDStringToLocalDate, formatDateLocalYMD, normalizeDate } from '@/composables/utils/dateUtils';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { validateGuestInfo } from './useValidators';
+import { useSettingsStore } from '@/store/settingsStore';
 import type {
   CreateBookingCheckDto,
   CreateBookingGuestDto,
-  StripeCheckoutResponse,
-} from '@/types/booking';
+} from '@/types';
+
+
 
 export function useBooking() {
   const bookingStore = useBookingStore();
@@ -22,11 +24,22 @@ export function useBooking() {
     guestInfo,
     errorFields,
     errorMessage,
-    priceInfo,
     status,
     unavailableDates,
     mode,
   } = storeToRefs(bookingStore);
+
+
+  //Settings laden
+  const settingsStore = useSettingsStore();
+  const adultTax = computed(() => settingsStore.settings?.adultTax ?? 2);
+  const childTax = computed(() => settingsStore.settings?.childTax ?? 0);
+  const pricePerNightPerCar = computed(() => settingsStore.settings?.pricePerNightPerCar ?? 30);
+  const maxGuestsPerCar = computed(() => settingsStore.settings?.maxGuestsPerCar ?? 10);
+  const minNights = computed(() => settingsStore.settings?.minNights ?? 1);
+  const maxNights = computed(() => settingsStore.settings?.maxNights ?? 14);
+
+
 
   const checkInDate = computed(() => selectedDates.value?.[0] ?? null);
   const checkOutDate = computed(() => selectedDates.value?.[1] ?? null);
@@ -35,25 +48,40 @@ export function useBooking() {
     bookingStore.initModeFromUser();
   };
 
+  const step = ref(1); // hinzufügen
+  const resetBooking = bookingStore.resetBooking;
 
   const unavailableDatesAsDates = computed(() =>
     unavailableDates.value.map(parseYMDStringToLocalDate)
   );
 
+  const basePrice = computed(() => calculateBasePrice());
+  const kurtaxe = computed(() => calculateKurtaxe());
+  const totalPrice = computed(() => basePrice.value + kurtaxe.value);
+
+  // Exportiere als ein zusammengesetztes Objekt:
+  const priceInfo = computed(() => ({
+    base: basePrice.value,
+    tax: kurtaxe.value,
+    total: totalPrice.value,
+  }));
 
   /**
-   * Preisberechnung: Kurtaxe
-   */
-  const calculateKurtaxe = () => {
+  * Preisberechnung: Kurtaxe (Erwachsene & Kinder getrennt)
+  */
+  const calculateKurtaxe = (): number => {
     if (!bookingStore.selectedDates) return 0;
 
     const checkIn = normalizeDate(bookingStore.selectedDates[0]);
     const checkOut = normalizeDate(bookingStore.selectedDates[1]);
-
     const totalNights = (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24);
-    const totalPeople = bookingStore.cars.reduce((sum, car) => sum + car.adults + car.children, 0);
 
-    return totalNights * totalPeople * 2; // 2 CHF pro Person/Nacht
+    const totalAdults = bookingStore.cars.reduce((sum, car) => sum + car.adults, 0);
+    const totalChildren = bookingStore.cars.reduce((sum, car) => sum + car.children, 0);
+
+    return (
+      totalNights * (totalAdults * adultTax.value + totalChildren * childTax.value)
+    );
   };
 
   /**
@@ -64,7 +92,7 @@ export function useBooking() {
     const checkIn = normalizeDate(bookingStore.selectedDates[0]);
     const checkOut = normalizeDate(bookingStore.selectedDates[1]);
     const totalNights = (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24);
-    return totalNights * numberOfCars.value * 30; // z. B. 25 CHF pro Fahrzeug/Nacht
+    return totalNights * numberOfCars.value * pricePerNightPerCar.value;
   };
 
   /**
@@ -91,6 +119,8 @@ export function useBooking() {
       console.error('❌ Fehler beim Laden der Verfügbarkeiten:', error);
     }
   };
+
+
 
 
 
@@ -124,12 +154,6 @@ export function useBooking() {
           bookingStore.initEmptyCars(payload.checkInDate, payload.checkOutDate);
         }
 
-        bookingStore.setPriceInfo({
-          base: calculateBasePrice(),
-          tax: calculateKurtaxe(),
-          total: calculateTotalPrice(),
-        });
-
         bookingStore.setStatus('draft');
         bookingStore.setErrorMessage('');
         return true;
@@ -161,12 +185,6 @@ export function useBooking() {
       if (!patchResponse.data.cars || patchResponse.data.cars.length === 0) {
         bookingStore.initEmptyCars(payload.checkInDate, payload.checkOutDate);
       }
-
-      bookingStore.setPriceInfo({
-        base: calculateBasePrice(),
-        tax: calculateKurtaxe(),
-        total: calculateTotalPrice(),
-      });
 
       bookingStore.setStatus('draft');
       bookingStore.setErrorMessage('');
@@ -249,6 +267,7 @@ export function useBooking() {
     calculateBasePrice,
     calculateKurtaxe,
     calculateTotalPrice,
+    priceInfo,
 
     // 📅 Datenlogik
     fetchUnavailableDates,
@@ -265,7 +284,6 @@ export function useBooking() {
     guestInfo,
     errorFields,
     errorMessage,
-    priceInfo,
     status,
     unavailableDates,
     unavailableDatesAsDates,
@@ -273,5 +291,9 @@ export function useBooking() {
     checkOutDate,
     initModeFromUser,
     mode,
+    step,
+    resetBooking,
+    maxGuestsPerCar,
+
   };
 }

@@ -1,10 +1,9 @@
+<!-- src/components/User/StepTwo.vue -->
 <template>
   <div class="flex flex-col md:flex-row gap-6 max-w-5xl mx-auto px-4 py-6">
-
     <!-- 🧍 Gästeformular -->
     <div
       class="flex-1 bg-white dark:bg-slate-900 p-6 rounded-md shadow-sm space-y-4 border border-slate-200 dark:border-slate-700">
-
       <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">Gästeinformationen</h2>
 
       <!-- Anrede, Vorname, Nachname -->
@@ -28,22 +27,13 @@
         </div>
       </div>
 
-
-      <!-- Nationalität und E-Mail -->
+      <!-- Nationalität & E-Mail -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nationalität</label>
-          <Multiselect v-model="guestCountry" :options="countries" :searchable="true" :close-on-select="true"
-            placeholder="Nationalität wählen" track-by="code" label="name"
-            :class="['multiselect', { 'border-red-500': errorFields.includes('Nationalität') }]">
-            <template #option="{ option }">
-              {{ option.name }}
-            </template>
-            <template #singleLabel="{ option }">
-              {{ option.name }}
-            </template>
-          </Multiselect>
-
+          <Multiselect v-model="guestCountry" :options="countries" track-by="code" label="name"
+            placeholder="Nationalität wählen" :searchable="true" :close-on-select="true"
+            :class="['multiselect', { 'border-red-500': errorFields.includes('Nationalität') }]" />
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">E-Mail</label>
@@ -55,24 +45,12 @@
       <!-- Telefonnummer -->
       <div>
         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Telefonnummer</label>
-        <div class="flex gap-2 py-2 items-stretch relative min-h-[42px]">
-
-
+        <div class="flex gap-2 py-2 items-stretch min-h-[42px]">
           <Multiselect v-model="guestDialCode" :options="dialCodes" :searchable="true" :close-on-select="true"
-            :allow-empty="false" placeholder="Vorwahl wählen" track-by="dialCode" :custom-label="countryLabel"
-            :class="['multiselect', 'w-1/2', { 'border-red-500': errorFields.includes('Vorwahl') }]">
-            <template #option="{ option }">
-              {{ option.name }} ({{ option.dialCode }})
-            </template>
-            <template #singleLabel="{ option }">
-              {{ option.dialCode }}
-            </template>
-          </Multiselect>
-
-
-
+            :allow-empty="false" track-by="dialCode" placeholder="Vorwahl wählen" :custom-label="countryLabel"
+            :class="['multiselect', 'w-1/2', { 'border-red-500': errorFields.includes('Vorwahl') }]" />
           <input type="text" v-model="guestInfo.phoneNumber" placeholder="79 123 45 67"
-            :class="inputClass(errorFields.includes('Telefonnummer')), 'w-1/2'" />
+            :class="inputClass(errorFields.includes('Telefonnummer')) + ' w-1/2'" />
         </div>
       </div>
 
@@ -87,17 +65,16 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Gäste 0–13 Jahre</label>
-            <input type="number" min="0" v-model="car.children"
+            <input type="number" min="0" :max="maxChildrenForCar(index)" v-model="car.children"
               :class="inputClass(errorFields.includes(`Kinder für Auto ${index + 1}`))" />
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Gäste 14+ Jahre</label>
-            <input type="number" min="1" v-model="car.adults"
+            <input type="number" min="1" :max="maxAdultsForCar(index)" v-model="car.adults"
               :class="inputClass(errorFields.includes(`Erwachsene für Auto ${index + 1}`))" />
           </div>
         </div>
       </div>
-
     </div>
 
     <!-- 📋 Buchungsinfos -->
@@ -129,41 +106,38 @@
   </div>
 </template>
 
-
 <script setup lang="ts">
-import { useBooking } from '@/composables/useBooking';
-import DateDisplay from '@/components/User/DateDisplay.vue';
-import { countries } from '@/countries';
 import { computed } from 'vue';
 import Multiselect from 'vue-multiselect';
+import { useBooking } from '@/composables/useBooking';
 import { useBookingStore } from '@/store/bookingStore';
 import { storeToRefs } from 'pinia';
+import { countries } from '@/countries';
+import DateDisplay from '@/components/User/DateDisplay.vue';
+import { useSettingsStore } from '@/store/settingsStore';
+import { ref, watch } from 'vue';
 
 
-defineOptions({
-  components: {
-    Multiselect,
-  },
-});
 
-const {
-  numberOfCars,
-  cars,
-  guestInfo,
-  errorFields,
-  errorMessage,
-  checkInDate,
-  checkOutDate,
-  priceInfo,
-  submitBookingStepTwo,
-} = useBooking();
+//Settings laden
+const settingsStore = useSettingsStore();
+const maxGuestsPerCar = computed(() => settingsStore.settings?.maxGuestsPerCar ?? 10);
 
-const bookingStore = useBookingStore();
-const { manualPhoneCodeChange } = storeToRefs(bookingStore);
-const { setManualPhoneCodeChange } = bookingStore;
+
+const maxChildrenForCar = (carIndex: number) => {
+  return Math.max(maxGuestsPerCar.value - cars.value[carIndex].adults, 0);
+};
+
+const maxAdultsForCar = (carIndex: number) => {
+  return Math.max(maxGuestsPerCar.value - cars.value[carIndex].children, 1); // min 1 Erwachsener
+};
 
 
 const emit = defineEmits(['submit']);
+const { submitBookingStepTwo, numberOfCars, cars, guestInfo, errorFields, checkInDate, checkOutDate, priceInfo } = useBooking();
+const bookingStore = useBookingStore();
+const { manualPhoneCodeChange } = storeToRefs(bookingStore);
+const { setManualPhoneCodeChange } = bookingStore;
 
 const handleSubmit = async () => {
   const success = await submitBookingStepTwo();
@@ -199,7 +173,6 @@ const countryLabel = (option: { name: string; dialCode: string }) =>
   `${option.name} (${option.dialCode})`;
 
 const inputClass = (hasError: boolean) =>
-  `mt-1 w-full px-3 py-2 border rounded-md bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-    hasError ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
+  `mt-1 w-full px-3 py-2 border rounded-md bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 ${hasError ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'
   }`;
 </script>

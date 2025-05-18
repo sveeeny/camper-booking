@@ -1,29 +1,22 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { formatToCH } from '@/composables/utils/dateUtils';
 
-interface Props {
-  date: string | Date | null; 
+const props = defineProps<{
+  date: string | Date | null;
   label?: string;
-}
+}>();
 
-const props = defineProps<Props>();
-
-const formattedDate = computed<string>(() => {
+const formattedDate = computed(() => {
   if (!props.date) return '–';
-
-  const dateObj = typeof props.date === 'string'
-    ? new Date(props.date)
-    : props.date;
-
-  return dateObj.toLocaleDateString('de-CH', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  try {
+    const dateObj = typeof props.date === 'string' ? new Date(props.date) : props.date;
+    return formatToCH(dateObj);
+  } catch (e) {
+    return '–';
+  }
 });
-
 </script>
-
 
 <template>
   <p>

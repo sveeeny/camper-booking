@@ -2,6 +2,7 @@
 import { Ref, ref, computed } from 'vue';
 import { formatDateToYMD, formatToCH } from './utils/dateUtils';
 import type { DatePickerMarker } from '@vuepic/vue-datepicker';
+import { useSettingsStore } from '@/store/settingsStore';
 
 /**
  * Setup für den Check-out Datepicker mit dynamischem Range-Limit.
@@ -9,9 +10,9 @@ import type { DatePickerMarker } from '@vuepic/vue-datepicker';
  */
 export function useCheckOutPicker(
   checkInDate: Ref<Date | null>,
-  disabledNights: Ref<Date[]>,
-  maxRange = 3
+  disabledNights: Ref<Date[]>
 ) {
+  const maxRange = computed(() => settingsStore.settings?.maxNights ?? 3);
   const selectedRange = ref<[Date] | [Date, Date] | null>(null);
 
   // 📋 Normalisierte Liste belegter Nächte als 'YYYY-MM-DD'
@@ -19,35 +20,41 @@ export function useCheckOutPicker(
     disabledNights.value.map(formatDateToYMD)
   );
 
+  //settings laden
+  const settingsStore = useSettingsStore();
+  const minNights = computed(() => settingsStore.settings?.minNights ?? 1);
+  const maxNights = computed(() => settingsStore.settings?.maxNights ?? 3);
+
+
   // 🟢 MARKERS für Tooltips vorbereiten:
   const markers = computed<DatePickerMarker[]>(() => {
     const markersList: DatePickerMarker[] = [];
-  
+
     if (!checkInDate.value) return markersList;
-  
+
     const start = new Date(checkInDate.value);
     const maxDate = new Date(checkInDate.value);
-    maxDate.setDate(maxDate.getDate() + maxRange);
-  
+    maxDate.setDate(maxDate.getDate() + maxNights.value);
+
     const definitiveMaxDate = new Date(checkInDate.value);
     definitiveMaxDate.setDate(definitiveMaxDate.getDate() + definitiveRange.value);
-  
+
     const endOfMonth = new Date(checkInDate.value.getFullYear(), checkInDate.value.getMonth() + 1, 0);
-  
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-  
+
     let current = new Date(start);
     current.setDate(current.getDate() + 1); // Start nach Check-in
-  
+
     while (current <= endOfMonth) {
       // Skip Vergangenheit
       if (current < today) {
         current.setDate(current.getDate() + 1);
         continue;
       }
-  
-      // 🟢 1️⃣ Marker: außerhalb der definitiven Range aber innerhalb von maxRange
+
+      // 🟢 1️⃣ Marker: außerhalb der definitiven Range aber innerhalb von maxNights
       if (current > definitiveMaxDate && current <= maxDate) {
         markersList.push({
           date: new Date(current),
@@ -60,36 +67,36 @@ export function useCheckOutPicker(
           }],
         } as unknown as DatePickerMarker);
       }
-  
-      // 🟠 2️⃣ Marker: nach maxRange (aber nur bis Ende Monat)
+
+      // 🟠 2️⃣ Marker: nach maxNights (aber nur bis Ende Monat)
       if (current > maxDate) {
         markersList.push({
           date: new Date(current),
           type: 'dot',
           color: 'grey',
           tooltip: [{
-            text: `Maximale Buchungsdauer überschritten (max. ${maxRange} Nächte)`,
+            text: `Maximale Buchungsdauer überschritten (max. ${maxNights.value} Nächte)`,
             color: 'grey',
             options: { markDisabled: true },
           }],
         } as unknown as DatePickerMarker);
       }
-  
+
       current.setDate(current.getDate() + 1);
     }
-  
+
     return markersList;
   });
-  
-  
+
+
 
 
 
   // 📏 Berechnung der maximal möglichen Range basierend auf Belegung
   const definitiveRange = computed(() => {
-    if (!checkInDate.value) return maxRange;
+    if (!checkInDate.value) return maxNights.value;
 
-    for (let i = 1; i <= maxRange; i++) {
+    for (let i = 1; i <= maxNights.value; i++) {
       const nights = Array.from({ length: i }, (_, offset) => {
         const night = new Date(checkInDate.value!);
         night.setDate(night.getDate() + offset);
@@ -103,7 +110,7 @@ export function useCheckOutPicker(
       if (isBlocked) return i - 1;
     }
 
-    return maxRange;
+    return maxNights.value;
   });
 
 
@@ -141,7 +148,7 @@ export function useCheckOutPicker(
 
     return {
       range: {
-        minRange: 1,
+        minRange: minNights.value,
         maxRange: definitiveRange.value,
         showLastInRange: true,
       },
@@ -159,9 +166,9 @@ export function useCheckOutPicker(
       actionRow: { showCancel: false, showPreview: false },
       transitions: false,
       placeholder: checkInDate.value
-      ? `${formatToCH(checkInDate.value)} –`
-      : 'Check-out auswählen',
-    
+        ? `${formatToCH(checkInDate.value)} –`
+        : 'Check-out auswählen',
+
     };
   });
 

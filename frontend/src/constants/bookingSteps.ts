@@ -1,7 +1,7 @@
 // 📁 src/constants/bookingSteps.ts
 export const bookingSteps = [
   'Zeitraum & Fahrzeug',
-  'Gästeinfos & Insassen',
+  'Gästeinfos',
   'Buchungsübersicht',
   'Zahlung',
 ] as const;
