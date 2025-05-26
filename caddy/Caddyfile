@@ -9,11 +9,8 @@ booking.byherger.ch {
         reverse_proxy backend:3000
     }
 
-    # ➕ NEU: Stripe-Webhooks direkt ans Backend weiterleiten
-    handle /stripe/* {
-        reverse_proxy backend:3000
-    }
-    
+
+
     # Handle all other requests (frontend)
     handle {
         reverse_proxy frontend:80
