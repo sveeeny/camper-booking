@@ -19,7 +19,7 @@ const routes = [
   {
     path: '/success',
     name: 'BookingSuccess',
-    component: () => import('@/components/User/Success.vue'), // als Komponente eingebunden
+    component: () => import('@/components/User/Success.vue'), 
   },
   {
     path: '/payment-cancelled',

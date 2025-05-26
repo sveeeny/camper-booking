@@ -9,6 +9,11 @@ booking.byherger.ch {
         reverse_proxy backend:3000
     }
 
+    # ➕ NEU: Stripe-Webhooks direkt ans Backend weiterleiten
+    handle /stripe/* {
+        reverse_proxy backend:3000
+    }
+
     # Handle all other requests (frontend)
     handle {
         reverse_proxy frontend:80
@@ -19,15 +24,10 @@ booking.byherger.ch {
 
     # Add security headers
     header {
-        # Enable HSTS
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
-        # Prevent browsers from trying to guess the content type
         X-Content-Type-Options "nosniff"
-        # Enable XSS filter
         X-XSS-Protection "1; mode=block"
-        # Prevent clickjacking
         X-Frame-Options "DENY"
-        # Enable referrer policy
         Referrer-Policy "strict-origin-when-cross-origin"
     }
 }

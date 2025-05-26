@@ -52,17 +52,13 @@ const redirectPath = computed(() => (isHostOrAdmin.value ? '/host' : '/'));
 
 const bookingId = ref<string | null>(null);
 const { clearOnlyLocal } = useBookingCleanup();
+
 onMounted(async () => {
   const id = route.query.bookingId as string;
   if (id) {
     bookingId.value = id;
-    try {
-      await axios.patch(`/bookings/${id}/status`, { status: 'paid' });
-      console.log('✅ Buchungsstatus auf "paid" gesetzt');
-    } catch (err) {
-      console.error('❌ Fehler beim Setzen von Status "paid":', err);
-    }
   }
   clearOnlyLocal();
+
 });
 </script>
