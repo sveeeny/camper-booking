@@ -3,11 +3,13 @@ import { StripeService } from './stripe.service';
 import { StripeController } from './stripe.controller';
 import { ConfigModule } from '@nestjs/config'; 
 import { BookingModule } from '@/booking/booking.module';
+import { ResendModule } from '@/resend/resend.module';
 
 @Module({
   imports: [
     ConfigModule, 
-    BookingModule
+    BookingModule,
+    ResendModule,    
   ], 
   controllers: [StripeController],
   providers: [StripeService],

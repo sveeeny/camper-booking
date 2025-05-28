@@ -3,7 +3,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { BookingService } from '@/booking/booking.service';
-
+import { ResendService } from '@/resend/resend.service';
+import { SettingsService } from '@/settings/settings.service';
+import { generateBookingPDF } from '@/booking/booking-pdf.service';
 
 
 @Injectable()
@@ -14,6 +16,8 @@ export class StripeService {
   constructor(
     private configService: ConfigService,
     private bookingService: BookingService,
+    private resendService: ResendService,
+    private settingsService: SettingsService,
   ) {
     //TODO: bei live wechseln
     // const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
@@ -81,19 +85,31 @@ export class StripeService {
       if (bookingId) {
         this.logger.log(`✅ Zahlung erfolgreich für Buchung ${bookingId}`);
 
-        // TODO: Buchung updaten, PDF erzeugen, E-Mail senden
-
         try {
+          // 1. Status auf paid setzen
           await this.bookingService.updateStatus(bookingId, 'paid');
           this.logger.log(`📌 Status für Buchung ${bookingId} erfolgreich auf "paid" gesetzt.`);
+
+          // 2. Buchung und Settings laden
+          const booking = await this.bookingService.getBookingById(bookingId);
+          const settings = await this.settingsService.getSettings();
+
+          // 3. PDF generieren
+          const pdfBuffer = await generateBookingPDF(booking, settings);
+
+          // 4. E-Mail versenden
+          await this.resendService.sendBookingConfirmation(booking.guest.email, pdfBuffer);
+
+          this.logger.log(`📧 E-Mail mit PDF wurde an ${booking.guest.email} versendet.`);
         } catch (err) {
-          this.logger.error(`❌ Fehler beim Setzen des Status: ${err.message}`);
+          this.logger.error(`❌ Fehler im Buchungsnachbearbeitungsprozess: ${err.message}`);
           return { success: false };
         }
 
         return { success: true };
       }
     }
+
 
     return { success: false };
   }

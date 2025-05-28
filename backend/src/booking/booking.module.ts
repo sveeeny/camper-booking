@@ -8,11 +8,13 @@ import { ConfigModule } from '@nestjs/config';
 import { Booking } from '@/entities/booking.entity';
 import { Car } from '@/entities/cars.entity';
 import { BookingDatesService } from './booking-dates.service';
+import { ResendModule } from '@/resend/resend.module';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([Booking, Car, Availability]) 
+    TypeOrmModule.forFeature([Booking, Car, Availability]),
+    ResendModule 
   ],
   controllers: [BookingController],
   providers: [BookingService, AvailabilityService, BookingDatesService], 
