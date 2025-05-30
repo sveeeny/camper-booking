@@ -1,0 +1,12 @@
+{
+  "stepOne": {
+    "title": "Start your booking",
+    "vehicles": "Number of vehicles",
+    "maxNights": "Maximum 3 nights",
+    "chooseCheckIn": "Choose check-in date",
+    "chooseCheckOut": "Choose check-out date",
+    "basePrice": "Base price",
+    "excludingTax": "(excluding tourist tax)",
+    "error": "Please check your input"
+  }
+}

@@ -4,11 +4,11 @@
     <!-- Linke Seite: Formulardaten -->
     <div class="flex flex-col gap-6">
       <!-- 🧭 Titel -->
-      <h3 class="text-xl font-semibold text-slate-600 dark:text-slate-300">Buchung starten</h3>
+      <h3 class="text-xl font-semibold text-slate-600 dark:text-slate-300">{{ t('stepOne.title') }}</h3>
 
       <!-- 🚗 Anzahl Fahrzeuge -->
       <div>
-        <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">Anzahl Fahrzeuge</label>
+        <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">{{ t('stepOne.vehicles') }}</label>
         <select v-model="numberOfCars" class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-2 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
           <option v-for="n in 5" :key="n" :value="n">{{ n }}</option>
         </select>
@@ -16,9 +16,9 @@
 
       <!-- 📅 Datepicker -->
       <div>
-        <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">Maximal 3 Nächte</label>
+        <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">{{ t('stepOne.maxNights') }}</label>
         <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">
-          {{ checkInDate ? 'Check-out Datum wählen' : 'Check-in Datum wählen' }}
+          {{ checkInDate ? 'Check-out Datum wählen' : t('stepOne.chooseCheckIn') }}
         </label>
 
         <div class="relative min-h-[300px]">
@@ -42,8 +42,8 @@
 
       <!-- 💰 Preis -->
       <div class="w-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm rounded px-4 py-2">
-        <p><strong>Grundpreis:</strong> {{ basePriceCHF }} CHF</p>
-        <p class="text-xs text-slate-500">(exkl. Kurtaxe)</p>
+        <p><strong>{{ t('stepOne.basePrice') }}:</strong> {{ basePriceCHF }} CHF</p>
+        <p class="text-xs text-slate-500">{{ t('stepOne.excludingTax') }}</p>
       </div>
 
       <!-- ❌ Fehleranzeige -->
@@ -70,6 +70,9 @@ import { useBooking } from '@/composables/useBooking';
 import { useCheckInPicker } from '@/composables/useCheckInPicker';
 import { useCheckOutPicker } from '@/composables/useCheckOutPicker';
 import { isDateRangeAvailable } from '@/composables/utils/isDateRangeAvailable';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const emit = defineEmits<{
   (e: 'next'): void;

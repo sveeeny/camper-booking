@@ -137,16 +137,5 @@ export class BookingController {
     return this.bookingService.getBookingById(bookingId);
   }
 
-  // @Public()
-  // @Get('pdf/:bookingId')
-  // @Header('Content-Type', 'application/pdf')
-  // @Header('Content-Disposition', 'attachment; filename=Confirmation.pdf')
-  // async downloadBookingPdf(@Param('bookingId') bookingId: string, @Res() res: Response) {
-  //   const booking = await this.bookingService.getBookingById(bookingId);
-  //   const settings = await this.settingsService.getSettings();
-  //   const pdfBuffer = await generateBookingPDF(booking, settings);
-
-  //   return res.send(pdfBuffer);
-  // }
 
 }

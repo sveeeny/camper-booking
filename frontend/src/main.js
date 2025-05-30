@@ -8,6 +8,7 @@ import router from './router';
 import './styles/multiselect.css';
 
 import { useUserStore } from '@/store/userStore'; // 🔑 Importiere den Store
+import {i18n} from './i18n';
 
 
 const app = createApp(App);

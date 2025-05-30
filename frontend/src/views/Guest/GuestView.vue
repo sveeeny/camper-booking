@@ -1,4 +1,7 @@
 <template>
+  <header class="flex justify-end items-center p-4">
+    <LanguageSwitcher />
+  </header>
   <div class="booking-form">
     <!-- 🧭 Step 1: Zeitraum & Fahrzeug -->
     <StepOne v-if="step === 1" @next="handleStepOneSubmit" />
@@ -31,6 +34,8 @@ import { bookingSteps } from '@/constants/bookingSteps';
 import { useUserStore } from '@/store/userStore';
 import { onBeforeUnmount } from 'vue';
 import { useSettingsStore } from '@/store/settingsStore';
+
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 
 const settingsStore = useSettingsStore();
 
