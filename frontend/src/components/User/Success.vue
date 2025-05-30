@@ -13,7 +13,7 @@
        
         <!-- PDF-Download vorbereiten (noch deaktiviert) --> 
         <a
-          v-if="bookingId && !pdfToken"
+          v-if="pdfToken"
           :href="`${API_BASE_URL}bookings/pdf-secure?token=${pdfToken}`"
           target="_blank"
           download
