@@ -35,7 +35,7 @@ import { useUserStore } from '@/store/userStore';
 import { onBeforeUnmount } from 'vue';
 import { useSettingsStore } from '@/store/settingsStore';
 
-import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
+import LanguageSwitcher from '@/components/User/LanguageSwitcher.vue';
 
 const settingsStore = useSettingsStore();
 
