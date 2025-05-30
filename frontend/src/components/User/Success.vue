@@ -45,13 +45,17 @@ import { useRoute } from 'vue-router';
 import { useUserStore } from '@/store/userStore';
 import { useBookingCleanup } from '@/composables/useBookingCleanup';
 
-const pdfToken = computed(() => route.query.token);
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // z. B. https://booking.byherger.ch
+
+
 
 
 const route = useRoute();
 const userStore = useUserStore();
+
+const pdfToken = computed(() => route.query.token);
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; 
 
 const isHostOrAdmin = computed(() => userStore.role === 'host' || userStore.role === 'admin');
 const redirectPath = computed(() => (isHostOrAdmin.value ? '/host' : '/'));
