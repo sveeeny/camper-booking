@@ -92,6 +92,7 @@ export class BookingController {
     return this.bookingService.getBookingById(bookingId);
   }
 
+  @Public()
   @Get('pdf/:bookingId')
   @Header('Content-Type', 'application/pdf')
   @Header('Content-Disposition', 'attachment; filename=Confirmation.pdf')

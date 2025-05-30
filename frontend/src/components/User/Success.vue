@@ -14,7 +14,7 @@
         
         <a
           v-if="bookingId"
-          :href="`${API_BASE_URL}/bookings/pdf/${bookingId}`"
+          :href="`${API_BASE_URL}bookings/pdf/${bookingId}`"
           target="_blank"
           download
           class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-white px-4 py-2 rounded hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600"
