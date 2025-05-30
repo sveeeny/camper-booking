@@ -11,16 +11,17 @@
 
       <div class="flex justify-center gap-4 flex-wrap mt-4">
         <!-- PDF-Download vorbereiten (noch deaktiviert) -->
-        <!--
+        
         <a
           v-if="bookingId"
-          :href="`/api/bookings/${bookingId}/confirmation.pdf`"
+          :href="`${API_BASE_URL}/api/bookings/pdf/${bookingId}`"
           target="_blank"
+          download
           class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-white px-4 py-2 rounded hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600"
         >
-          📄 Buchungsbestätigung (PDF)
+           📄 Buchungsbestätigung als PDF herunterladen
         </a>
-        -->
+       
 
         <!-- Link zur Hauptseite -->
         <a href="https://byherger.ch" target="_blank"
@@ -43,6 +44,10 @@ import axios from 'axios';
 import { useRoute } from 'vue-router';
 import { useUserStore } from '@/store/userStore';
 import { useBookingCleanup } from '@/composables/useBookingCleanup';
+
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // z. B. https://booking.byherger.ch
+
 
 const route = useRoute();
 const userStore = useUserStore();

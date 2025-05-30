@@ -6,13 +6,18 @@ import {
   Param,
   Delete,
   Query,
-  Patch
+  Patch,
+  Res, 
+  Header, 
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingGuestDto } from './dto/create-booking-guest.dto';
 import { CreateBookingCheckDto } from './dto/create-booking-check.dto';
 import { Public } from 'decorators/public.decorator';
 import { BookingDatesService } from './booking-dates.service';
+import { Response } from 'express';
+import { SettingsService } from '@/settings/settings.service';
+import { generateBookingPDF } from './booking-pdf.service';
 
 
 @Public()
@@ -20,7 +25,9 @@ import { BookingDatesService } from './booking-dates.service';
 export class BookingController {
   constructor(
     private readonly bookingService: BookingService,
-    private readonly bookingDatesService: BookingDatesService) { }
+    private readonly bookingDatesService: BookingDatesService,
+    private readonly settingsService: SettingsService,
+  ) { }
 
   // 🏕 Verfügbarkeit prüfen (provisorische Reservierung)
   @Public()
@@ -83,6 +90,17 @@ export class BookingController {
   @Get(':id')
   async getBookingById(@Param('id') bookingId: string) {
     return this.bookingService.getBookingById(bookingId);
+  }
+
+  @Get('pdf/:bookingId')
+  @Header('Content-Type', 'application/pdf')
+  @Header('Content-Disposition', 'attachment; filename=Confirmation.pdf')
+  async downloadBookingPdf(@Param('bookingId') bookingId: string, @Res() res: Response) {
+    const booking = await this.bookingService.getBookingById(bookingId);
+    const settings = await this.settingsService.getSettings();
+    const pdfBuffer = await generateBookingPDF(booking, settings);
+
+    return res.send(pdfBuffer);
   }
 
 

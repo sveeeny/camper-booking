@@ -9,12 +9,14 @@ import { Booking } from '@/entities/booking.entity';
 import { Car } from '@/entities/cars.entity';
 import { BookingDatesService } from './booking-dates.service';
 import { ResendModule } from '@/resend/resend.module';
+import { SettingsModule } from '@/settings/settings.module';
 
 @Module({
   imports: [
     ConfigModule,
     TypeOrmModule.forFeature([Booking, Car, Availability]),
-    ResendModule 
+    ResendModule,
+    SettingsModule, 
   ],
   controllers: [BookingController],
   providers: [BookingService, AvailabilityService, BookingDatesService], 

@@ -98,7 +98,7 @@ export class StripeService {
           const pdfBuffer = await generateBookingPDF(booking, settings);
 
           // 4. E-Mail versenden
-          await this.resendService.sendBookingConfirmation(booking.guest.email, pdfBuffer);
+          await this.resendService.sendBookingConfirmation(booking.guest.email, pdfBuffer, booking);
 
           this.logger.log(`📧 E-Mail mit PDF wurde an ${booking.guest.email} versendet.`);
         } catch (err) {
