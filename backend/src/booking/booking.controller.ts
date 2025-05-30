@@ -92,6 +92,7 @@ export class BookingController {
   @Public()
   @Get('download-token/:id')
   async getDownloadToken(@Param('id') bookingId: string) {
+    console.log('🧪 bookingId received in download-token:', bookingId);
     // Du kannst hier optional prüfen, ob die Buchung existiert
     await this.bookingService.getBookingById(bookingId); // gibt 404 bei ungültiger ID
 

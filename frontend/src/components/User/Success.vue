@@ -64,19 +64,22 @@ const bookingId = ref<string | null>(null);
 const { clearOnlyLocal } = useBookingCleanup();
 
 onMounted(async () => {
-  if (bookingId) {
+  const id = typeof route.query.bookingId === 'string' ? route.query.bookingId : null;
+
+  if (id) {
+    bookingId.value = id;
+
     try {
-      const res = await axios.get(`${API_BASE_URL}bookings/download-token/${bookingId}`);
+      const res = await axios.get(`${API_BASE_URL}bookings/download-token/${id}`);
       pdfToken.value = res.data.token;
     } catch (err) {
       console.error('❌ Fehler beim Token holen:', err);
     }
+  } else {
+    console.warn('⚠️ Keine gültige bookingId in URL-Query gefunden.');
   }
-  const id = route.query.bookingId as string;
-  if (id) {
-    bookingId.value = id;
-  }
-  clearOnlyLocal();
 
+  clearOnlyLocal();
 });
+
 </script>
