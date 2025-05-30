@@ -190,6 +190,9 @@ export class BookingService {
     const cars = await this.carRepository.find({
       where: { booking_id: bookingId, isCancelled: false },
     });
+    
+    const priceBase = cars.reduce((acc, c) => acc + Number(c.basePrice ?? 0), 0);
+    const priceTax = cars.reduce((acc, c) => acc + Number(c.touristTax ?? 0), 0);
 
     return {
       id: booking.booking_id,
@@ -216,7 +219,9 @@ export class BookingService {
         basePrice: Number(car.basePrice ?? 0),
         touristTax: Number(car.touristTax ?? 0),
       })),
-
+      
+      priceBase,
+      priceTax,
       priceTotal: Number(booking.totalPrice ?? 0),
     };
   }

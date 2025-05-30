@@ -120,12 +120,12 @@ function renderHtml(booking: BookingPdfInput, settings: Settings): string {
 
       <!-- Gesamtpreis -->
       <div class="total-box">
-        Gesamtpreis: ${booking.priceTotal.toFixed(2)} CHF
+        Gesamtpreis: CHF ${booking.priceTotal.toFixed(2)} bezahlt
       </div>
 
       <!-- Anfahrtshinweis -->
       <div style="margin-top: 40px; padding: 16px; border: 2px solid #c00; border-radius: 6px; background: #fff0f0;">
-        <h2 style="color: #c00; margin-top: 0;">🚐 Wichtiger Hinweis zur Anfahrt</h2>
+        <h2 style="color: #c00; margin-top: 0;">Wichtiger Hinweis zur Anfahrt</h2>
         <p style="margin: 8px 0;">
           Bitte <strong>vermeiden Sie Kratzer oder Schäden</strong> an Ihrem Fahrzeug!
         </p>
