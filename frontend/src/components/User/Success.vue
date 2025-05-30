@@ -13,7 +13,7 @@
        
         <!-- PDF-Download vorbereiten (noch deaktiviert) --> 
         <a
-          v-if="bookingId"
+          v-if="bookingId && !pdfToken"
           :href="`${API_BASE_URL}bookings/pdf-secure?token=${pdfToken}`"
           target="_blank"
           download
@@ -44,10 +44,6 @@ import axios from 'axios';
 import { useRoute } from 'vue-router';
 import { useUserStore } from '@/store/userStore';
 import { useBookingCleanup } from '@/composables/useBookingCleanup';
-
-
-
-
 
 
 const route = useRoute();
