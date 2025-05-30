@@ -109,7 +109,7 @@ export class BookingController {
   }
 
   @Public()
-  @Get(':id([0-9a-fA-F-]{36})')
+  @Get(':id')
   async getBookingById(@Param('id') bookingId: string) {
     return this.bookingService.getBookingById(bookingId);
   }
