@@ -6,7 +6,7 @@ import { BookingService } from '@/booking/booking.service';
 import { ResendService } from '@/resend/resend.service';
 import { SettingsService } from '@/settings/settings.service';
 import { generateBookingPDF } from '@/booking/booking-pdf.service';
-
+import { generateDownloadToken } from '@/utils/jwt-download.util';
 
 @Injectable()
 export class StripeService {
@@ -99,6 +99,9 @@ export class StripeService {
 
           // 4. E-Mail versenden
           await this.resendService.sendBookingConfirmation(booking.guest.email, pdfBuffer, booking);
+
+          const token = generateDownloadToken({ bookingId });
+          const downloadLink = `${process.env.FRONTEND_URL}/success?token=${token}`;
 
           this.logger.log(`📧 E-Mail mit PDF wurde an ${booking.guest.email} versendet.`);
         } catch (err) {

@@ -7,8 +7,9 @@ import {
   Delete,
   Query,
   Patch,
-  Res, 
-  Header, 
+  Res,
+  Header,
+  BadRequestException,
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingGuestDto } from './dto/create-booking-guest.dto';
@@ -18,6 +19,7 @@ import { BookingDatesService } from './booking-dates.service';
 import { Response } from 'express';
 import { SettingsService } from '@/settings/settings.service';
 import { generateBookingPDF } from './booking-pdf.service';
+import { verifyDownloadToken } from '@/utils/jwt-download.util';
 
 
 @Public()
@@ -92,12 +94,32 @@ export class BookingController {
     return this.bookingService.getBookingById(bookingId);
   }
 
-  @Public()
-  @Get('pdf/:bookingId')
+  // @Public()
+  // @Get('pdf/:bookingId')
+  // @Header('Content-Type', 'application/pdf')
+  // @Header('Content-Disposition', 'attachment; filename=Confirmation.pdf')
+  // async downloadBookingPdf(@Param('bookingId') bookingId: string, @Res() res: Response) {
+  //   const booking = await this.bookingService.getBookingById(bookingId);
+  //   const settings = await this.settingsService.getSettings();
+  //   const pdfBuffer = await generateBookingPDF(booking, settings);
+
+  //   return res.send(pdfBuffer);
+  // }
+
+  @Get('pdf-secure')
   @Header('Content-Type', 'application/pdf')
   @Header('Content-Disposition', 'attachment; filename=Confirmation.pdf')
-  async downloadBookingPdf(@Param('bookingId') bookingId: string, @Res() res: Response) {
-    const booking = await this.bookingService.getBookingById(bookingId);
+  async downloadPdfSecure(@Query('token') token: string, @Res() res: Response) {
+    if (!token) throw new BadRequestException('Token fehlt');
+
+    let payload: { bookingId: string };
+    try {
+      payload = verifyDownloadToken(token);
+    } catch (err) {
+      throw new BadRequestException('Ungültiger oder abgelaufener Token');
+    }
+
+    const booking = await this.bookingService.getBookingById(payload.bookingId);
     const settings = await this.settingsService.getSettings();
     const pdfBuffer = await generateBookingPDF(booking, settings);
 

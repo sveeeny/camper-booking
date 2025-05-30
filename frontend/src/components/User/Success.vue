@@ -10,11 +10,11 @@
       <p><strong>Buchungsnummer:</strong> {{ bookingId || '–' }}</p>
 
       <div class="flex justify-center gap-4 flex-wrap mt-4">
-        <!-- PDF-Download vorbereiten (noch deaktiviert) -->
-        
+       
+        <!-- PDF-Download vorbereiten (noch deaktiviert) --> 
         <a
-          v-if="bookingId"
-          :href="`${API_BASE_URL}bookings/pdf/${bookingId}`"
+          v-if="pdfToken"
+          :href="`${API_BASE_URL}bookings/pdf-secure?token=${pdfToken}`"
           target="_blank"
           download
           class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-white px-4 py-2 rounded hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600"
@@ -45,6 +45,7 @@ import { useRoute } from 'vue-router';
 import { useUserStore } from '@/store/userStore';
 import { useBookingCleanup } from '@/composables/useBookingCleanup';
 
+const pdfToken = computed(() => route.query.token);
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // z. B. https://booking.byherger.ch
 
