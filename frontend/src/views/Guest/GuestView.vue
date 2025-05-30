@@ -30,18 +30,19 @@ import { useBookingCleanup } from '@/composables/useBookingCleanup';
 
 
 import { useBooking } from '@/composables/useBooking';
-import { bookingSteps } from '@/constants/bookingSteps';
+import { bookingStepKeys } from '@/constants/bookingSteps';
 import { useUserStore } from '@/store/userStore';
 import { onBeforeUnmount } from 'vue';
 import { useSettingsStore } from '@/store/settingsStore';
 
 import LanguageSwitcher from '@/components/User/LanguageSwitcher.vue';
 
+
 const settingsStore = useSettingsStore();
 
 const step = ref(1);
 const stepIndex = computed(() => step.value - 1);
-const maxStep = bookingSteps.length;
+const maxStep = bookingStepKeys.length;
 
 const showPaymentOverlay = ref(false);
 const overlayStatus = ref<'processing' | 'cancelled'>('processing');

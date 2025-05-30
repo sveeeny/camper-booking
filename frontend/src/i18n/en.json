@@ -8,5 +8,101 @@
     "basePrice": "Base price",
     "excludingTax": "(excluding tourist tax)",
     "error": "Please check your input"
+  },
+  "stepTwo": {
+    "title": "Guest Information",
+    "salutation": "Salutation",
+    "salutationOptions": {
+      "mr": "Mr",
+      "ms": "Ms",
+      "placeholder": "Please select"
+    },
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "nationality": {
+      "title": "Nationality",
+      "placeholder": "Choose nationality"
+    },
+    "email": "Email",
+    "phone": {
+      "label": "Phone Number",
+      "placeholder": "e.g. 79 123 45 67",
+      "countryCode": "Choose prefix"
+    },
+    "car": {
+      "title": "Vehicle {index}",
+      "plate": "License Plate",
+      "children": "Guests 0–13 years",
+      "adults": "Guests 14+ years"
+    },
+    "checkin": {
+      "title": "Check-in Details",
+      "label": "Check-in from"
+    },
+    "checkout": {
+      "label": "Check-out until"
+    },
+    "vehicles": {
+      "count": "Number of vehicles: {count}"
+    },
+    "price": {
+      "title": "Price Summary",
+      "base": "Base price (excl. tax):",
+      "tax": "Tourist tax:",
+      "total": "Total:"
+    }
+  },
+  "summary": {
+    "title": "Booking Summary",
+    "guestInfo": {
+      "title": "Guest Information",
+      "salutation": "Salutation",
+      "name": "Name",
+      "nationality": "Nationality",
+      "email": "E-mail",
+      "phone": "Phone"
+    },
+    "period": {
+      "title": "Period",
+      "checkin": "Check-in: {date} from {time} o'clock",
+      "checkout": "Check-out: {date} until {time} o'clock",
+      "vehicles": "Number of vehicles: {count}"
+    },
+    "car": {
+      "title": "Vehicle {index}",
+      "plate": "License Plate:",
+      "adults": "Adults:",
+      "children": "Children:",
+      "basePrice": "Base Price:",
+      "tax": "Tourist Tax:"
+    },
+    "total": {
+      "label": "Total: CHF {price}"
+    }
+  },
+  "timeline": {
+    "confirmInfo": "I confirm that all information is correct.",
+    "acceptRules": "I accept the",
+    "rulesButton": "booking terms",
+    "rulesTitle": "Booking Terms",
+    "rulesList": {
+      "1": "Check-in from 1:00 PM, check-out until 12:00 PM.",
+      "2": "The booking is binding.",
+      "3": "Quiet hours are from 10:00 PM to 7:00 AM.",
+      "4": "Personal data will only be used to process the booking."
+    },
+    "close": "Close",
+    "back": "Back to \"{step}\"",
+    "next": "Continue to \"{step}\"",
+    "confirm": {
+      "host": "Save booking",
+      "guest": "Proceed to payment"
+    },
+    "steps": [
+      "Date & Vehicle",
+      "Guest Info",
+      "Booking Summary",
+      "Payment"
+    ]
   }
 }

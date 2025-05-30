@@ -8,5 +8,101 @@
     "basePrice": "Grundpreis",
     "excludingTax": "(exkl. Kurtaxe)",
     "error": "Bitte überprüfe deine Eingaben"
+  },
+  "stepTwo": {
+    "title": "Gästeinformationen",
+    "salutation": "Anrede",
+    "salutationOptions": {
+      "mr": "Herr",
+      "ms": "Frau",
+      "placeholder": "Bitte wählen"
+    },
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "nationality": {
+      "title": "Nationalität",
+      "placeholder": "Nationalität wählen"
+    },
+    "email": "E-Mail",
+    "phone": {
+      "label": "Telefonnummer",
+      "placeholder": "79 123 45 67",
+      "countryCode": "Vorwahl wählen"
+    },
+    "car": {
+      "title": "Fahrzeug {index}",
+      "plate": "Autokennzeichen",
+      "children": "Gäste 0–13 Jahre",
+      "adults": "Gäste 14+ Jahre"
+    },
+    "checkin": {
+      "title": "Check-in-Daten",
+      "label": "Check-in ab"
+    },
+    "checkout": {
+      "label": "Check-out bis"
+    },
+    "vehicles": {
+      "count": "Anzahl Fahrzeuge: {count}"
+    },
+    "price": {
+      "title": "Preisübersicht",
+      "base": "Preis (exkl. Kurtaxe):",
+      "tax": "Kurtaxe:",
+      "total": "Total:"
+    }
+  },
+  "summary": {
+    "title": "Buchungsübersicht",
+    "guestInfo": {
+      "title": "Gästeinformationen",
+      "salutation": "Anrede",
+      "name": "Name",
+      "nationality": "Nationalität",
+      "email": "E-Mail",
+      "phone": "Telefon"
+    },
+    "period": {
+      "title": "Zeitraum",
+      "checkin": "Check-in: {date} ab {time} Uhr",
+      "checkout": "Check-out: {date} bis {time} Uhr",
+      "vehicles": "Anzahl Fahrzeuge: {count}"
+    },
+    "car": {
+      "title": "Fahrzeug {index}",
+      "plate": "KFZ-Nr:",
+      "adults": "Erwachsene:",
+      "children": "Kinder:",
+      "basePrice": "Grundpreis:",
+      "tax": "Kurtaxe:"
+    },
+    "total": {
+      "label": "Gesamtpreis: CHF {price}"
+    }
+  },
+  "timeline": {
+    "confirmInfo": "Ich bestätige, dass alle Angaben korrekt sind.",
+    "acceptRules": "Ich akzeptiere die",
+    "rulesButton": "Buchungsbedingungen",
+    "rulesTitle": "Buchungsbedingungen",
+    "rulesList": {
+      "1": "Check-in ab 13:00 Uhr, Check-out bis 12:00 Uhr.",
+      "2": "Die Buchung ist verbindlich.",
+      "3": "Ruhezeiten sind von 22:00 bis 07:00 einzuhalten.",
+      "4": "Die persönlichen Daten werden ausschließlich zur Abwicklung der Buchung verwendet."
+    },
+    "close": "Schließen",
+    "back": "Zurück zu \"{step}\"",
+    "next": "Weiter zu \"{step}\"",
+    "confirm": {
+      "host": "Buchung speichern",
+      "guest": "Zur Zahlung"
+    },
+    "steps": [
+      "Zeitraum & Fahrzeug",
+      "Gästeinfos",
+      "Buchungsübersicht",
+      "Zahlung"
+    ]
   }
 }

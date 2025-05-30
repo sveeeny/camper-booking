@@ -4,24 +4,24 @@
     <!-- 🧍 Gästeformular -->
     <div
       class="flex-1 bg-white dark:bg-slate-900 p-6 rounded-md shadow-sm space-y-4 border border-slate-200 dark:border-slate-700">
-      <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">Gästeinformationen</h2>
+      <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">{{ t('stepTwo.title') }}</h2>
 
       <!-- Anrede, Vorname, Nachname -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Anrede</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.salutation') }}</label>
           <select v-model="guestInfo.salutation" :class="inputClass(errorFields.includes('Anrede'))">
-            <option value="">Bitte wählen</option>
-            <option value="Herr">Herr</option>
-            <option value="Frau">Frau</option>
+            <option value="">{{ t('stepTwo.salutationOptions.placeholder') }}</option>
+            <option value="Herr">{{ t('stepTwo.salutationOptions.mr') }}</option>
+            <option value="Frau">{{ t('stepTwo.salutationOptions.ms') }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Vorname</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.firstName') }}</label>
           <input v-model="guestInfo.firstName" placeholder="Max" :class="inputClass(errorFields.includes('Vorname'))" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nachname</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.lastName') }}</label>
           <input v-model="guestInfo.lastName" placeholder="Muster"
             :class="inputClass(errorFields.includes('Nachname'))" />
         </div>
@@ -30,13 +30,13 @@
       <!-- Nationalität & E-Mail -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Nationalität</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.nationality.title') }}</label>
           <Multiselect v-model="guestCountry" :options="countries" track-by="code" label="name"
-            placeholder="Nationalität wählen" :searchable="true" :close-on-select="true"
+            :placeholder="t('stepTwo.nationality.placeholder')" :searchable="true" :close-on-select="true"
             :class="['multiselect', { 'border-red-500': errorFields.includes('Nationalität') }]" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">E-Mail</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.email') }}</label>
           <input v-model="guestInfo.email" placeholder="max.muster@provider.ch"
             :class="inputClass(errorFields.includes('E-Mail'))" />
         </div>
@@ -44,32 +44,32 @@
 
       <!-- Telefonnummer -->
       <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Telefonnummer</label>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.phone.label') }}</label>
         <div class="flex gap-2 py-2 items-stretch min-h-[42px]">
           <Multiselect v-model="guestDialCode" :options="dialCodes" :searchable="true" :close-on-select="true"
-            :allow-empty="false" track-by="dialCode" placeholder="Vorwahl wählen" :custom-label="countryLabel"
+            :allow-empty="false" track-by="dialCode" :placeholder="t('stepTwo.phone.countryCode')" :custom-label="countryLabel"
             :class="['multiselect', 'w-1/2', { 'border-red-500': errorFields.includes('Vorwahl') }]" />
-          <input type="text" v-model="guestInfo.phoneNumber" placeholder="79 123 45 67"
+          <input type="text" v-model="guestInfo.phoneNumber" :placeholder="t('stepTwo.phone.placeholder')"
             :class="inputClass(errorFields.includes('Telefonnummer')) + ' w-1/2'" />
         </div>
       </div>
 
       <!-- Fahrzeugdaten -->
       <div v-for="(car, index) in cars" :key="index" class="mt-6 border-t pt-4">
-        <h3 class="text-base font-semibold text-slate-800 dark:text-slate-200 mb-2">Fahrzeug {{ index + 1 }}</h3>
+        <h3 class="text-base font-semibold text-slate-800 dark:text-slate-200 mb-2">{{ t('stepTwo.car.title', { index: index + 1 }) }}</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Autokennzeichen</label>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.car.plate') }}</label>
             <input v-model="car.carPlate" placeholder="UR 12341"
               :class="inputClass(errorFields.includes(`Autokennzeichen für Auto ${index + 1}`))" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Gäste 0–13 Jahre</label>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.car.children') }}</label>
             <input type="number" min="0" :max="maxChildrenForCar(index)" v-model="car.children"
               :class="inputClass(errorFields.includes(`Kinder für Auto ${index + 1}`))" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Gäste 14+ Jahre</label>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.car.adults') }}</label>
             <input type="number" min="1" :max="maxAdultsForCar(index)" v-model="car.adults"
               :class="inputClass(errorFields.includes(`Erwachsene für Auto ${index + 1}`))" />
           </div>
@@ -80,25 +80,25 @@
     <!-- 📋 Buchungsinfos -->
     <div class="w-full md:w-1/3 flex flex-col gap-4">
       <div class="bg-white dark:bg-slate-900 p-4 rounded-md border border-slate-200 dark:border-slate-700">
-        <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200 mb-2">Check-in-Daten</h3>
-        <DateDisplay :date="checkInDate" label="Check-in ab" />
-        <DateDisplay :date="checkOutDate" label="Check-out bis" />
-        <h3 class="text-base text-slate-700 dark:text-slate-200 mb-2">Anzahl Fahrzeuge: {{ numberOfCars }}</h3>
+        <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200 mb-2">{{ t('stepTwo.checkin.title') }}</h3>
+        <DateDisplay :date="checkInDate" :label="t('stepTwo.checkin.label')" />
+        <DateDisplay :date="checkOutDate" :label="t('stepTwo.checkout.label')" />
+        <h3 class="text-base text-slate-700 dark:text-slate-200 mb-2">{{ t('stepTwo.vehicles.count', { count: numberOfCars }) }}</h3>
       </div>
 
       <div class="bg-white dark:bg-slate-900 p-4 rounded-md border border-slate-200 dark:border-slate-700">
-        <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200 mb-2">Preisübersicht</h3>
+        <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200 mb-2">{{ t('stepTwo.price.title') }}</h3>
         <p class="flex justify-between text-sm text-slate-700 dark:text-slate-300">
-          <span>Preis (exkl. Kurtaxe):</span>
+          <span>{{ t('stepTwo.price.base') }}</span>
           <span> CHF {{ priceInfo.base.toFixed(2) }}</span>
         </p>
         <p class="flex justify-between text-sm text-slate-700 dark:text-slate-300">
-          <span>Kurtaxe:</span>
+          <span>{{ t('stepTwo.price.tax') }}</span>
           <span> CHF {{ priceInfo.tax.toFixed(2) }}</span>
         </p>
         <hr class="my-2 border-slate-300 dark:border-slate-600" />
         <p class="flex justify-between font-semibold text-slate-800 dark:text-white">
-          <span>Total:</span>
+          <span>{{ t('stepTwo.price.total') }}</span>
           <span> CHF {{ priceInfo.total.toFixed(2) }}</span>
         </p>
       </div>
@@ -116,8 +116,9 @@ import { countries } from '@/countries';
 import DateDisplay from '@/components/User/DateDisplay.vue';
 import { useSettingsStore } from '@/store/settingsStore';
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
-
+const {t} = useI18n();
 
 //Settings laden
 const settingsStore = useSettingsStore();

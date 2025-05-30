@@ -1,7 +1,7 @@
 <template>
   <div class="summary-container space-y-6">
     <h2 class="text-2xl font-bold text-center text-slate-800 dark:text-white mb-4">
-      Buchungsübersicht
+      {{ t('summary.title') }}
     </h2>
 
     <!-- 👤 Gastinfo + 📅 Zeitraum -->
@@ -9,21 +9,21 @@
       <!-- 👤 Gastinfo -->
       <div
         class="bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 h-[280px] flex flex-col justify-center space-y-2 text-sm md:text-base">
-        <p><strong>Gästeinformationen</strong></p>
-        <p>Anrede: {{ guestInfo.salutation }}</p>
-        <p>Name: {{ guestInfo.firstName }} {{ guestInfo.lastName }}</p>
-        <p>Nationalität: {{ guestInfo.nationality }}</p>
-        <p>E-Mail: {{ guestInfo.email }}</p>
-        <p>Telefon: {{ guestInfo.phoneCountryCode }} {{ guestInfo.phoneNumber }}</p>
+        <p><strong>{{ t('summary.guestInfo.title') }}</strong></p>
+        <p>{{ t('summary.guestInfo.salutation') }}: {{ guestInfo.salutation }}</p>
+        <p>{{ t('summary.guestInfo.name') }}: {{ guestInfo.firstName }} {{ guestInfo.lastName }}</p>
+        <p>{{ t('summary.guestInfo.nationality') }}: {{ guestInfo.nationality }}</p>
+        <p>{{ t('summary.guestInfo.email') }}: {{ guestInfo.email }}</p>
+        <p>{{ t('summary.guestInfo.phone') }}: {{ guestInfo.phoneCountryCode }} {{ guestInfo.phoneNumber }}</p>
       </div>
 
       <!-- 📅 Zeitraum + Preis -->
       <div
         class="bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 h-[280px] flex flex-col justify-center space-y-2 text-sm md:text-base">
-        <p><strong>Zeitraum</strong></p>
-        <p>Check-in: {{ checkInDateFormatted }} ab {{ checkInTime }} Uhr</p>
-        <p>Check-out: {{ checkOutDateFormatted }} bis {{ checkOutTime }} Uhr</p>
-        <p>Anzahl Fahrzeuge: {{ numberOfCars }}</p>
+        <p><strong>{{ t('summary.period.title') }}</strong></p>
+        <p>{{ t('summary.period.checkin', { date: checkInDateFormatted, time: checkInTime }) }}</p>
+        <p>{{ t('summary.period.checkout', { date: checkOutDateFormatted, time: checkOutTime }) }}</p>
+        <p>{{ t('summary.period.vehicles', { count: numberOfCars }) }}</p>
       </div>
     </div>
 
@@ -37,12 +37,12 @@
     ]">
       <div v-for="(car, index) in cars" :key="index"
         class="bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 h-auto text-left">
-        <h3 class="font-semibold mb-2">Fahrzeug {{ index + 1 }}</h3>
-        <p><strong>KFZ-Nr:</strong> {{ car.carPlate }}</p>
-        <p><strong>Erwachsene:</strong> {{ car.adults }}</p>
-        <p><strong>Kinder:</strong> {{ car.children }}</p>
-        <p><strong>Grundpreis:</strong> CHF {{ (car.basePrice ?? 0).toFixed(2) }}</p>
-        <p><strong>Kurtaxe:</strong> CHF {{ (car.touristTax ?? 0).toFixed(2) }}</p>
+        <h3 class="font-semibold mb-2">{{ t('summary.car.title', { index: index + 1 }) }}</h3>
+        <p><strong>{{ t('summary.car.plate') }}</strong> {{ car.carPlate }}</p>
+        <p><strong>{{ t('summary.car.adults') }}</strong> {{ car.adults }}</p>
+        <p><strong>{{ t('summary.car.children') }}</strong> {{ car.children }}</p>
+        <p><strong>{{ t('summary.car.basePrice') }}</strong> CHF {{ (car.basePrice ?? 0).toFixed(2) }}</p>
+        <p><strong>{{ t('summary.car.tax') }}</strong> CHF {{ (car.touristTax ?? 0).toFixed(2) }}</p>
 
       </div>
     </div>
@@ -50,7 +50,7 @@
     <!-- 💰 Gesamtpreis -->
     <div
       class="bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 text-center font-semibold text-lg">
-      Gesamtpreis: {{ (priceInfo.total ?? 0).toFixed(2) }} CHF
+      {{ t('summary.total.label', { price: (priceInfo.total ?? 0).toFixed(2) }) }}
     </div>
   </div>
 </template>
@@ -61,6 +61,9 @@ import { computed, onMounted } from 'vue';
 import { useBooking } from '@/composables/useBooking';
 import { formatToCH } from '@/composables/utils/dateUtils';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useI18n } from 'vue-i18n';
+
+const {t} = useI18n();
 
 onMounted(async () => {
 

@@ -1,9 +1,9 @@
 // 📁 src/constants/bookingSteps.ts
-export const bookingSteps = [
-  'Zeitraum & Fahrzeug',
-  'Gästeinfos',
-  'Buchungsübersicht',
-  'Zahlung',
+export const bookingStepKeys = [
+  'timeline.steps.0',
+  'timeline.steps.1',
+  'timeline.steps.2',
+  'timeline.steps.3',
 ] as const;
 
-export type BookingStepLabel = (typeof bookingSteps)[number];
+export type BookingStepKey = (typeof bookingStepKeys)[number];
