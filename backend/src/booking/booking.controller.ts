@@ -100,7 +100,7 @@ export class BookingController {
     return { token };
   }
 
-
+  @Public()
   @Get('pdf-secure')
   @Header('Content-Type', 'application/pdf')
   @Header('Content-Disposition', 'attachment; filename=Confirmation.pdf')
