@@ -31,7 +31,7 @@
         <h3 class="text-base font-semibold mb-2">Buchungsbedingungen</h3>
         <ul class="list-disc pl-5 space-y-2">
           <li>Check-in ab 13:00 Uhr, Check-out bis 12:00 Uhr.</li>
-          <li>Die Buchung ist verbindlich. Stornierungen bitte rechtzeitig melden.</li>
+          <li>Die Buchung ist verbindlich</li>
           <li>Ruhezeiten sind von 22:00 bis 07:00 einzuhalten.</li>
           <li>Die persönlichen Daten werden ausschließlich zur Abwicklung der Buchung verwendet.</li>
         </ul>

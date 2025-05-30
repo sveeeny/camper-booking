@@ -4,22 +4,8 @@
       Buchungsübersicht
     </h2>
 
-    <!-- 🧾 Zeitraum + Gast -->
+    <!-- 👤 Gastinfo + 📅 Zeitraum -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-left">
-      <!-- 📅 Zeitraum + Preis -->
-      <div
-        class="bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 h-[280px] flex flex-col justify-center space-y-2 text-sm md:text-base">
-        <p><strong>Zeitraum</strong></p>
-        <p>Check-in: {{ checkInDateFormatted }} ab {{ checkInTime }} Uhr</p>
-        <p>Check-out: {{ checkOutDateFormatted }} bis {{ checkOutTime }} Uhr</p>
-        <p>Anzahl Fahrzeuge: {{ numberOfCars }}</p>
-        <hr />
-        <p><strong>Preisberechnung</strong></p>
-        <p>Grundpreis: {{ priceInfo.base }} CHF</p>
-        <p>Kurtaxe: {{ priceInfo.tax }} CHF</p>
-        <p class="font-semibold">Total: {{ priceInfo.total }} CHF</p>
-      </div>
-
       <!-- 👤 Gastinfo -->
       <div
         class="bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 h-[280px] flex flex-col justify-center space-y-2 text-sm md:text-base">
@@ -30,31 +16,45 @@
         <p>E-Mail: {{ guestInfo.email }}</p>
         <p>Telefon: {{ guestInfo.phoneCountryCode }} {{ guestInfo.phoneNumber }}</p>
       </div>
+
+      <!-- 📅 Zeitraum + Preis -->
+      <div
+        class="bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 h-[280px] flex flex-col justify-center space-y-2 text-sm md:text-base">
+        <p><strong>Zeitraum</strong></p>
+        <p>Check-in: {{ checkInDateFormatted }} ab {{ checkInTime }} Uhr</p>
+        <p>Check-out: {{ checkOutDateFormatted }} bis {{ checkOutTime }} Uhr</p>
+        <p>Anzahl Fahrzeuge: {{ numberOfCars }}</p>
+      </div>
     </div>
 
     <!-- 🚐 Fahrzeuge -->
-    <div :class="[
-      'grid gap-3',
-      cars.length === 1
-        ? 'grid-cols-1'
-        : cars.length === 2
-          ? 'grid-cols-1 md:grid-cols-2'
-          : cars.length === 3
-            ? 'grid-cols-1 md:grid-cols-3'
-            : cars.length === 4
-              ? 'grid-cols-1 md:grid-cols-4'
-              : 'grid-cols-1 md:grid-cols-5',
+    <div :class="['grid gap-3',
+      cars.length === 1 ? 'grid-cols-1'
+        : cars.length === 2 ? 'grid-cols-1 md:grid-cols-2'
+          : cars.length === 3 ? 'grid-cols-1 md:grid-cols-3'
+            : cars.length === 4 ? 'grid-cols-1 md:grid-cols-4'
+              : 'grid-cols-1 md:grid-cols-5'
     ]">
       <div v-for="(car, index) in cars" :key="index"
-        class="bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 h-[180px] text-left">
+        class="bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 h-auto text-left">
         <h3 class="font-semibold mb-2">Fahrzeug {{ index + 1 }}</h3>
         <p><strong>KFZ-Nr:</strong> {{ car.carPlate }}</p>
         <p><strong>Erwachsene:</strong> {{ car.adults }}</p>
         <p><strong>Kinder:</strong> {{ car.children }}</p>
+        <p><strong>Grundpreis:</strong> CHF {{ (car.basePrice ?? 0).toFixed(2) }}</p>
+        <p><strong>Kurtaxe:</strong> CHF {{ (car.touristTax ?? 0).toFixed(2) }}</p>
+
       </div>
+    </div>
+
+    <!-- 💰 Gesamtpreis -->
+    <div
+      class="bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 text-center font-semibold text-lg">
+      Gesamtpreis: {{ (priceInfo.total ?? 0).toFixed(2) }} CHF
     </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';

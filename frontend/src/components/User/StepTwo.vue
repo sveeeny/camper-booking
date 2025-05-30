@@ -83,23 +83,23 @@
         <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200 mb-2">Check-in-Daten</h3>
         <DateDisplay :date="checkInDate" label="Check-in ab" />
         <DateDisplay :date="checkOutDate" label="Check-out bis" />
-        <p class="text-sm text-slate-700 dark:text-slate-300 mt-2">Anzahl Fahrzeuge: {{ numberOfCars }}</p>
+        <h3 class="text-base text-slate-700 dark:text-slate-200 mb-2">Anzahl Fahrzeuge: {{ numberOfCars }}</h3>
       </div>
 
       <div class="bg-white dark:bg-slate-900 p-4 rounded-md border border-slate-200 dark:border-slate-700">
         <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200 mb-2">Preisübersicht</h3>
         <p class="flex justify-between text-sm text-slate-700 dark:text-slate-300">
           <span>Preis (exkl. Kurtaxe):</span>
-          <span>{{ priceInfo.base }} CHF</span>
+          <span> CHF {{ priceInfo.base.toFixed(2) }}</span>
         </p>
         <p class="flex justify-between text-sm text-slate-700 dark:text-slate-300">
           <span>Kurtaxe:</span>
-          <span>{{ priceInfo.tax }} CHF</span>
+          <span> CHF {{ priceInfo.tax.toFixed(2) }}</span>
         </p>
         <hr class="my-2 border-slate-300 dark:border-slate-600" />
         <p class="flex justify-between font-semibold text-slate-800 dark:text-white">
           <span>Total:</span>
-          <span>{{ priceInfo.total }} CHF</span>
+          <span> CHF {{ priceInfo.total.toFixed(2) }}</span>
         </p>
       </div>
     </div>

@@ -116,9 +116,18 @@ export class BookingController {
 
     const booking = await this.bookingService.getBookingById(payload.bookingId);
     const settings = await this.settingsService.getSettings();
-    const pdfBuffer = await generateBookingPDF(booking, settings);
+    const bookingForPdf = {
+      ...booking,
+      cars: booking.cars.map((car) => ({
+        carPlate: car.carPlate,
+        adults: car.adults,
+        children: car.children,
+        priceBase: Number(car.basePrice ?? 0),
+        priceTax: Number(car.touristTax ?? 0),
+      })),
+    };
 
-    return res.send(pdfBuffer);
+    const pdfBuffer = await generateBookingPDF(bookingForPdf, settings);
   }
 
   @Public()

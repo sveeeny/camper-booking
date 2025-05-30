@@ -204,61 +204,72 @@ export function useBooking() {
    */
 
 
-  const submitBookingStepTwo = async (): Promise<boolean> => {
-    if (!bookingId.value || !selectedDates.value) {
-      bookingStore.setErrorMessage('Keine gültige Buchung gefunden.');
-      return false;
-    }
+const submitBookingStepTwo = async (): Promise<boolean> => {
+  if (!bookingId.value || !selectedDates.value) {
+    bookingStore.setErrorMessage('Keine gültige Buchung gefunden.');
+    return false;
+  }
 
-    // 🧩 Platzhalter für fehlende Hostdaten setzen
-    if (mode.value === 'host') {
-      if (!guestInfo.value.firstName.trim()) guestInfo.value.firstName = 'Gast';
-      if (!guestInfo.value.lastName.trim()) guestInfo.value.lastName = 'Unbekannt';
-      if (!guestInfo.value.salutation) guestInfo.value.salutation = 'Herr';
-      if (!guestInfo.value.email.trim()) guestInfo.value.email = 'keine-angabe@example.com';
-      if (!guestInfo.value.phoneNumber.trim()) guestInfo.value.phoneNumber = '0000000000';
-      if (!guestInfo.value.phoneCountryCode) guestInfo.value.phoneCountryCode = '+41';
-      if (!guestInfo.value.nationality) guestInfo.value.nationality = 'CH';
+  // 🧩 Platzhalter für Host-Modus
+  if (mode.value === 'host') {
+    if (!guestInfo.value.firstName.trim()) guestInfo.value.firstName = 'Gast';
+    if (!guestInfo.value.lastName.trim()) guestInfo.value.lastName = 'Unbekannt';
+    if (!guestInfo.value.salutation) guestInfo.value.salutation = 'Herr';
+    if (!guestInfo.value.email.trim()) guestInfo.value.email = 'keine-angabe@example.com';
+    if (!guestInfo.value.phoneNumber.trim()) guestInfo.value.phoneNumber = '0000000000';
+    if (!guestInfo.value.phoneCountryCode) guestInfo.value.phoneCountryCode = '+41';
+    if (!guestInfo.value.nationality) guestInfo.value.nationality = 'CH';
 
-      cars.value.forEach((car, i) => {
-        if (!car.carPlate.trim()) car.carPlate = `XX-${i + 1}`;
-        if (car.adults < 1) car.adults = 1;
-        if (car.children < 0) car.children = 0;
-      });
-    }
+    cars.value.forEach((car, i) => {
+      if (!car.carPlate.trim()) car.carPlate = `XX-${i + 1}`;
+      if (car.adults < 1) car.adults = 1;
+      if (car.children < 0) car.children = 0;
+    });
+  }
 
-    // 🧪 Validieren
-    const errors = validateGuestInfo(guestInfo.value, cars.value, mode.value);
-    if (errors.length > 0) {
-      bookingStore.setErrorFields(errors);
-      bookingStore.setErrorMessage('Bitte alle Pflichtfelder korrekt ausfüllen.');
-      return false;
-    }
+  // 🧪 Validierung
+  const errors = validateGuestInfo(guestInfo.value, cars.value, mode.value);
+  if (errors.length > 0) {
+    bookingStore.setErrorFields(errors);
+    bookingStore.setErrorMessage('Bitte alle Pflichtfelder korrekt ausfüllen.');
+    return false;
+  }
 
-    // ✅ Fehlerzustand zurücksetzen
-    bookingStore.setErrorFields([]);
-    bookingStore.setErrorMessage('');
+  // ✅ Fehlerzustand zurücksetzen
+  bookingStore.setErrorFields([]);
+  bookingStore.setErrorMessage('');
 
-    const payload: CreateBookingGuestDto = {
-      ...guestInfo.value,
-      bookingId: bookingId.value,
-      checkInDate: formatDateLocalYMD(normalizeDate(selectedDates.value[0])),
-      checkOutDate: formatDateLocalYMD(normalizeDate(selectedDates.value[1])),
+  // 💰 Preise pro Fahrzeug berechnen
+  const checkIn = normalizeDate(selectedDates.value[0]);
+  const checkOut = normalizeDate(selectedDates.value[1]);
+  const totalNights = (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24);
 
-      totalPrice: priceInfo.value.total,
-      cars: cars.value,
-    };
+  cars.value.forEach((car) => {
+    car.basePrice = pricePerNightPerCar.value * totalNights;
+    car.touristTax = totalNights * (car.adults * adultTax.value + car.children * childTax.value);
+  });
 
-    try {
-      const response = await axios.post('/bookings/create', payload);
-      console.log('✅ Buchung Schritt 2 erfolgreich:', response.data);
-      return true;
-    } catch (error) {
-      console.error('❌ Fehler in Schritt 2:', error);
-      bookingStore.setErrorMessage('Fehler beim Speichern der Buchung.');
-      return false;
-    }
+  // 📦 Payload
+  const payload: CreateBookingGuestDto = {
+    ...guestInfo.value,
+    bookingId: bookingId.value,
+    checkInDate: formatDateLocalYMD(checkIn),
+    checkOutDate: formatDateLocalYMD(checkOut),
+    totalPrice: priceInfo.value.total,
+    cars: cars.value,
   };
+
+  try {
+    const response = await axios.post('/bookings/create', payload);
+    console.log('✅ Buchung Schritt 2 erfolgreich:', response.data);
+    return true;
+  } catch (error) {
+    console.error('❌ Fehler in Schritt 2:', error);
+    bookingStore.setErrorMessage('Fehler beim Speichern der Buchung.');
+    return false;
+  }
+};
+
 
 
 

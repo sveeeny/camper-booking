@@ -93,12 +93,26 @@ export class StripeService {
           // 2. Buchung und Settings laden
           const booking = await this.bookingService.getBookingById(bookingId);
           const settings = await this.settingsService.getSettings();
+          const priceBase = booking.cars.reduce((acc, car) => acc + Number(car.basePrice ?? 0), 0);
+          const priceTax = booking.cars.reduce((acc, car) => acc + Number(car.touristTax ?? 0), 0);
+
+          const bookingForPdf = {
+            ...booking,
+            cars: booking.cars.map((car) => ({
+              carPlate: car.carPlate,
+              adults: car.adults,
+              children: car.children,
+              priceBase: Number(car.basePrice ?? 0),
+              priceTax: Number(car.touristTax ?? 0),
+            })),
+          };
 
           // 3. PDF generieren
-          const pdfBuffer = await generateBookingPDF(booking, settings);
+          const pdfBuffer = await generateBookingPDF(bookingForPdf, settings);
+
 
           // 4. E-Mail versenden
-          await this.resendService.sendBookingConfirmation(booking.guest.email, pdfBuffer, booking);
+          await this.resendService.sendBookingConfirmation(booking.guest.email, pdfBuffer, bookingForPdf);
 
           const token = generateDownloadToken({ bookingId });
           const downloadLink = `${process.env.FRONTEND_URL}/success?token=${token}`;

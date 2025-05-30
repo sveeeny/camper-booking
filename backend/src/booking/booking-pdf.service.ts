@@ -35,7 +35,9 @@ function renderHtml(booking: BookingPdfInput, settings: Settings): string {
         <strong>Fahrzeug ${i + 1}</strong><br>
         KFZ-Nr: ${car.carPlate}<br>
         Erwachsene: ${car.adults}<br>
-        Kinder: ${car.children}
+        Kinder: ${car.children}<br>
+        Grundpreis: ${car.priceBase.toFixed(2)} CHF<br>
+        Kurtaxe: ${car.priceTax.toFixed(2)} CHF
       </div>`
     )
     .join('');
@@ -77,24 +79,22 @@ function renderHtml(booking: BookingPdfInput, settings: Settings): string {
           font-size: 0.9em;
           color: #666;
         }
+        .total-box {
+          margin-top: 20px;
+          border: 2px solid #000;
+          border-radius: 6px;
+          padding: 16px;
+          font-size: 1.2em;
+          font-weight: bold;
+          text-align: center;
+        }
       </style>
     </head>
     <body>
       <h1>Buchungsbestätigung</h1>
 
       <div class="section">
-        <div class="card">
-          <strong>Zeitraum</strong>
-          <p>Check-in: ${booking.checkIn} ab ${settings.checkInTime} Uhr</p>
-          <p>Check-out: ${booking.checkOut} bis ${settings.checkOutTime} Uhr</p>
-          <p>Anzahl Fahrzeuge: ${booking.cars.length}</p>
-          <hr>
-          <strong>Preisberechnung</strong>
-          <p>Grundpreis: ${booking.priceBase} CHF</p>
-          <p>Kurtaxe: ${booking.priceTax} CHF</p>
-          <p><strong>Total: ${booking.priceTotal} CHF</strong></p>
-        </div>
-
+        <!-- Gästeinformationen -->
         <div class="card">
           <strong>Gästeinformationen</strong>
           <p>Anrede: ${booking.guest.salutation}</p>
@@ -103,10 +103,24 @@ function renderHtml(booking: BookingPdfInput, settings: Settings): string {
           <p>E-Mail: ${booking.guest.email}</p>
           <p>Telefon: ${booking.guest.phoneCountryCode} ${booking.guest.phoneNumber}</p>
         </div>
+
+        <!-- Zeitraum -->
+        <div class="card">
+          <strong>Zeitraum</strong>
+          <p>Check-in: ${booking.checkIn} ab ${settings.checkInTime} Uhr</p>
+          <p>Check-out: ${booking.checkOut} bis ${settings.checkOutTime} Uhr</p>
+          <p>Anzahl Fahrzeuge: ${booking.cars.length}</p>
+        </div>
       </div>
 
+      <!-- Fahrzeuginfos mit Preisen -->
       <div>
         ${carsHtml}
+      </div>
+
+      <!-- Gesamtpreis -->
+      <div class="total-box">
+        Gesamtpreis: ${booking.priceTotal.toFixed(2)} CHF
       </div>
 
       <!-- Anfahrtshinweis -->
@@ -129,10 +143,9 @@ function renderHtml(booking: BookingPdfInput, settings: Settings): string {
         </p>
       </div>
 
-<div class="footer">
-  Danke für deine Buchung bei Camper byherger!
-</div>
-
+      <div class="footer">
+        Danke für deine Buchung bei Camper byherger!
+      </div>
     </body>
     </html>
   `;

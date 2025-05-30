@@ -21,11 +21,12 @@ export const AppDataSource = new DataSource({
 
 
   migrations: [
-    //Für Production
     'dist/migrations/*.js'
-
-    //Für Migrationen
-    // 'src/migrations/*.ts'
+    //Migration erstellen:
+    // cd backend 
+    // npm run build 
+    // npx typeorm migration:generate src/migrations/AddBasePriceToCar -d dist/data-source.js
+    // npm run typeorm:migration:run
   ],
 
   synchronize: false,

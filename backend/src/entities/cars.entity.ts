@@ -10,9 +10,9 @@ import { Booking } from './booking.entity';
 @Entity('cars')
 export class Car {
   @PrimaryGeneratedColumn('uuid')
-  car_id: string;  
+  car_id: string;
   @Column()
-  car_slot: number; 
+  car_slot: number;
 
   @Column()
   carPlate: string;
@@ -32,6 +32,9 @@ export class Car {
   @Column({ type: 'int', default: 0 })
   children: number;
 
+  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+  basePrice: number;
+
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
   touristTax: number;
 
@@ -40,5 +43,5 @@ export class Car {
   booking: Booking;
 
   @Column()
-  booking_id: string; 
+  booking_id: string;
 }

@@ -99,7 +99,8 @@ export class BookingDatesService {
       car.adults = carData.adults;
       car.children = carData.children;
       car.touristTax = carData.touristTax;
-
+      car.basePrice = carData.basePrice ?? 0;
+      
       await this.carRepository.save(car);
     }
   }
@@ -137,15 +138,15 @@ export class BookingDatesService {
     const existingCars = await this.carRepository.find({
       where: { booking_id: bookingId, isCancelled: false },
     });
-  
+
     if (existingCars.length === 0) {
       throw new NotFoundException('Keine bestehenden Fahrzeuge gefunden.');
     }
-  
+
     const oldCheckIn = existingCars[0].checkInDate;
     const oldCheckOut = existingCars[0].checkOutDate;
     const oldNumberOfCars = existingCars.length;
-  
+
     // 1️⃣ Alte Reservierungen freigeben
     await this.availabilityService.updateAvailability(
       oldCheckIn,
@@ -153,10 +154,10 @@ export class BookingDatesService {
       oldNumberOfCars,
       false, // ➖ Freigeben
     );
-  
+
     // 2️⃣ Alte Fahrzeuge löschen
     await this.carRepository.delete({ booking_id: bookingId });
-  
+
     // 3️⃣ Booking aktualisieren (Anzahl Fahrzeuge)
     const booking = await this.bookingRepository.findOneBy({ booking_id: bookingId });
     if (!booking) {
@@ -164,7 +165,7 @@ export class BookingDatesService {
     }
     booking.numberOfCars = dto.numberOfCars;
     await this.bookingRepository.save(booking);
-  
+
     // 4️⃣ Neue Reservierungen setzen (Verfügbarkeit)
     await this.availabilityService.updateAvailability(
       dto.checkInDate,
@@ -172,7 +173,7 @@ export class BookingDatesService {
       dto.numberOfCars,
       true, // ➕ Belegen
     );
-  
+
     // 5️⃣ Neue Fahrzeuge anlegen
     for (let carSlot = 1; carSlot <= dto.numberOfCars; carSlot++) {
       await this.carRepository.save(
@@ -190,7 +191,7 @@ export class BookingDatesService {
       );
     }
   }
-  
+
 
 
 }

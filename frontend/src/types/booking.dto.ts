@@ -16,6 +16,7 @@ export interface CarsDto {
   adults: number;
   children: number;
   touristTax: number;
+  basePrice: number;
 }
 
 export interface CreateBookingGuestDto {

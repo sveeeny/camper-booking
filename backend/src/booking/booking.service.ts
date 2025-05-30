@@ -213,10 +213,10 @@ export class BookingService {
         carPlate: car.carPlate,
         adults: car.adults,
         children: car.children,
+        basePrice: Number(car.basePrice ?? 0),
+        touristTax: Number(car.touristTax ?? 0),
       })),
 
-      priceBase: Number(booking.totalPrice ?? 0) - cars.reduce((acc, c) => acc + Number(c.touristTax ?? 0), 0),
-      priceTax: cars.reduce((acc, c) => acc + Number(c.touristTax ?? 0), 0),
       priceTotal: Number(booking.totalPrice ?? 0),
     };
   }

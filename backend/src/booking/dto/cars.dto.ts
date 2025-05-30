@@ -36,6 +36,10 @@ export class CarsDto {
   @Min(0)
   children: number;
 
+  @Type(() => Number)
+  @Min(0)
+  basePrice: number;
+
   @IsNotEmpty()
   @Type(() => Number)
   @Min(0)

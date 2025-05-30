@@ -8,9 +8,6 @@ export interface BookingPdfInput {
   guestName: string;
   guest: GuestInfo;
   cars: CarInfo[];
-
-  priceBase: number;
-  priceTax: number;
   priceTotal: number;
 }
 
@@ -28,4 +25,7 @@ export interface CarInfo {
   carPlate: string;
   adults: number;
   children: number;
+  priceBase: number;
+  priceTax: number;
+  
 }
