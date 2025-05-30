@@ -20,6 +20,7 @@ import { Response } from 'express';
 import { SettingsService } from '@/settings/settings.service';
 import { generateBookingPDF } from './booking-pdf.service';
 import { verifyDownloadToken } from '@/utils/jwt-download.util';
+import { generateDownloadToken } from '@/utils/jwt-download.util';
 
 
 @Public()
@@ -88,6 +89,17 @@ export class BookingController {
     return this.bookingService.updateStatus(bookingId, body.status);
   }
 
+  @Public()
+  @Get('download-token/:id')
+  async getDownloadToken(@Param('id') bookingId: string) {
+    // Du kannst hier optional prüfen, ob die Buchung existiert
+    await this.bookingService.getBookingById(bookingId); // gibt 404 bei ungültiger ID
+
+    const token = generateDownloadToken({ bookingId });
+    return { token };
+  }
+
+
   @Get('pdf-secure')
   @Header('Content-Type', 'application/pdf')
   @Header('Content-Disposition', 'attachment; filename=Confirmation.pdf')
@@ -125,9 +137,5 @@ export class BookingController {
 
   //   return res.send(pdfBuffer);
   // }
-
-
-
-
 
 }

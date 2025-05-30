@@ -53,7 +53,7 @@ import { useBookingCleanup } from '@/composables/useBookingCleanup';
 const route = useRoute();
 const userStore = useUserStore();
 
-const pdfToken = computed(() => route.query.token);
+const pdfToken = ref<string | null>(null);
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; 
 
@@ -64,6 +64,14 @@ const bookingId = ref<string | null>(null);
 const { clearOnlyLocal } = useBookingCleanup();
 
 onMounted(async () => {
+  if (bookingId) {
+    try {
+      const res = await axios.get(`${API_BASE_URL}bookings/download-token/${bookingId}`);
+      pdfToken.value = res.data.token;
+    } catch (err) {
+      console.error('❌ Fehler beim Token holen:', err);
+    }
+  }
   const id = route.query.bookingId as string;
   if (id) {
     bookingId.value = id;
