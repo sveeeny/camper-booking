@@ -109,9 +109,30 @@ function renderHtml(booking: BookingPdfInput, settings: Settings): string {
         ${carsHtml}
       </div>
 
-      <div class="footer">
-        Danke für deine Buchung bei Camper Herger!
+      <!-- Anfahrtshinweis -->
+      <div style="margin-top: 40px; padding: 16px; border: 2px solid #c00; border-radius: 6px; background: #fff0f0;">
+        <h2 style="color: #c00; margin-top: 0;">🚐 Wichtiger Hinweis zur Anfahrt</h2>
+        <p style="margin: 8px 0;">
+          Bitte <strong>vermeiden Sie Kratzer oder Schäden</strong> an Ihrem Fahrzeug!
+        </p>
+        <p style="margin: 8px 0;">
+          Viele Navigationsgeräte schlagen eine <strong>zu enge Zufahrtsstraße</strong> vor, die für Wohnmobile nicht geeignet ist.
+          Bitte <strong>folgen Sie nicht dem Navi</strong>, sondern nutzen Sie ausschließlich den folgenden Link:
+        </p>
+        <p style="margin: 8px 0;">
+          <a href="https://goo.gl/maps/z7DCgHpszoDWJZfK9" style="color: #0055aa;">
+            ➤ Anfahrt in Google Maps öffnen
+          </a>
+        </p>
+        <p style="margin: 8px 0; font-style: italic; color: #555;">
+          (Ein Lageplan folgt in Kürze.)
+        </p>
       </div>
+
+<div class="footer">
+  Danke für deine Buchung bei Camper byherger!
+</div>
+
     </body>
     </html>
   `;
