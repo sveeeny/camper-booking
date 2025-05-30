@@ -120,7 +120,7 @@ function renderHtml(booking: BookingPdfInput, settings: Settings): string {
 
       <!-- Gesamtpreis -->
       <div class="total-box">
-        Gesamtpreis: CHF ${booking.priceTotal.toFixed(2)} bezahlt
+        Gesamtpreis: CHF ${booking.priceTotal.toFixed(2)} bezahlt 
       </div>
 
       <!-- Anfahrtshinweis -->

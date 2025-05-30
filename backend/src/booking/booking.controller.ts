@@ -128,6 +128,7 @@ export class BookingController {
     };
 
     const pdfBuffer = await generateBookingPDF(bookingForPdf, settings);
+    return res.send(pdfBuffer);
   }
 
   @Public()
