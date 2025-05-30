@@ -150,7 +150,7 @@ const handleSummaryConfirm = async () => {
 
 
   try {
-    const amountInRappen = priceInfo.value.total * 100;
+    const amountInRappen = Math.round(priceInfo.value.total * 100);
     const response = await axios.post('/stripe/checkout', {
       amount: amountInRappen,
       bookingId: bookingId.value,
