@@ -15,7 +15,7 @@ export async function generateBookingPDF(
   });
 
   const page = await browser.newPage();
-  const templatePath = path.resolve(__dirname, 'templates/pdf-template.html');
+  const templatePath = path.join(__dirname, 'templates/pdf-template.html');
   let html = fs.readFileSync(templatePath, 'utf-8');
 
   const carsHtml = booking.cars
