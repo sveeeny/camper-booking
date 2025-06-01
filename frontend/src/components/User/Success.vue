@@ -11,35 +11,23 @@
 
       <div class="flex justify-center gap-4 flex-wrap mt-4">
         <!-- PDF-Download -->
-        <a
-          v-if="pdfToken"
-          :href="`${API_BASE_URL}bookings/pdf-secure?token=${pdfToken}`"
-          target="_blank"
-          download
-          class="block w-full md:w-auto text-center bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition font-medium"
-        >
+        <a v-if="pdfToken" :href="`${API_BASE_URL}bookings/pdf-secure?token=${pdfToken}`" target="_blank" download
+          class="block w-full md:w-auto text-center bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition font-medium">
           ✅ Buchungsbestätigung als PDF herunterladen
         </a>
 
-        <!-- Weiterleitungen -->
-        <div
-          class="mt-6 flex flex-col md:flex-row justify-center gap-4 text-sm text-slate-600 dark:text-slate-400"
-        >
-          <a
-            href="https://byherger.ch"
-            target="_blank"
-            class="underline hover:text-blue-600 dark:hover:text-blue-400"
-          >
-            🌐 Zur Hauptseite (byherger.ch)
+        <div class="flex justify-center gap-3 mt-6 flex-wrap">
+          <a href="https://byherger.ch" target="_blank"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-slate-800 transition">
+            🌐 Zur Hauptseite
           </a>
 
-          <router-link
-            :to="redirectPath"
-            class="underline hover:text-blue-600 dark:hover:text-blue-400"
-          >
-            {{ isHostOrAdmin ? "🔧 Zurück zum Dashboard" : "🏠 Zurück zur Startseite" }}
-          </router-link>
+          <!-- <router-link :to="redirectPath"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-slate-800 transition">
+            🏠 Zurück zur Startseite
+          </router-link> -->
         </div>
+
       </div>
     </div>
   </div>
