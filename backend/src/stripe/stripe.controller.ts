@@ -9,10 +9,8 @@ export class StripeController {
 
   @Public()
   @Post('checkout')
-  async createSession(@Body() body: { amount: number; bookingId: string; locale: string }) {
-    const shortLocale = body.locale?.split('-')[0] ?? 'auto';
-    console.log('🔁 StripeController – Request Body:', body);
-    const url = await this.stripeService.createCheckoutSession(body.bookingId, body.amount, shortLocale);
+  async createSession(@Body() body: { amount: number; bookingId: string; productName: string }) {
+    const url = await this.stripeService.createCheckoutSession(body.bookingId, body.amount, body.productName);
     return { url };
   }
 

@@ -34,8 +34,8 @@ export class StripeService {
   }
 
 
-  async createCheckoutSession(bookingId: string, amountInRappen: number, locale = 'auto'): Promise<string> {
-    console.log(`🧾 Creating Stripe Session with locale: ${locale}`);
+  async createCheckoutSession(bookingId: string, amountInRappen: number, productName: string): Promise<string> {
+    
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [
@@ -43,7 +43,7 @@ export class StripeService {
           price_data: {
             currency: 'chf',
             product_data: {
-              name: 'Campingplatz-Buchung',
+              name: productName,
             },
             unit_amount: amountInRappen,
           },
@@ -52,7 +52,6 @@ export class StripeService {
       ],
       success_url: `${process.env.FRONTEND_URL}/success?bookingId=${bookingId}`,
       cancel_url: `${process.env.FRONTEND_URL}/`,
-      locale: locale as Stripe.Checkout.SessionCreateParams.Locale,
       metadata: {
         bookingId
       },

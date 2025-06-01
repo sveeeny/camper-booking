@@ -39,6 +39,7 @@ import LanguageSwitcher from '@/components/User/LanguageSwitcher.vue';
 import { useI18n } from 'vue-i18n';
 
 const { locale } = useI18n();
+const {t} = useI18n();
 
 const settingsStore = useSettingsStore();
 
@@ -159,11 +160,10 @@ const handleSummaryConfirm = async () => {
 
   try {
     const amountInRappen = Math.round(priceInfo.value.total * 100);
-    console.log('Stripe Checkout Locale:', locale.value);
     const response = await axios.post('/stripe/checkout', {
       amount: amountInRappen,
       bookingId: bookingId.value,
-      locale: locale.value,
+      productName: t('stripe.productName'),
     });
 
     await axios.patch(`/bookings/${bookingId.value}/status`, {

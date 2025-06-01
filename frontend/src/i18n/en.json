@@ -192,5 +192,8 @@
     "GB": "United Kingdom",
     "US": "United States",
     "VN": "Vietnam"
-  }
+  },
+  "stripe": {
+  "productName": "booking byherger"
+}
 }
