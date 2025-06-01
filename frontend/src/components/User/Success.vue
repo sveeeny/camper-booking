@@ -16,7 +16,7 @@
           ✅ Buchungsbestätigung als PDF herunterladen
         </a>
 
-        <div class="flex justify-center gap-3 mt-6 flex-wrap">
+        <div class="flex justify-center gap-4 flex-wrap mt-4">
           <a href="https://byherger.ch" target="_blank"
             class="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-slate-800 transition">
             🌐 Zur Hauptseite
