@@ -35,6 +35,7 @@ export class StripeService {
 
 
   async createCheckoutSession(bookingId: string, amountInRappen: number, locale = 'auto'): Promise<string> {
+    this.logger.log(`🧾 Creating Stripe Session with locale: ${locale}`);
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [

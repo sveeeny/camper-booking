@@ -159,6 +159,7 @@ const handleSummaryConfirm = async () => {
 
   try {
     const amountInRappen = Math.round(priceInfo.value.total * 100);
+    console.log('Stripe Checkout Locale:', locale.value);
     const response = await axios.post('/stripe/checkout', {
       amount: amountInRappen,
       bookingId: bookingId.value,
