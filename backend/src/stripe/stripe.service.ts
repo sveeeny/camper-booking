@@ -22,10 +22,10 @@ export class StripeService {
     private settingsService: SettingsService,
   ) {
     //TODO: bei live wechseln
-    // const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
+    const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
 
     //Test-Mode-Key
-    const secretKey = this.configService.get<string>('STRIPE_SECRET_TEST_KEY');
+    // const secretKey = this.configService.get<string>('STRIPE_SECRET_TEST_KEY');
 
     if (!secretKey) {
       throw new Error('❌ STRIPE_SECRET_KEY fehlt in .env-Datei');
