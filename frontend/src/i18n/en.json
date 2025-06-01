@@ -195,5 +195,12 @@
   },
   "stripe": {
   "productName": "booking byherger"
+},
+"success": {
+  "title": "Thank you for your booking!",
+  "text": "Your payment was successful. We have received your booking and will send you a confirmation by email shortly.",
+  "download": "✅ Download booking confirmation as PDF",
+  "home": "🌐 Back to main site"
 }
+
 }

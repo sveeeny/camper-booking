@@ -195,6 +195,12 @@
   },
   "stripe": {
   "productName": "Buchung byherger"
+},
+"success": {
+  "title": "Vielen Dank für deine Buchung!",
+  "text": "Deine Zahlung war erfolgreich. Wir haben deine Buchung erhalten und senden dir in Kürze eine Bestätigung per E-Mail.",
+  "download": "✅ Buchungsbestätigung als PDF herunterladen",
+  "home": "🌐 Zur Hauptseite"
 }
 
 }

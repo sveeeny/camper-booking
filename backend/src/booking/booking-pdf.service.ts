@@ -1,4 +1,6 @@
 import * as puppeteer from 'puppeteer';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Settings } from '@/entities/settings.entity';
 import { BookingPdfInput } from '@/types/pdf.types';
 
@@ -13,21 +15,9 @@ export async function generateBookingPDF(
   });
 
   const page = await browser.newPage();
-  const html = renderHtml(booking, settings);
+  const templatePath = path.resolve(__dirname, 'pdf-template.html');
+  let html = fs.readFileSync(templatePath, 'utf-8');
 
-  await page.setContent(html, { waitUntil: 'networkidle0' });
-
-  const pdfBuffer = await page.pdf({
-    format: 'A4',
-    printBackground: true,
-    margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
-  });
-
-  await browser.close();
-  return Buffer.from(pdfBuffer); // ✅ wichtig
-}
-
-function renderHtml(booking: BookingPdfInput, settings: Settings): string {
   const carsHtml = booking.cars
     .map(
       (car, i) => `
@@ -42,111 +32,30 @@ function renderHtml(booking: BookingPdfInput, settings: Settings): string {
     )
     .join('');
 
-  return `
-    <!DOCTYPE html>
-    <html lang="de">
-    <head>
-      <meta charset="utf-8" />
-      <title>Buchungsbestätigung</title>
-      <style>
-        body {
-          font-family: sans-serif;
-          padding: 24px;
-          color: #333;
-        }
-        h1 {
-          text-align: center;
-          margin-bottom: 24px;
-        }
-        .section {
-          display: flex;
-          gap: 20px;
-          margin-bottom: 24px;
-        }
-        .card {
-          flex: 1;
-          border: 1px solid #ccc;
-          border-radius: 6px;
-          padding: 16px;
-          background: #f9f9f9;
-        }
-        .card p {
-          margin: 4px 0;
-        }
-        .footer {
-          text-align: center;
-          margin-top: 40px;
-          font-size: 0.9em;
-          color: #666;
-        }
-        .total-box {
-          margin-top: 20px;
-          border: 2px solid #000;
-          border-radius: 6px;
-          padding: 16px;
-          font-size: 1.2em;
-          font-weight: bold;
-          text-align: center;
-        }
-      </style>
-    </head>
-    <body>
-      <h1>Buchungsbestätigung</h1>
+  // Platzhalter ersetzen
+  html = html
+    .replace('{{SALUTATION}}', booking.guest.salutation)
+    .replace('{{FIRST_NAME}}', booking.guest.firstName)
+    .replace('{{LAST_NAME}}', booking.guest.lastName)
+    .replace('{{NATIONALITY}}', booking.guest.nationality)
+    .replace('{{EMAIL}}', booking.guest.email)
+    .replace('{{PHONE}}', booking.guest.phoneCountryCode + ' ' + booking.guest.phoneNumber)
+    .replace('{{CHECKIN_DATE}}', booking.checkIn)
+    .replace('{{CHECKOUT_DATE}}', booking.checkOut)
+    .replace('{{CHECKIN_TIME}}', settings.checkInTime)
+    .replace('{{CHECKOUT_TIME}}', settings.checkOutTime)
+    .replace('{{CAR_COUNT}}', booking.cars.length.toString())
+    .replace('{{TOTAL_PRICE}}', booking.priceTotal.toFixed(2))
+    .replace('{{CARS_HTML}}', carsHtml);
 
-      <div class="section">
-        <!-- Gästeinformationen -->
-        <div class="card">
-          <strong>Gästeinformationen</strong>
-          <p>Anrede: ${booking.guest.salutation}</p>
-          <p>Name: ${booking.guest.firstName} ${booking.guest.lastName}</p>
-          <p>Nationalität: ${booking.guest.nationality}</p>
-          <p>E-Mail: ${booking.guest.email}</p>
-          <p>Telefon: ${booking.guest.phoneCountryCode} ${booking.guest.phoneNumber}</p>
-        </div>
+  await page.setContent(html, { waitUntil: 'networkidle0' });
 
-        <!-- Zeitraum -->
-        <div class="card">
-          <strong>Zeitraum</strong>
-          <p>Check-in: ${booking.checkIn} ab ${settings.checkInTime} Uhr</p>
-          <p>Check-out: ${booking.checkOut} bis ${settings.checkOutTime} Uhr</p>
-          <p>Anzahl Fahrzeuge: ${booking.cars.length}</p>
-        </div>
-      </div>
+  const pdfBuffer = await page.pdf({
+    format: 'A4',
+    printBackground: true,
+    margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' },
+  });
 
-      <!-- Fahrzeuginfos mit Preisen -->
-      <div>
-        ${carsHtml}
-      </div>
-
-      <!-- Gesamtpreis -->
-      <div class="total-box">
-        Gesamtpreis: CHF ${booking.priceTotal.toFixed(2)} bezahlt 
-      </div>
-
-      <!-- Anfahrtshinweis -->
-      <div style="margin-top: 40px; padding: 16px; border: 2px solid #c00; border-radius: 6px; background: #fff0f0;">
-        <h2 style="color: #c00; margin-top: 0;">Wichtiger Hinweis zur Anfahrt</h2>
-        <p style="margin: 8px 0;">
-          Bitte <strong>vermeiden Sie Kratzer oder Schäden</strong> an Ihrem Fahrzeug!
-        </p>
-        <p style="margin: 8px 0;">
-          Viele Navigationsgeräte schlagen eine <strong>zu enge Zufahrtsstraße</strong> vor, die für Wohnmobile nicht geeignet ist.
-          Bitte <strong>folgen Sie nicht dem Navi</strong>, sondern nutzen Sie ausschließlich den folgenden Link:
-        </p>
-        <p style="margin: 8px 0;">
-          <a href="https://goo.gl/maps/z7DCgHpszoDWJZfK9" style="color: #0055aa;">
-            ➤ Anfahrt in Google Maps öffnen
-          </a>
-        </p>
-        <p style="margin: 8px 0; font-style: italic; color: #555;">
-          (Ein Lageplan folgt in Kürze.)
-        </p>
-      </div>
-
-      <div class="footer">
-        Danke für deine Buchung bei Camper byherger!
-      </div>
-    </body>
-    </html>
-  `;
+  await browser.close();
+  return Buffer.from(pdfBuffer);
 }
