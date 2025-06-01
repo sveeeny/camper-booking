@@ -9,7 +9,7 @@
     <div class="flex justify-center mt-4">
       <a v-if="pdfToken" :href="`${API_BASE_URL}bookings/pdf-secure?token=${pdfToken}`" target="_blank" download
         class="block w-full md:w-auto text-center bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition font-medium">
-        ✅ {{ t('success.download') }}
+        {{ t('success.download') }}
       </a>
     </div>
 
@@ -17,7 +17,7 @@
     <div class="flex justify-center mt-6">
       <a href="https://byherger.ch" target="_blank"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-slate-800 transition">
-        🌐 {{ t('success.home') }}
+        {{ t('success.home') }}
       </a>
     </div>
 

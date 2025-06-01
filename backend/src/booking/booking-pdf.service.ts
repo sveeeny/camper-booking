@@ -1,8 +1,8 @@
 import * as puppeteer from 'puppeteer';
-import * as fs from 'fs';
-import * as path from 'path';
 import { Settings } from '@/entities/settings.entity';
 import { BookingPdfInput } from '@/types/pdf.types';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export async function generateBookingPDF(
   booking: BookingPdfInput,
