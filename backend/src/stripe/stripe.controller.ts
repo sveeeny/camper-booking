@@ -9,8 +9,8 @@ export class StripeController {
 
   @Public()
   @Post('checkout')
-  async createSession(@Body() body: { amount: number; bookingId: string; productName: string }) {
-    const url = await this.stripeService.createCheckoutSession(body.bookingId, body.amount, body.productName);
+  async createSession(@Body() body: { amount: number; bookingId: string; productName: string; locale: string }) {
+    const url = await this.stripeService.createCheckoutSession(body.bookingId, body.amount, body.productName, body.locale);
     return { url };
   }
 

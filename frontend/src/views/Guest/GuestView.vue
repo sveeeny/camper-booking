@@ -164,6 +164,7 @@ const handleSummaryConfirm = async () => {
       amount: amountInRappen,
       bookingId: bookingId.value,
       productName: t('stripe.productName'),
+      locale: locale.value,
     });
 
     await axios.patch(`/bookings/${bookingId.value}/status`, {

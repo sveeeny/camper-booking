@@ -34,7 +34,7 @@ export class StripeService {
   }
 
 
-  async createCheckoutSession(bookingId: string, amountInRappen: number, productName: string): Promise<string> {
+  async createCheckoutSession(bookingId: string, amountInRappen: number, productName: string, locale: string): Promise<string> {
     
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
@@ -53,7 +53,8 @@ export class StripeService {
       success_url: `${process.env.FRONTEND_URL}/success?bookingId=${bookingId}`,
       cancel_url: `${process.env.FRONTEND_URL}/`,
       metadata: {
-        bookingId
+        bookingId,
+        locale
       },
     });
 
@@ -97,6 +98,8 @@ export class StripeService {
           const settings = await this.settingsService.getSettings();
           const priceBase = booking.cars.reduce((acc, car) => acc + Number(car.basePrice ?? 0), 0);
           const priceTax = booking.cars.reduce((acc, car) => acc + Number(car.touristTax ?? 0), 0);
+          const language = session.metadata?.locale || 'en'; // fallback: english
+
 
           const bookingForPdf = {
             ...booking,
@@ -114,7 +117,7 @@ export class StripeService {
 
 
           // 4. E-Mail versenden
-          await this.resendService.sendBookingConfirmation(booking.guest.email, pdfBuffer, bookingForPdf);
+          await this.resendService.sendBookingConfirmation(booking.guest.email, pdfBuffer, bookingForPdf, language);
 
           const token = generateDownloadToken({ bookingId });
           const downloadLink = `${process.env.FRONTEND_URL}/success?token=${token}`;
