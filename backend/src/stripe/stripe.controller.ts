@@ -5,14 +5,16 @@ import { Public } from '@/decorators/public.decorator';
 
 @Controller('stripe')
 export class StripeController {
-  constructor(private readonly stripeService: StripeService) {}
+  constructor(private readonly stripeService: StripeService) { }
 
   @Public()
   @Post('checkout')
-  async createSession(@Body() body: { amount: number; bookingId: string }) {
-    const url = await this.stripeService.createCheckoutSession(body.bookingId, body.amount);
+  async createSession(@Body() body: { amount: number; bookingId: string; locale: string }) {
+    const shortLocale = body.locale?.split('-')[0] ?? 'auto';
+    const url = await this.stripeService.createCheckoutSession(body.bookingId, body.amount, shortLocale);
     return { url };
   }
+
 
   @Public()
   @Post('webhook')

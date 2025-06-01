@@ -36,7 +36,9 @@ import { onBeforeUnmount } from 'vue';
 import { useSettingsStore } from '@/store/settingsStore';
 
 import LanguageSwitcher from '@/components/User/LanguageSwitcher.vue';
+import { useI18n } from 'vue-i18n';
 
+const { locale } = useI18n();
 
 const settingsStore = useSettingsStore();
 
@@ -160,6 +162,7 @@ const handleSummaryConfirm = async () => {
     const response = await axios.post('/stripe/checkout', {
       amount: amountInRappen,
       bookingId: bookingId.value,
+      locale: locale.value,
     });
 
     await axios.patch(`/bookings/${bookingId.value}/status`, {

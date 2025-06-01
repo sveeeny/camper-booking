@@ -8,6 +8,7 @@ import { SettingsService } from '@/settings/settings.service';
 import { generateBookingPDF } from '@/booking/booking-pdf.service';
 import { generateDownloadToken } from '@/utils/jwt-download.util';
 
+
 @Injectable()
 export class StripeService {
   private stripe: Stripe;
@@ -22,7 +23,7 @@ export class StripeService {
     //TODO: bei live wechseln
     // const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
 
-    //TEST
+    //Test-Mode-Key
     const secretKey = this.configService.get<string>('STRIPE_SECRET_TEST_KEY');
 
     if (!secretKey) {
@@ -33,7 +34,7 @@ export class StripeService {
   }
 
 
-  async createCheckoutSession(bookingId: string, amountInRappen: number): Promise<string> {
+  async createCheckoutSession(bookingId: string, amountInRappen: number, locale = 'auto'): Promise<string> {
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [
@@ -50,6 +51,7 @@ export class StripeService {
       ],
       success_url: `${process.env.FRONTEND_URL}/success?bookingId=${bookingId}`,
       cancel_url: `${process.env.FRONTEND_URL}/`,
+      locale: locale as Stripe.Checkout.SessionCreateParams.Locale,
       metadata: {
         bookingId
       },

@@ -21,7 +21,7 @@
           <input v-model="guestInfo.firstName" placeholder="Max" :class="inputClass(errorFields.includes('Vorname'))" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.lastName') }}</label>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.lastName') }}</label> 
           <input v-model="guestInfo.lastName" placeholder="Muster"
             :class="inputClass(errorFields.includes('Nachname'))" />
         </div>
@@ -31,9 +31,17 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.nationality.title') }}</label>
-          <Multiselect v-model="guestCountry" :options="countries" track-by="code" label="name"
-            :placeholder="t('stepTwo.nationality.placeholder')" :searchable="true" :close-on-select="true"
-            :class="['multiselect', { 'border-red-500': errorFields.includes('Nationalität') }]" />
+          
+          <Multiselect 
+          v-model="guestCountry" 
+          :options="translatedCountries" 
+          track-by="code" 
+          label="name"
+          :placeholder="t('stepTwo.nationality.placeholder')" 
+          :searchable="true" 
+          :close-on-select="true"
+          :class="['multiselect', { 'border-red-500': errorFields.includes('Nationalität') }]" />
+
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.email') }}</label>
@@ -46,9 +54,11 @@
       <div>
         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.phone.label') }}</label>
         <div class="flex gap-2 py-2 items-stretch min-h-[42px]">
+          
           <Multiselect v-model="guestDialCode" :options="dialCodes" :searchable="true" :close-on-select="true"
             :allow-empty="false" track-by="dialCode" :placeholder="t('stepTwo.phone.countryCode')" :custom-label="countryLabel"
             :class="['multiselect', 'w-1/2', { 'border-red-500': errorFields.includes('Vorwahl') }]" />
+
           <input type="text" v-model="guestInfo.phoneNumber" :placeholder="t('stepTwo.phone.placeholder')"
             :class="inputClass(errorFields.includes('Telefonnummer')) + ' w-1/2'" />
         </div>
@@ -147,13 +157,22 @@ const handleSubmit = async () => {
 
 const dialCodes = computed(() =>
   countries.map((c) => ({
-    name: c.name,
+    name: t(`countries.${c.code}`),
     dialCode: c.dialCode,
   }))
 );
 
+const translatedCountries = computed(() =>
+  countries.map((c) => ({
+    ...c,
+    name: t(`countries.${c.code}`),  
+  }))
+);
+
+
+
 const guestCountry = computed({
-  get: () => countries.find((c) => c.code === guestInfo.value.nationality) || null,
+  get: () => translatedCountries.value.find((c) => c.code === guestInfo.value.nationality) || null,
   set: (val) => {
     guestInfo.value.nationality = val?.code || '';
     if (!manualPhoneCodeChange.value && val?.dialCode) {
