@@ -7,7 +7,7 @@
 
     <!-- PDF-Download (zentriert) -->
     <div class="flex justify-center mt-4">
-      <a v-if="pdfToken" :href="`${API_BASE_URL}bookings/pdf-secure?token=${pdfToken}`" target="_blank" download
+      <a v-if="pdfToken" :href="`${API_BASE_URL}bookings/pdf-secure?token=${pdfToken}&lang=${locale}`" target="_blank" download
         class="block w-full md:w-auto text-center bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition font-medium">
         {{ t('success.download') }}
       </a>
@@ -32,6 +32,7 @@ import { useUserStore } from "@/store/userStore";
 import { useBookingCleanup } from "@/composables/useBookingCleanup";
 import { useI18n } from "vue-i18n";
 
+const {locale} = useI18n();
 const { t } = useI18n();
 
 const route = useRoute();

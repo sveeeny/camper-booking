@@ -21,7 +21,7 @@ import { SettingsService } from '@/settings/settings.service';
 import { generateBookingPDF } from './booking-pdf.service';
 import { verifyDownloadToken } from '@/utils/jwt-download.util';
 import { generateDownloadToken } from '@/utils/jwt-download.util';
-
+import { StripeService } from '@/stripe/stripe.service';
 
 @Public()
 @Controller('bookings')
@@ -104,7 +104,10 @@ export class BookingController {
   @Get('pdf-secure')
   @Header('Content-Type', 'application/pdf')
   @Header('Content-Disposition', 'attachment; filename=Confirmation.pdf')
-  async downloadPdfSecure(@Query('token') token: string, @Res() res: Response) {
+  async downloadPdfSecure(
+    @Query('token') token: string, 
+    @Query('lang') lang: string = 'en',
+    @Res() res: Response) {
     if (!token) throw new BadRequestException('Token fehlt');
 
     let payload: { bookingId: string };
@@ -127,7 +130,8 @@ export class BookingController {
       })),
     };
 
-    const pdfBuffer = await generateBookingPDF(bookingForPdf, settings);
+    const language = ['de', 'en'].includes(lang) ? lang : 'en'; // optional absichern
+    const pdfBuffer = await generateBookingPDF(bookingForPdf, settings, language);
     return res.send(pdfBuffer);
   }
 
