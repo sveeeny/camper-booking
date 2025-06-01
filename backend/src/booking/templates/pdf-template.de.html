@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Buchungsbestätigung</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 24px;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .section {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            flex: 1;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 16px;
+            background: #f9f9f9;
+        }
+
+        .card p {
+            margin: 4px 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .total-box {
+            margin-top: 20px;
+            border: 2px solid #000;
+            border-radius: 6px;
+            padding: 16px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Buchungsbestätigung</h1>
+
+    <div class="section">
+        <div class="card">
+            <strong>Gästeinformationen</strong>
+            <p>Anrede: {{SALUTATION}}</p>
+            <p>Name: {{FIRST_NAME}} {{LAST_NAME}}</p>
+            <p>Nationalität: {{NATIONALITY}}</p>
+            <p>E-Mail: {{EMAIL}}</p>
+            <p>Telefon: {{PHONE}}</p>
+        </div>
+        <div class="card">
+            <strong>Zeitraum</strong>
+            <p>Check-in: {{CHECKIN_DATE}} ab {{CHECKIN_TIME}} Uhr</p>
+            <p>Check-out: {{CHECKOUT_DATE}} bis {{CHECKOUT_TIME}} Uhr</p>
+            <p>Anzahl Fahrzeuge: {{CAR_COUNT}}</p>
+        </div>
+    </div>
+
+    <!-- Fahrzeugkarten -->
+    {{CARS_HTML}}
+
+    <div class="total-box">
+        Gesamtpreis: CHF {{TOTAL_PRICE}} bezahlt
+    </div>
+
+    <div style="margin-top: 40px; padding: 16px; border: 2px solid #c00; border-radius: 6px; background: #fff0f0;">
+        <h2 style="color: #c00; margin-top: 0;">Wichtiger Hinweis zur Anfahrt</h2>
+        <p>Bitte <strong>vermeiden Sie Kratzer oder Schäden</strong> an Ihrem Fahrzeug!</p>
+        <p>
+            Viele Navigationsgeräte schlagen eine <strong>zu enge Zufahrtsstraße</strong> vor,
+            die für Wohnmobile nicht geeignet ist. Bitte <strong>folgen Sie nicht dem Navi</strong>,
+            sondern nutzen Sie ausschließlich den folgenden Link:
+        </p>
+        <p>
+            <a href="https://goo.gl/maps/z7DCgHpszoDWJZfK9" style="color: #0055aa;">
+                Anfahrt in Google Maps öffnen
+            </a>
+        </p>
+    </div>
+
+    <div class="footer">
+        Danke für deine Buchung bei byherger!
+    </div>
+    
+    <!-- ⬇ Seitenumbruch -->
+    <div style="page-break-before: always;"></div>
+
+    <h2 style="font-size: 1.2em; margin-top: 40px;">Regeln</h2>
+    <p>Kinder und Jugendliche bis 16 Jahren müssen immer von Erwachsenen beaufsichtigt sein.</p>
+    <p>
+        Die Kinderfahrzeuge bleiben im dafür gekennzeichneten Kinderfahrzeug-Bereich.
+        Nach dem Gebrauch müssen die Fahrzeuge wieder im Parkplatz-Bereich im Stall parkiert werden.
+    </p>
+    <p>Herzlichen Dank, dass du mithilfst unseren Hof sauber zu halten.</p>
+
+    <h2 style="font-size: 1.2em; margin-top: 40px;">Angebot</h2>
+    <ul>
+        <li>WLAN Zugang im Hofladen: <strong>SSID: WiFi byherger</strong>, <strong>Password: Vollmond</strong></li>
+        <li>Sanitäre Anlagen (WC, Dusche, Wickelstation, Kassettenentleerungs-Station, Frischwasser)</li>
+        <li>Selbstbedienungs-Hofladen &amp; Hofcafé (täglich geöffnet von 07:00 bis 21:00 Uhr)</li>
+        <li>Stromanschluss für dein Fahrzeug, Abfallentsorgung, Feuerstelle (Feuerholz im Hofladen erhältlich)</li>
+        <li>Holzofen-Sauna für max. 5 Pers. (buchbar: 079 425 52 63)</li>
+    </ul>
+
+    <!-- 🔹 Sauna-Tabelle NEU -->
+    <h2 style="font-size: 1.2em; margin-top: 40px;">Holzofen Sauna</h2>
+    <table style="border-collapse: collapse; margin-top: 16px; width: auto;">
+        <thead>
+            <tr>
+                <th style="border: 1px solid #ddd; padding: 8px;">Anzahl Personen</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">1–2</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">3</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">4</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">5</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">Preis</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">CHF 20.–</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">CHF 30.–</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">CHF 40.–</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">CHF 50.–</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 style="font-size: 1.2em; margin-top: 40px;">Bei Fragen</h2>
+    <p>Franz 079 425 52 63, Doris 078 866 46 42, Laura 076 399 34 49, Sven 076 343 30 46, Nino 076 580 93 95</p>
+</body>
+
+</html>

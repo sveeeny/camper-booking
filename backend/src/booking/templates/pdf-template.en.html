@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Buchungsbestätigung</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 24px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .section {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .card {
+            flex: 1;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 16px;
+            background: #f9f9f9;
+        }
+        .card p {
+            margin: 4px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .total-box {
+            margin-top: 20px;
+            border: 2px solid #000;
+            border-radius: 6px;
+            padding: 16px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Booking Confirmation</h1>
+
+    <div class="section">
+        <div class="card">
+            <strong>Guest Information</strong>
+            <p>Salutation: {{SALUTATION}}</p>
+            <p>Name: {{FIRST_NAME}} {{LAST_NAME}}</p>
+            <p>Nationality: {{NATIONALITY}}</p>
+            <p>Email: {{EMAIL}}</p>
+            <p>Phone: {{PHONE}}</p>
+        </div>
+        <div class="card">
+            <strong>Booking Period</strong>
+            <p>Check-in: {{CHECKIN_DATE}} from {{CHECKIN_TIME}}</p>
+            <p>Check-out: {{CHECKOUT_DATE}} until {{CHECKOUT_TIME}}</p>
+            <p>Number of Vehicles: {{CAR_COUNT}}</p>
+        </div>
+    </div>
+
+    {{CARS_HTML}}
+
+    <div class="total-box">
+        Total Price: CHF {{TOTAL_PRICE}} paid
+    </div>
+
+    <div style="margin-top: 40px; padding: 16px; border: 2px solid #c00; border-radius: 6px; background: #fff0f0;">
+        <h2 style="color: #c00; margin-top: 0;">Important Arrival Information</h2>
+        <p>Please <strong>avoid scratches or damage</strong> to your vehicle!</p>
+        <p>
+            Many navigation systems suggest a <strong>narrow road</strong> that is not suitable for motorhomes.
+            Please <strong>do not follow your GPS</strong>, and instead use this link:
+        </p>
+        <p>
+            <a href="https://goo.gl/maps/z7DCgHpszoDWJZfK9" style="color: #0055aa;">
+                Open directions in Google Maps
+            </a>
+        </p>
+    </div>
+
+    <div class="footer">
+        Thank you for booking with byherger!
+    </div>
+
+    <div style="page-break-before: always;"></div>
+
+    <h2 style="font-size: 1.2em; margin-top: 40px;">Rules</h2>
+    <p>Children and teenagers under 16 must always be supervised by an adult.</p>
+    <p>
+        Children's vehicles must remain in the designated area.
+        After use, please return the vehicles to the designated parking area in the barn.
+    </p>
+    <p>Thank you for helping us keep the farm clean.</p>
+
+    <h2 style="font-size: 1.2em; margin-top: 40px;">Facilities</h2>
+    <ul>
+        <li>WiFi in the farm shop: <strong>SSID: WiFi byherger</strong>, <strong>Password: Vollmond</strong></li>
+        <li>Sanitary facilities (toilets, showers, baby changing area, chemical toilet disposal, fresh water)</li>
+        <li>Self-service farm shop &amp; café (open daily from 7:00 AM to 9:00 PM)</li>
+        <li>Electricity, waste disposal, fire pit (firewood available in farm shop)</li>
+        <li>Wood-fired sauna for up to 5 people (reservation: 079 425 52 63)</li>
+    </ul>
+
+    <h2 style="font-size: 1.2em; margin-top: 40px;">Wood-Fired Sauna</h2>
+    <table style="border-collapse: collapse; margin-top: 16px; width: auto;">
+        <thead>
+            <tr>
+                <th style="border: 1px solid #ddd; padding: 8px;">Number of Persons</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">1–2</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">3</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">4</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">5</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">Price</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">CHF 20.–</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">CHF 30.–</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">CHF 40.–</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">CHF 50.–</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 style="font-size: 1.2em; margin-top: 40px;">Contact</h2>
+    <p>Franz 079 425 52 63, Doris 078 866 46 42, Laura 076 399 34 49, Sven 076 343 30 46, Nino 076 580 93 95</p>
+</body>
+</html>

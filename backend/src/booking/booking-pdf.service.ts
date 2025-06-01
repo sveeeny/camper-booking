@@ -6,7 +6,8 @@ import * as path from 'path';
 
 export async function generateBookingPDF(
   booking: BookingPdfInput,
-  settings: Settings
+  settings: Settings,
+  language: string,
 ): Promise<Buffer> {
   const browser = await puppeteer.launch({
     headless: true,
@@ -14,8 +15,12 @@ export async function generateBookingPDF(
     executablePath: '/usr/bin/chromium',
   });
 
+
   const page = await browser.newPage();
-  const templatePath = path.join(__dirname, 'templates/pdf-template.html');
+  const lang = language || 'en'; 
+  const templatePath = path.resolve(__dirname, `templates/pdf-template.${lang}.html`);
+
+  // const templatePath = path.join(__dirname, 'templates/pdf-template.html');
   let html = fs.readFileSync(templatePath, 'utf-8');
 
   const carsHtml = booking.cars

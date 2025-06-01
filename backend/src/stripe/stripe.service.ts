@@ -7,6 +7,7 @@ import { ResendService } from '@/resend/resend.service';
 import { SettingsService } from '@/settings/settings.service';
 import { generateBookingPDF } from '@/booking/booking-pdf.service';
 import { generateDownloadToken } from '@/utils/jwt-download.util';
+import { stringify } from 'querystring';
 
 
 @Injectable()
@@ -109,11 +110,12 @@ export class StripeService {
               children: car.children,
               priceBase: Number(car.basePrice ?? 0),
               priceTax: Number(car.touristTax ?? 0),
+              
             })),
           };
 
           // 3. PDF generieren
-          const pdfBuffer = await generateBookingPDF(bookingForPdf, settings);
+          const pdfBuffer = await generateBookingPDF(bookingForPdf, settings, language);
 
 
           // 4. E-Mail versenden
