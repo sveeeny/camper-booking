@@ -83,7 +83,7 @@ const {
 const { clearOnlyLocal, cleanupWithPrompt } = useBookingCleanup();
 
 useIdleTimer({
-  timeoutMinutes: 0.2,
+  timeoutMinutes: 15,
   onTimeout: async () => {
     console.warn('⏱️ Benutzer war zu lange inaktiv – Buchung wird gelöscht');
     await cleanupWithPrompt({
