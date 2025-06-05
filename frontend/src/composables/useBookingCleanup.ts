@@ -23,7 +23,7 @@ export function useBookingCleanup(options?: {
   // 🔍 Stripe-Flow-Check
   const isStripeFlowActive = () => localStorage.getItem('paymentInProgress') === 'true';
 
-  const clearOnlyLocal = () => {
+  const clearOnlyLocal = async() => {
     clearLocalState();
   };
 
