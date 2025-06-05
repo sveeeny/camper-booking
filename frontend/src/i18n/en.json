@@ -191,7 +191,8 @@
     "AE": "United Arab Emirates",
     "GB": "United Kingdom",
     "US": "United States",
-    "VN": "Vietnam"
+    "VN": "Vietnam",
+    "CZ": "Czech Republic"
   },
   "stripe": {
   "productName": "booking byherger"

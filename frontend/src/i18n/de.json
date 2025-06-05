@@ -191,7 +191,8 @@
     "AE": "Vereinigte Arabische Emirate",
     "GB": "Vereinigtes Königreich",
     "US": "Vereinigte Staaten",
-    "VN": "Vietnam"
+    "VN": "Vietnam",
+    "CZ": "Tschechien"
   },
   "stripe": {
   "productName": "Buchung byherger"

@@ -55,6 +55,7 @@ export const useBookingStore = defineStore('booking', {
         adults: 1,
         children: 0,
         touristTax: 0,
+        basePrice: 0,
       }));
     },
 

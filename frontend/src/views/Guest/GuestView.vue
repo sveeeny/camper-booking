@@ -37,6 +37,14 @@ import { useSettingsStore } from '@/store/settingsStore';
 
 import LanguageSwitcher from '@/components/User/LanguageSwitcher.vue';
 import { useI18n } from 'vue-i18n';
+import { useIdleTimer } from '@/composables/useIdleTimer';
+
+import { useBookingStore } from '@/store/bookingStore';
+
+const bookingStore = useBookingStore();
+
+
+
 
 const { locale } = useI18n();
 const {t} = useI18n();
@@ -71,6 +79,19 @@ const {
   submitBookingStepTwo,
   initModeFromUser,
 } = useBooking();
+
+const { clearOnlyLocal, cleanupWithPrompt } = useBookingCleanup();
+
+useIdleTimer({
+  timeoutMinutes: 1,
+  onTimeout: async () => {
+    console.warn('⏱️ Benutzer war zu lange inaktiv – Buchung wird gelöscht');
+    await cleanupWithPrompt({
+      message: 'Du warst zu lange inaktiv. Die Buchung wurde abgebrochen.',
+      redirect: '/', // z. B. zur Startseite
+    });
+  },
+});
 
 
 useBookingCleanup({ requireConfirmation: true });

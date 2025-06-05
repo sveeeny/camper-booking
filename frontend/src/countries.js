@@ -84,7 +84,8 @@ export const countries = [
   { code: "AE", dialCode: "+971" },
   { code: "GB", dialCode: "+44" },
   { code: "US", dialCode: "+1" },
-  { code: "VN", dialCode: "+84" }
+  { code: "VN", dialCode: "+84" },
+  { code: "CZ", dialCode: "+420" }
 ];
 
 export default countries;
