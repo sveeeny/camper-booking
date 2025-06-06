@@ -40,6 +40,7 @@
           :placeholder="t('stepTwo.nationality.placeholder')" 
           :searchable="true" 
           :close-on-select="true"
+          :block-keys="['Tab', 'Enter']"
           :class="['multiselect', { 'border-red-500': errorFields.includes('Nationalität') }]" />
 
         </div>
@@ -55,9 +56,16 @@
         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.phone.label') }}</label>
         <div class="flex gap-2 py-2 items-stretch min-h-[42px]">
           
-          <Multiselect v-model="guestDialCode" :options="dialCodes" :searchable="true" :close-on-select="true"
-            :allow-empty="false" track-by="dialCode" :placeholder="t('stepTwo.phone.countryCode')" :custom-label="countryLabel"
-            :class="['multiselect', 'w-1/2', { 'border-red-500': errorFields.includes('Vorwahl') }]" />
+          <Multiselect 
+          v-model="guestDialCode" 
+          :options="dialCodes" 
+          :searchable="true" 
+          :close-on-select="true"
+          :allow-empty="false" track-by="dialCode" 
+          :placeholder="t('stepTwo.phone.countryCode')" 
+          :custom-label="countryLabel"
+          :block-keys="['Tab', 'Enter']"
+          :class="['multiselect', 'w-1/2', { 'border-red-500': errorFields.includes('Vorwahl') }]" />
 
           <input type="text" v-model="guestInfo.phoneNumber" :placeholder="t('stepTwo.phone.placeholder')"
             :class="inputClass(errorFields.includes('Telefonnummer')) + ' w-1/2'" />
