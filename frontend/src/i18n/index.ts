@@ -1,10 +1,21 @@
 import { createI18n } from 'vue-i18n';
-import de from './de.json';
-import en from './en.json';
+import deBase from './de.json';
+import enBase from './en.json';
+import deCountries from './countries.de.json';
+import enCountries from './countries.en.json';
+
+const de = {
+  ...deBase,
+  countries: deCountries,
+};
+
+const en = {
+  ...enBase,
+  countries: enCountries,
+};
 
 type MessageSchema = typeof de;
 
-// 🌐 Gespeicherte Sprache laden (oder 'de')
 const savedLocale = localStorage.getItem('locale') as 'de' | 'en' | null;
 const defaultLocale: 'de' | 'en' = savedLocale || 'de';
 
