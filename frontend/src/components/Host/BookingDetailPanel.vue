@@ -17,6 +17,7 @@
     <!-- Inhalt -->
     <div class="p-4 overflow-y-auto max-h-[calc(100vh-64px)]">
       <div v-if="booking" class="space-y-6 text-left text-sm md:text-base">
+      <p><strong>Check-in:</strong> {{ booking.id }} ab 13:00 Uhr</p>
         <!-- Block 1: Buchungsinfo -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div class="bg-white dark:bg-slate-800 p-4 rounded shadow border dark:border-slate-700">
