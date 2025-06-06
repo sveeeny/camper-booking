@@ -40,7 +40,6 @@
           :placeholder="t('stepTwo.nationality.placeholder')" 
           :searchable="true" 
           :close-on-select="true"
-          :block-keys="['Tab', 'Enter']"
           :class="['multiselect', { 'border-red-500': errorFields.includes('Nationalität') }]" />
 
         </div>
@@ -64,7 +63,6 @@
           :allow-empty="false" track-by="dialCode" 
           :placeholder="t('stepTwo.phone.countryCode')" 
           :custom-label="countryLabel"
-          :block-keys="['Tab', 'Enter']"
           :class="['multiselect', 'w-1/2', { 'border-red-500': errorFields.includes('Vorwahl') }]" />
 
           <input type="text" v-model="guestInfo.phoneNumber" :placeholder="t('stepTwo.phone.placeholder')"
