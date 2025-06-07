@@ -84,13 +84,30 @@ const freeSpotsPerDay = computed(() =>
 type PositionedBooking = HostBookingSummary & { offset: number; length: number };
 
 const layoutRows = computed<PositionedBooking[][]>(() => {
-  const positioned: PositionedBooking[] = props.bookings.map((b) => {
+  const weekStart = props.startDate;
+const weekEnd = new Date(+weekStart + 7 * 86400000);
+
+const positioned: PositionedBooking[] = props.bookings
+  .map((b) => {
     const checkIn = new Date(b.checkIn);
     const checkOut = new Date(b.checkOut);
-    const offset = Math.max(0, Math.floor((+checkIn - +props.startDate) / 86400000));
-    const length = Math.floor((+checkOut - +checkIn) / 86400000);
+
+    // Wenn die Buchung außerhalb der Woche liegt, überspringen
+    if (checkOut <= weekStart || checkIn >= weekEnd) return null;
+
+    // Effektive sichtbare Start-/Endzeit innerhalb dieser Woche
+    const visibleStart = checkIn < weekStart ? weekStart : checkIn;
+    const visibleEnd = checkOut > weekEnd ? weekEnd : checkOut;
+
+    const offset = Math.floor((+visibleStart - +weekStart) / 86400000);
+    const length = Math.floor((+visibleEnd - +visibleStart) / 86400000);
+
+    if (length <= 0) return null; // keine sichtbaren Nächte
+
     return { ...b, offset, length };
-  });
+  })
+  .filter((b): b is PositionedBooking => b !== null);
+
 
   const rows: PositionedBooking[][] = [];
   for (const booking of positioned) {
