@@ -86,7 +86,9 @@ const layoutRows = computed<PositionedBooking[][]>(() => {
       // Effektive sichtbare Start-/Endzeit innerhalb dieser Woche
       const visibleStart = checkIn < weekStart ? weekStart : checkIn;
       const visibleEnd = checkOut > weekEnd ? weekEnd : checkOut;
-      const adjustedVisibleEnd = new Date(+visibleEnd - 1); // letzte Nacht
+      const adjustedVisibleEnd = new Date(visibleEnd);
+      adjustedVisibleEnd.setDate(adjustedVisibleEnd.getDate() - 1);
+
 
 
 
