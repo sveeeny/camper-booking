@@ -92,7 +92,7 @@ const layoutRows = computed<PositionedBooking[][]>(() => {
 
 
     // ⛔️ Falls letzte Nacht vor Wochenanfang oder checkIn nach Wochenende → überspringen
-    if (lastNight < weekStart || checkIn >= weekEnd) return null;
+    if (lastNight < weekStart || checkIn > weekEnd) return null;
 
     // ✅ Sichtbarer Bereich innerhalb der Woche
     const visibleStart = checkIn < weekStart ? weekStart : checkIn;
