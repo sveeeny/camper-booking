@@ -73,40 +73,37 @@ const freeSpotsPerDay = computed(() =>
 type PositionedBooking = HostBookingSummary & { offset: number; length: number };
 
 const layoutRows = computed<PositionedBooking[][]>(() => {
-  const weekStart = props.startDate;
-  const weekEnd = new Date(+weekStart + 7 * 86400000);
+  const weekStart = normalizeDate(new Date(props.startDate));
+  const weekEnd = new Date(+weekStart + 7 * 86400000); // exklusiv
 
   const positioned: PositionedBooking[] = props.bookings
-  .map((b) => {
-    const checkIn = new Date(b.checkIn);
+    .map((b) => {
+      const checkIn = normalizeDate(new Date(b.checkIn));
+      const checkOut = normalizeDate(new Date(b.checkOut));
 
-    // ⛔️ Wenn checkIn >= checkOut: ungültig
-    if (!b.checkOut || new Date(b.checkOut) <= checkIn) return null;
+      // ⛔ Ungültige oder leere Buchung
+      if (!b.checkOut || checkOut <= checkIn) return null;
 
-    // ✅ checkOut - 1 Tag, um die "letzte Nacht" korrekt zu berechnen
-    const lastNight = new Date(b.checkOut);
-    lastNight.setDate(lastNight.getDate() - 1);
+      // ✅ Letzte sichtbare Nacht (checkOut - 1 Tag)
+      const lastNight = new Date(+checkOut - 86400000);
 
-    const weekStart = props.startDate;
-    const weekEnd = normalizeDate(new Date(+weekStart + 7 * 86400000));
+      // ⛔ Buchung komplett außerhalb der Woche
+      if (lastNight < weekStart || checkIn >= weekEnd) return null;
 
+      // ✅ Sichtbarer Zeitraum innerhalb dieser Woche
+      const visibleStart = checkIn < weekStart ? weekStart : checkIn;
+      const visibleEnd = lastNight > weekEnd ? weekEnd : lastNight;
 
-    // ⛔️ Falls letzte Nacht vor Wochenanfang oder checkIn nach Wochenende → überspringen
-    if (lastNight < weekStart || checkIn > weekEnd) return null;
+      const offset = Math.floor((+visibleStart - +weekStart) / 86400000);
+      const length = Math.floor((+visibleEnd - +visibleStart) / 86400000) + 1;
 
-    // ✅ Sichtbarer Bereich innerhalb der Woche
-    const visibleStart = checkIn < weekStart ? weekStart : checkIn;
-    const visibleEnd = lastNight > weekEnd ? weekEnd : lastNight;
+      if (length <= 0) return null;
 
-    const offset = Math.floor((+visibleStart - +weekStart) / 86400000);
-    const length = Math.floor((+visibleEnd - +visibleStart) / 86400000) + 1;
+      return { ...b, offset, length };
+    })
+    .filter((b): b is PositionedBooking => b !== null);
 
-    return { ...b, offset, length };
-  })
-  .filter((b): b is PositionedBooking => b !== null && b.length > 0);
-
-
-
+  // Buchungen in Gantt-Zeilen aufteilen
   const rows: PositionedBooking[][] = [];
   for (const booking of positioned) {
     let placed = false;
