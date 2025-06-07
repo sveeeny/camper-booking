@@ -1,27 +1,18 @@
 <!-- src/components/Host/BookingGantt.vue -->
 <template>
-  <div
-    class="grid"
-    :style="`grid-template-columns: 120px repeat(${daysOfWeek.length}, 1fr);`"
-  >
+  <div class="grid" :style="`grid-template-columns: 120px repeat(${daysOfWeek.length}, 1fr);`">
     <!-- Kopfzeile -->
     <div class="p-2 font-medium border bg-slate-100 dark:bg-slate-800">Plätze frei</div>
-    <div
-      v-for="(day, i) in daysOfWeek"
-      :key="i"
-      class="p-2 border text-sm font-medium text-slate-700 dark:text-white bg-slate-100 dark:bg-slate-800"
-    >
+    <div v-for="(day, i) in daysOfWeek" :key="i"
+      class="p-2 border text-sm font-medium text-slate-700 dark:text-white bg-slate-100 dark:bg-slate-800">
       {{ formatDay(day) }}
     </div>
 
     <!-- Freie Plätze -->
     <div class="p-2 font-medium border-l border-b min-h-12 flex items-center">Frei</div>
-    <div
-      v-for="(free, i) in freeSpotsPerDay"
-      :key="'free-' + i"
+    <div v-for="(free, i) in freeSpotsPerDay" :key="'free-' + i"
       class="p-2 text-center font-semibold border-b border-r min-h-12 flex items-center justify-center"
-      :class="getSpotColor(free)"
-    >
+      :class="getSpotColor(free)">
       {{ free }}
     </div>
 
@@ -33,13 +24,10 @@
       <template v-for="booking in row" :key="booking.id">
         <div
           class="cursor-pointer text-sm px-2 py-1 m-[2px] overflow-hidden whitespace-nowrap flex flex-col justify-center leading-tight h-half rounded-xl text-white"
-          :class="getBookingClass(booking)"
-          :style="{
+          :class="getBookingClass(booking)" :style="{
             gridColumn: booking.offset + 2 + ' / span ' + booking.length,
             gridRow: rowIndex + 3
-          }"
-          @click="$emit('select', booking.id)"
-        >
+          }" @click="$emit('select', booking.id)">
           <span class="font-bold">{{ booking.carPlate }}</span>
           <span class="text-xs">{{ booking.guestName }}</span>
         </div>
@@ -85,28 +73,31 @@ type PositionedBooking = HostBookingSummary & { offset: number; length: number }
 
 const layoutRows = computed<PositionedBooking[][]>(() => {
   const weekStart = props.startDate;
-const weekEnd = new Date(+weekStart + 7 * 86400000);
+  const weekEnd = new Date(+weekStart + 7 * 86400000);
 
-const positioned: PositionedBooking[] = props.bookings
-  .map((b) => {
-    const checkIn = new Date(b.checkIn);
-    const checkOut = new Date(b.checkOut);
+  const positioned: PositionedBooking[] = props.bookings
+    .map((b) => {
+      const checkIn = new Date(b.checkIn);
+      const checkOut = new Date(b.checkOut);
 
-    // Wenn die Buchung außerhalb der Woche liegt, überspringen
-    if (checkOut <= weekStart || checkIn >= weekEnd) return null;
+      // Wenn die Buchung außerhalb der Woche liegt, überspringen
+      if (checkOut <= weekStart || checkIn >= weekEnd) return null;
 
-    // Effektive sichtbare Start-/Endzeit innerhalb dieser Woche
-    const visibleStart = checkIn < weekStart ? weekStart : checkIn;
-    const visibleEnd = checkOut > weekEnd ? weekEnd : checkOut;
+      // Effektive sichtbare Start-/Endzeit innerhalb dieser Woche
+      const visibleStart = checkIn < weekStart ? weekStart : checkIn;
+      const visibleEnd = checkOut > weekEnd ? weekEnd : checkOut;
+      const adjustedVisibleEnd = new Date(+visibleEnd - 1); // letzte Nacht
 
-    const offset = Math.floor((+visibleStart - +weekStart) / 86400000);
-    const length = Math.floor((+visibleEnd - +visibleStart) / 86400000);
 
-    if (length <= 0) return null; // keine sichtbaren Nächte
 
-    return { ...b, offset, length };
-  })
-  .filter((b): b is PositionedBooking => b !== null);
+      const offset = Math.floor((+visibleStart - +weekStart) / 86400000);
+      const length = Math.floor((+adjustedVisibleEnd - +visibleStart) / 86400000) + 1;
+
+      if (length <= 0) return null; // keine sichtbaren Nächte
+
+      return { ...b, offset, length };
+    })
+    .filter((b): b is PositionedBooking => b !== null);
 
 
   const rows: PositionedBooking[][] = [];
