@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { HostBookingSummary } from '@/types';
-import { formatDateToYMD } from '@/composables/utils/dateUtils';
+import { formatDateLocalYMD, formatDateToYMD } from '@/composables/utils/dateUtils';
 
 const props = defineProps<{
   bookings: HostBookingSummary[];
@@ -61,14 +61,13 @@ const daysOfWeek = computed(() =>
 
 const freeSpotsPerDay = computed(() =>
   daysOfWeek.value.map((day) => {
-    const ymd = formatDateToYMD(day); // ← ohne +1!
+    const ymd = formatDateLocalYMD(new Date(day.getTime() + 86400000)); // +1 Tag
     const occupied = props.bookings.filter(
       (b) => ymd >= b.checkIn && ymd < b.checkOut
     ).length;
     return Math.max(0, props.maxSpots - occupied);
   })
 );
-
 
 type PositionedBooking = HostBookingSummary & { offset: number; length: number };
 
