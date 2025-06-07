@@ -76,30 +76,33 @@ const layoutRows = computed<PositionedBooking[][]>(() => {
   const weekEnd = new Date(+weekStart + 7 * 86400000);
 
   const positioned: PositionedBooking[] = props.bookings
-    .map((b) => {
-      const checkIn = new Date(b.checkIn);
-      const checkOut = new Date(b.checkOut);
+  .map((b) => {
+    const checkIn = new Date(b.checkIn);
 
-      // Wenn die Buchung außerhalb der Woche liegt, überspringen
-      if (checkOut <= weekStart || checkIn >= weekEnd) return null;
+    // ⛔️ Wenn checkIn >= checkOut: ungültig
+    if (!b.checkOut || new Date(b.checkOut) <= checkIn) return null;
 
-      // Effektive sichtbare Start-/Endzeit innerhalb dieser Woche
-      const visibleStart = checkIn < weekStart ? weekStart : checkIn;
-      const visibleEnd = checkOut > weekEnd ? weekEnd : checkOut;
-      const adjustedVisibleEnd = new Date(visibleEnd);
-      adjustedVisibleEnd.setDate(adjustedVisibleEnd.getDate() - 1);
+    // ✅ checkOut - 1 Tag, um die "letzte Nacht" korrekt zu berechnen
+    const lastNight = new Date(b.checkOut);
+    lastNight.setDate(lastNight.getDate() - 1);
 
+    const weekStart = props.startDate;
+    const weekEnd = new Date(+weekStart + 7 * 86400000);
 
+    // ⛔️ Falls letzte Nacht vor Wochenanfang oder checkIn nach Wochenende → überspringen
+    if (lastNight < weekStart || checkIn >= weekEnd) return null;
 
+    // ✅ Sichtbarer Bereich innerhalb der Woche
+    const visibleStart = checkIn < weekStart ? weekStart : checkIn;
+    const visibleEnd = lastNight > weekEnd ? weekEnd : lastNight;
 
-      const offset = Math.floor((+visibleStart - +weekStart) / 86400000);
-      const length = Math.floor((+adjustedVisibleEnd - +visibleStart) / 86400000) + 1;
+    const offset = Math.floor((+visibleStart - +weekStart) / 86400000);
+    const length = Math.floor((+visibleEnd - +visibleStart) / 86400000) + 1;
 
-      if (length <= 0) return null; // keine sichtbaren Nächte
+    return { ...b, offset, length };
+  })
+  .filter((b): b is PositionedBooking => b !== null && b.length > 0);
 
-      return { ...b, offset, length };
-    })
-    .filter((b): b is PositionedBooking => b !== null);
 
 
   const rows: PositionedBooking[][] = [];
