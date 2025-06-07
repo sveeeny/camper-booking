@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { HostBookingSummary } from '@/types';
-import { formatDateLocalYMD, formatDateToYMD } from '@/composables/utils/dateUtils';
+import { formatDateLocalYMD, formatDateToYMD, normalizeDate } from '@/composables/utils/dateUtils';
 
 const props = defineProps<{
   bookings: HostBookingSummary[];
@@ -88,10 +88,11 @@ const layoutRows = computed<PositionedBooking[][]>(() => {
     lastNight.setDate(lastNight.getDate() - 1);
 
     const weekStart = props.startDate;
-    const weekEnd = new Date(+weekStart + 7 * 86400000);
+    const weekEnd = normalizeDate(new Date(+weekStart + 7 * 86400000));
+
 
     // ⛔️ Falls letzte Nacht vor Wochenanfang oder checkIn nach Wochenende → überspringen
-    if (lastNight < weekStart || checkIn > weekEnd) return null;
+    if (lastNight < weekStart || checkIn >= weekEnd) return null;
 
     // ✅ Sichtbarer Bereich innerhalb der Woche
     const visibleStart = checkIn < weekStart ? weekStart : checkIn;
