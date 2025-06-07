@@ -81,23 +81,21 @@ const layoutRows = computed<PositionedBooking[][]>(() => {
       const checkIn = normalizeDate(new Date(b.checkIn));
       const checkOut = normalizeDate(new Date(b.checkOut));
 
-      // ⛔ Ungültige oder leere Buchung
       if (!b.checkOut || checkOut <= checkIn) return null;
 
-      // ✅ Letzte sichtbare Nacht (checkOut - 1 Tag)
+      // letzte Nacht
       const lastNight = new Date(+checkOut - 86400000);
 
-      // ⛔ Buchung komplett außerhalb der Woche
+      // keine sichtbare Nacht innerhalb dieser Woche
       if (lastNight < weekStart || checkIn >= weekEnd) return null;
 
-      // ✅ Sichtbarer Zeitraum innerhalb dieser Woche
       const visibleStart = checkIn < weekStart ? weekStart : checkIn;
-      const visibleEndExclusive = new Date(Math.min(+lastNight + 86400000, +weekEnd));
 
+      // exklusives Ende: entweder Nacht + 1 oder Wochenende, je nachdem was früher kommt
+      const visibleEndExclusive = new Date(Math.min(+lastNight + 86400000, +weekEnd));
 
       const offset = Math.floor((+visibleStart - +weekStart) / 86400000);
       const length = Math.floor((+visibleEndExclusive - +visibleStart) / 86400000);
-
 
       if (length <= 0) return null;
 
@@ -105,7 +103,7 @@ const layoutRows = computed<PositionedBooking[][]>(() => {
     })
     .filter((b): b is PositionedBooking => b !== null);
 
-  // Buchungen in Gantt-Zeilen aufteilen
+  // Buchungen auf Zeilen verteilen
   const rows: PositionedBooking[][] = [];
   for (const booking of positioned) {
     let placed = false;
@@ -126,6 +124,7 @@ const layoutRows = computed<PositionedBooking[][]>(() => {
 
   return rows;
 });
+
 
 const getBookingClass = (booking: HostBookingSummary) => {
   if (booking.status !== 'paid') {
