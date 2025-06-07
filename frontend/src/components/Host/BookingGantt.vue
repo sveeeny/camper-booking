@@ -61,13 +61,14 @@ const daysOfWeek = computed(() =>
 
 const freeSpotsPerDay = computed(() =>
   daysOfWeek.value.map((day) => {
-    const ymd = formatDateLocalYMD(new Date(day.getTime() + 86400000)); // +1 Tag
+    const ymd = formatDateLocalYMD(day); // ← ohne +1!
     const occupied = props.bookings.filter(
       (b) => ymd >= b.checkIn && ymd < b.checkOut
     ).length;
     return Math.max(0, props.maxSpots - occupied);
   })
 );
+
 
 type PositionedBooking = HostBookingSummary & { offset: number; length: number };
 
