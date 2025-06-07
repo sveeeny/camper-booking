@@ -81,7 +81,7 @@ const layoutRows = computed<PositionedBooking[][]>(() => {
     const checkIn = new Date(b.checkIn);
 
     // ⛔️ Wenn checkIn >= checkOut: ungültig
-    if (!b.checkOut || new Date(b.checkOut) <= checkIn) return null;
+    if (!b.checkOut || new Date(b.checkOut) < checkIn) return null;
 
     // ✅ checkOut - 1 Tag, um die "letzte Nacht" korrekt zu berechnen
     const lastNight = new Date(b.checkOut);
