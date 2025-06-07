@@ -74,7 +74,7 @@ type PositionedBooking = HostBookingSummary & { offset: number; length: number }
 
 const layoutRows = computed<PositionedBooking[][]>(() => {
   const weekStart = normalizeDate(new Date(props.startDate));
-  const weekEnd = new Date(+weekStart + 7 * 86400000); // exklusiv
+  const weekEnd = new Date(+weekStart + 7 * 86400000); // Mo + 7 = nächster Mo
 
   const positioned: PositionedBooking[] = props.bookings
     .map((b) => {
@@ -83,16 +83,16 @@ const layoutRows = computed<PositionedBooking[][]>(() => {
 
       if (!b.checkOut || checkOut <= checkIn) return null;
 
-      // letzte Nacht
       const lastNight = new Date(+checkOut - 86400000);
 
-      // keine sichtbare Nacht innerhalb dieser Woche
       if (lastNight < weekStart || checkIn >= weekEnd) return null;
 
       const visibleStart = checkIn < weekStart ? weekStart : checkIn;
 
-      // exklusives Ende: entweder Nacht + 1 oder Wochenende, je nachdem was früher kommt
-      const visibleEndExclusive = new Date(Math.min(+lastNight + 86400000, +weekEnd - 86400000));
+      // ❗ Sichtbares Ende maximal Sonntagabend (nicht Montag!)
+      const visibleEndExclusive = new Date(
+        Math.min(+lastNight + 86400000, +weekEnd - 1)
+      );
 
       const offset = Math.floor((+visibleStart - +weekStart) / 86400000);
       const length = Math.floor((+visibleEndExclusive - +visibleStart) / 86400000);
@@ -103,7 +103,7 @@ const layoutRows = computed<PositionedBooking[][]>(() => {
     })
     .filter((b): b is PositionedBooking => b !== null);
 
-  // Buchungen auf Zeilen verteilen
+  // Zeilenlogik bleibt unverändert
   const rows: PositionedBooking[][] = [];
   for (const booking of positioned) {
     let placed = false;
@@ -124,6 +124,7 @@ const layoutRows = computed<PositionedBooking[][]>(() => {
 
   return rows;
 });
+
 
 
 const getBookingClass = (booking: HostBookingSummary) => {
