@@ -92,7 +92,7 @@ const layoutRows = computed<PositionedBooking[][]>(() => {
       const visibleStart = checkIn < weekStart ? weekStart : checkIn;
 
       // exklusives Ende: entweder Nacht + 1 oder Wochenende, je nachdem was früher kommt
-      const visibleEndExclusive = new Date(Math.min(+lastNight + 86400000, +weekEnd));
+      const visibleEndExclusive = new Date(Math.min(+lastNight + 86400000, +weekEnd - 86400000));
 
       const offset = Math.floor((+visibleStart - +weekStart) / 86400000);
       const length = Math.floor((+visibleEndExclusive - +visibleStart) / 86400000);
