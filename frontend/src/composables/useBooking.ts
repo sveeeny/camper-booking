@@ -213,12 +213,13 @@ const submitBookingStepTwo = async (): Promise<boolean> => {
   // 🧩 Platzhalter für Host-Modus
   if (mode.value === 'host') {
     if (!guestInfo.value.firstName.trim()) guestInfo.value.firstName = 'Gast';
-    if (!guestInfo.value.lastName.trim()) guestInfo.value.lastName = 'Unbekannt';
+    if (!guestInfo.value.lastName.trim()) guestInfo.value.lastName = ' ';
     if (!guestInfo.value.salutation) guestInfo.value.salutation = 'Herr';
     if (!guestInfo.value.email.trim()) guestInfo.value.email = 'keine-angabe@example.com';
     if (!guestInfo.value.phoneNumber.trim()) guestInfo.value.phoneNumber = '0000000000';
     if (!guestInfo.value.phoneCountryCode) guestInfo.value.phoneCountryCode = '+41';
     if (!guestInfo.value.nationality) guestInfo.value.nationality = 'CH';
+    
 
     cars.value.forEach((car, i) => {
       if (!car.carPlate.trim()) car.carPlate = `XX-${i + 1}`;
@@ -256,6 +257,7 @@ const submitBookingStepTwo = async (): Promise<boolean> => {
     checkInDate: formatDateLocalYMD(checkIn),
     checkOutDate: formatDateLocalYMD(checkOut),
     totalPrice: priceInfo.value.total,
+    source: mode.value,
     cars: cars.value,
   };
 

@@ -66,3 +66,9 @@ export class Booking {
   @OneToMany(() => Car, (car) => car.booking, { cascade: true })
   cars: Car[];
 }
+
+// booking.state.ts oder booking.entity.ts
+export enum BookingSource {
+  GUEST = 'guest',
+  HOST = 'host',
+}

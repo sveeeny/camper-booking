@@ -1,9 +1,11 @@
 import {
   IsString, IsIn, IsArray, IsEmail, IsNotEmpty, Matches,
-  IsDateString, ValidateNested, MinLength, MaxLength, Validate, IsUUID
+  IsDateString, ValidateNested, MinLength, MaxLength, Validate, IsUUID,
+  isEnum
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { CarsDto } from '../dto/cars.dto';
+
 
 // 💡 Formatierungsfunktion für einheitliches Datum
 const formatDateToYMD = (value: string | Date): string => {
@@ -70,4 +72,11 @@ export class CreateBookingGuestDto {
   @ValidateNested({ each: true })
   @Type(() => CarsDto)
   cars: CarsDto[];
+
+
+
+  @IsString()
+  @IsIn(['host', 'guest'])
+  source?: string;
+
 }

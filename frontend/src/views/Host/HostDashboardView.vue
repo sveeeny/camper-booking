@@ -11,7 +11,7 @@
       </button>
 
       <!-- 🔓 Logout -->
-      <button @click="handleLogout" class="px-4 py-2 rounded-md font-medium bg-slate-600 hover:bg-slate-700 text-white">
+      <button @click="handleLogout" class="px-4 py-2 rounded-md font-medium bg-slate-400 hover:bg-slate-500 text-white">
         Logout
       </button>
     </div>
@@ -43,11 +43,6 @@ const userStore = useUserStore();
 const { cleanupWithPrompt } = useBookingCleanup();
 
 // 📍 Aktuelle Route
-// const isRoute = (name: string) => route.name === name;
-
-// 👁️ Route-Prüfungen
-// const isListOrWeekView = ['HostListView', 'HostWeekView'].includes(route.name as string);
-// const isAddBooking = route.name === 'HostAddBookingView' || route.path === '/host/buchung-hinzufuegen';
 
 const currentRouteName = computed(() => route.name);
 
@@ -60,8 +55,8 @@ const isRoute = (name: string) => currentRouteName.value === name;
 // 🎨 Styling für Buttons
 const buttonClass = (active: boolean) =>
   `px-4 py-2 rounded-md font-medium ${active
-    ? 'bg-blue-600 text-white'
-    : 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-white'
+    ? 'bg-slate-200 text-black dark:bg-slate-950 dark:text-white'
+    : 'bg-slate-100 text-black dark:bg-slate-700 dark:text-white'
   }`;
 
 // 🔁 Dashboard-Button

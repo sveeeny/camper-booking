@@ -4,11 +4,11 @@
     <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-4">Wochenübersicht</h2>
 
     <div class="flex items-center justify-between mb-4">
-      <button @click="prevWeek" class="text-blue-600 hover:underline">← Vorige Woche</button>
-      <div class="font-semibold text-slate-700 dark:text-white">
+      <button @click="prevWeek" class="text-lg">← Vorige Woche</button>
+      <div class="font-semibold text-slate-700 dark:text-white text-lg">
         {{ formatDate(weekStart) }} – {{ formatDate(weekEnd) }}
       </div>
-      <button @click="nextWeek" class="text-blue-600 hover:underline">Nächste Woche →</button>
+      <button @click="nextWeek" class="text-lg">Nächste Woche →</button>
     </div>
 
     <BookingGantt
@@ -79,7 +79,7 @@ watch(weekStart, () => {
   loadBookings(from, to);
 });
 
-const formatDate = (d: Date) => format(d, 'dd.MM');
+const formatDate = (d: Date) => format(d, 'dd.MM.yyyy');
 
 const prevWeek = () => {
   weekStart.value.setDate(weekStart.value.getDate() - 7);

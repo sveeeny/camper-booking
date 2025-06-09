@@ -8,6 +8,8 @@
                 <th class="text-left p-2">Abreise</th>
                 <th class="text-left p-2">Fahrzeug</th>
                 <th class="text-left p-2">Insassen</th>
+                <th class="text-left p-2">Status</th>
+                <th class="text-left p-2">gebucht durch</th>
             </tr>
         </thead>
         <tbody>
@@ -20,11 +22,13 @@
             <tr v-for="booking in bookings" :key="booking.id + booking.spot"
                 class="border-t hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                 @click="$emit('select', booking.id)">
-                <td class="p-2">{{ booking.guestName }}</td>
-                <td class="p-2">{{ formatToCH(new Date(booking.checkIn)) }}</td>
-                <td class="p-2">{{ formatToCH(new Date(booking.checkOut)) }}</td>
-                <td class="p-2">{{ booking.carPlate }}</td>
-                <td class="p-2">{{ booking.adults + booking.children }}</td>
+                <td class="text-left p-2">{{ booking.guestName }}</td>
+                <td class="text-left p-2">{{ formatToCH(new Date(booking.checkIn)) }}</td>
+                <td class="text-left p-2">{{ formatToCH(new Date(booking.checkOut)) }}</td>
+                <td class="text-left p-2">{{ booking.carPlate }}</td>
+                <td class="text-left p-2">{{ booking.adults + booking.children }}</td>
+                <td class="text-left p-2">{{ booking.status }}</td>
+                <td class="text-left p-2">{{ booking.source }}</td>
             </tr>
         </tbody>
     </table>

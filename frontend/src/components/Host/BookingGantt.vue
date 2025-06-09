@@ -1,17 +1,18 @@
 <!-- src/components/Host/BookingGantt.vue -->
 <template>
+  <div class="mb-4 px-4 bg-slate-50 dark:bg-slate-800 p-4 rounded-xl shadow border flex items-center gap-3 ">
   <div class="grid" :style="`grid-template-columns: 120px repeat(${daysOfWeek.length}, 1fr);`">
     <!-- Kopfzeile -->
-    <div class="p-2 font-medium border bg-slate-100 dark:bg-slate-800"></div>
+    <div class="p-2 font-medium border bg-slate-200 dark:bg-slate-950 rounded-l-lg">Datum</div>
     <div v-for="(day, i) in daysOfWeek" :key="i"
-      class="p-2 border text-sm font-medium text-slate-700 dark:text-white bg-slate-100 dark:bg-slate-800">
+      class="p-2 border text-base font-medium text-slate-700 dark:text-white bg-slate-200 dark:bg-slate-950">
       {{ formatDay(day) }}
     </div>
 
     <!-- Freie Plätze -->
-    <div class="p-2 font-medium border-l border-b min-h-12 flex items-center">Freie Plätze</div>
+    <div class="p-2 my-1 font-medium border-l border-b min-h-10 flex justify-center  bg-slate-200 dark:bg-slate-950 rounded-l-lg">Freie Plätze</div>
     <div v-for="(free, i) in freeSpotsPerDay" :key="'free-' + i"
-      class="p-2 text-center font-semibold border-b border-r min-h-12 flex items-center justify-center"
+      class="p-2 my-1 text-center font-semibold border-r justify-center"
       :class="getSpotColor(free)">
       {{ free }}
     </div>
@@ -23,7 +24,7 @@
 
       <template v-for="booking in row" :key="booking.id">
         <div
-          class="cursor-pointer text-sm px-2 py-1 m-[2px] overflow-hidden whitespace-nowrap flex flex-col justify-center leading-tight h-half rounded-xl text-white"
+          class="cursor-pointer text-sm px-2 py-1 m-[2px] overflow-hidden whitespace-nowrap flex flex-col justify-center leading-tight h-half rounded-lg text-white"
           :class="getBookingClass(booking)" :style="{
             gridColumn: booking.offset + 2 + ' / span ' + booking.length,
             gridRow: rowIndex + 3
@@ -33,6 +34,7 @@
         </div>
       </template>
     </template>
+  </div>
   </div>
 </template>
 
@@ -169,5 +171,5 @@ const getSpotColor = (free: number): string => {
 };
 
 const formatDay = (date: Date) =>
-  date.toLocaleDateString('de-CH', { weekday: 'short', day: '2-digit', month: '2-digit' });
+  date.toLocaleDateString('de-CH', { weekday: 'narrow', day: '2-digit', month: '2-digit' });
 </script>

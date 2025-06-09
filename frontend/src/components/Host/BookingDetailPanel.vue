@@ -17,17 +17,17 @@
     <div class="p-4 overflow-y-auto max-h-[calc(100vh-64px)]">
       <div v-if="booking" class="space-y-6 text-left text-sm md:text-base">
         <!-- Metadaten -->
-        <div class="text-xs text-slate-500 dark:text-slate-400">
+        <div class="text-base text-slate-500 dark:text-slate-400">
           <p><strong>Erstellt am:</strong> {{ formatTimestamp(booking.createdAt) }}</p>
-          <p><strong>Status aktualisiert:</strong> {{ formatTimestamp(booking.statusUpdatedAt) }}</p>
+          <p><strong>Zahlungsstatus aktualisiert:</strong> {{ formatTimestamp(booking.statusUpdatedAt) }}</p>
           <p><strong>Booking-ID:</strong> {{ booking.id }}</p>
-          <p v-if="booking.source === 'host'" class="mt-1 inline-block bg-slate-200 dark:bg-slate-600 px-2 py-1 rounded">Manuelle Buchung</p>
+          <p><strong>Buchung erstellt von:</strong> {{ booking.source }}</p>
         </div>
 
         <!-- Bearbeiten-Button -->
         <div class="flex items-center gap-3">
           <button @click="toggleEditing" class="text-blue-600 hover:underline">
-            {{ isEditing ? 'Bearbeiten beenden' : 'Bearbeiten aktivieren' }}
+            {{ isEditing ? 'Speichern' : 'Bearbeiten' }}
           </button>
 
           <button v-if="canBeDeleted" @click="deleteBooking" class="text-red-600 hover:underline ml-auto">
@@ -37,35 +37,37 @@
 
         <!-- Block 1: Buchungsinfo -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div class="bg-white dark:bg-slate-800 p-4 rounded shadow border dark:border-slate-700">
-            <p><strong>Check-in:</strong> {{ formatDate(booking.checkIn) }} ab 13:00 Uhr</p>
-            <p><strong>Check-out:</strong> {{ formatDate(booking.checkOut) }} bis 12:00 Uhr</p>
-            <p><strong>Anzahl Fahrzeuge:</strong> {{ booking.cars?.length ?? 0 }}</p>
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow border dark:border-slate-700">
+            <p><strong>Check-in: </strong> {{ formatDate(booking.checkIn) }}</p>
+            <p><strong>Check-out: </strong> {{ formatDate(booking.checkOut) }}</p>
+            <p><strong>Anzahl Fahrzeuge: </strong> {{ booking.cars?.length ?? 0 }}</p>
             <hr class="my-2" />
-            <p><strong>Gesamtpreis:</strong> {{ booking.priceTotal }} CHF</p>
+            <p><strong>Gesamtpreis: </strong> {{ booking.priceTotal }} CHF</p>
           </div>
 
           <!-- Block 2: Gastinfo -->
-          <div class="bg-white dark:bg-slate-800 p-4 rounded shadow border dark:border-slate-700">
-            <p><strong>Anrede:</strong>
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow border dark:border-slate-700">
+            <p><strong>Anrede: </strong>
               <input v-if="isEditing" v-model="editable.salutation" class="input" />
               <span v-else>{{ booking.guest?.salutation }}</span>
             </p>
-            <p><strong>Name:</strong>
+            <p><strong>Name: </strong>
               <input v-if="isEditing" v-model="editable.firstName" class="input" placeholder="Vorname" />
-              <span v-else>{{ booking.guest?.firstName }}</span>
+              <span v-else>{{ booking.guest?.firstName }} </span>
+            </p>
+            <p><strong>Vorname: </strong>
               <input v-if="isEditing" v-model="editable.lastName" class="input ml-2" placeholder="Nachname" />
               <span v-else>{{ booking.guest?.lastName }}</span>
             </p>
-            <p><strong>Nationalität:</strong>
+            <p><strong>Nationalität: </strong>
               <input v-if="isEditing" v-model="editable.nationality" class="input" />
               <span v-else>{{ booking.guest?.nationality }}</span>
             </p>
-            <p><strong>E-Mail:</strong>
+            <p><strong>E-Mail: </strong>
               <input v-if="isEditing" v-model="editable.email" class="input" />
               <span v-else>{{ booking.guest?.email }}</span>
             </p>
-            <p><strong>Telefon:</strong>
+            <p><strong>Telefon: </strong>
               <input v-if="isEditing" v-model="editable.phoneCountryCode" class="input w-16" />
               <input v-if="isEditing" v-model="editable.phoneNumber" class="input ml-2" />
               <span v-else>{{ booking.guest?.phoneCountryCode }} {{ booking.guest?.phoneNumber }}</span>
@@ -74,7 +76,7 @@
         </div>
 
         <!-- Status & Aktion -->
-        <div class="mb-4 px-4">
+        <div class="mb-4 px-4 bg-white dark:bg-slate-800 p-4 rounded-xl shadow border flex items-center gap-3 ">
           <p class="text-sm font-medium">
             Status:
             <span :class="getStatusBadge(booking.status)">{{ booking.status }}</span>
@@ -92,11 +94,11 @@
 
         <!-- Fahrzeuge -->
         <div class="grid gap-3" :class="gridClass">
-          <div v-for="(car, index) in booking.cars ?? []" :key="car.carPlate" class="bg-white dark:bg-slate-800 p-4 rounded shadow border dark:border-slate-700">
+          <div v-for="(car, index) in booking.cars ?? []" :key="car.carPlate" class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow border dark:border-slate-700">
             <h3 class="font-semibold mb-2">Fahrzeug {{ index + 1 }}</h3>
-            <p><strong>KFZ-Nr:</strong> {{ car.carPlate }}</p>
-            <p><strong>Erwachsene:</strong> {{ car.adults }}</p>
-            <p><strong>Kinder:</strong> {{ car.children }}</p>
+            <p><strong>KFZ-Nr: </strong> {{ car.carPlate }}</p>
+            <p><strong>Erwachsene: </strong> {{ car.adults }}</p>
+            <p><strong>Kinder: </strong> {{ car.children }}</p>
           </div>
         </div>
       </div>

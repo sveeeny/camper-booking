@@ -2,6 +2,7 @@
 
 import { BookingStatus } from "./booking.state";
 
+
 export interface CreateBookingCheckDto {
   checkInDate: string;
   checkOutDate: string;
@@ -44,6 +45,7 @@ export interface CreateBookingGuestDto {
   phoneCountryCode: string;
   phoneNumber: string;
   totalPrice: number;
+  source: 'host' | 'guest';
   cars: CarsDto[];
 }
 

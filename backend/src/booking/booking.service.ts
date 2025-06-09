@@ -11,9 +11,13 @@ import { BookingDatesService } from './booking-dates.service';
 import { Between } from 'typeorm';
 import { eachDayOfInterval, subDays, format } from 'date-fns'; // sicherstellen, dass @types/date-fns NICHT installiert ist
 import { LessThanOrEqual, MoreThan } from 'typeorm';
+import { BookingSource } from '../entities/booking.entity';
 
-
-
+function toBookingSource(value: string | undefined): BookingSource {
+  if (!value || value === 'guest') return BookingSource.GUEST;
+  if (value === 'host') return BookingSource.HOST;
+  throw new BadRequestException(`Ungültiger source-Wert: ${value}`);
+}
 
 @Injectable()
 export class BookingService {
@@ -57,6 +61,8 @@ export class BookingService {
       throw new NotFoundException('Buchung nicht gefunden');
     }
 
+
+
     // ➕ Gästeinfos speichern
     booking.salutation = dto.salutation;
     booking.firstName = dto.firstName;
@@ -66,6 +72,8 @@ export class BookingService {
     booking.phoneNumber = dto.phoneNumber;
     booking.email = dto.email;
     booking.totalPrice = dto.totalPrice;
+    booking.source = toBookingSource(dto.source ?? 'guest');
+
 
     await this.bookingRepository.save(booking);
 
@@ -147,6 +155,7 @@ export class BookingService {
       adults: car.adults,
       children: car.children,
       status: car.booking.status,
+      source: car.booking.source,
     }));
   }
 
@@ -179,58 +188,58 @@ export class BookingService {
   }
 
   async getBookingById(bookingId: string) {
-  const booking = await this.bookingRepository.findOne({
-    where: { booking_id: bookingId },
-  });
+    const booking = await this.bookingRepository.findOne({
+      where: { booking_id: bookingId },
+    });
 
-  if (!booking) {
-    throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
+    if (!booking) {
+      throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
+    }
+
+    const cars = await this.carRepository.find({
+      where: { booking_id: bookingId, isCancelled: false },
+    });
+
+    const priceBase = cars.reduce((acc, c) => acc + Number(c.basePrice ?? 0), 0);
+    const priceTax = cars.reduce((acc, c) => acc + Number(c.touristTax ?? 0), 0);
+
+    return {
+      id: booking.booking_id,
+      checkIn: cars[0]?.checkInDate ?? null,
+      checkOut: cars[0]?.checkOutDate ?? null,
+      status: booking.status,
+      spot: cars[0]?.car_slot ?? null,
+
+      guestName: `${booking.firstName} ${booking.lastName}`,
+      guest: {
+        salutation: booking.salutation,
+        firstName: booking.firstName,
+        lastName: booking.lastName,
+        nationality: booking.nationality,
+        email: booking.email,
+        phoneCountryCode: booking.phoneCountryCode,
+        phoneNumber: booking.phoneNumber,
+      },
+
+      cars: cars.map((car) => ({
+        carPlate: car.carPlate,
+        adults: car.adults,
+        children: car.children,
+        basePrice: Number(car.basePrice ?? 0),
+        touristTax: Number(car.touristTax ?? 0),
+      })),
+
+      priceBase,
+      priceTax,
+      priceTotal: Number(booking.totalPrice ?? 0),
+
+      // ✅ Zusätzliche Felder:
+      createdAt: booking.createdAt,
+      statusUpdatedAt: booking.statusUpdatedAt,
+      source: booking.source,
+      notizen: booking.notizen,
+    };
   }
-
-  const cars = await this.carRepository.find({
-    where: { booking_id: bookingId, isCancelled: false },
-  });
-
-  const priceBase = cars.reduce((acc, c) => acc + Number(c.basePrice ?? 0), 0);
-  const priceTax = cars.reduce((acc, c) => acc + Number(c.touristTax ?? 0), 0);
-
-  return {
-    id: booking.booking_id,
-    checkIn: cars[0]?.checkInDate ?? null,
-    checkOut: cars[0]?.checkOutDate ?? null,
-    status: booking.status,
-    spot: cars[0]?.car_slot ?? null,
-
-    guestName: `${booking.firstName} ${booking.lastName}`,
-    guest: {
-      salutation: booking.salutation,
-      firstName: booking.firstName,
-      lastName: booking.lastName,
-      nationality: booking.nationality,
-      email: booking.email,
-      phoneCountryCode: booking.phoneCountryCode,
-      phoneNumber: booking.phoneNumber,
-    },
-
-    cars: cars.map((car) => ({
-      carPlate: car.carPlate,
-      adults: car.adults,
-      children: car.children,
-      basePrice: Number(car.basePrice ?? 0),
-      touristTax: Number(car.touristTax ?? 0),
-    })),
-
-    priceBase,
-    priceTax,
-    priceTotal: Number(booking.totalPrice ?? 0),
-
-    // ✅ Zusätzliche Felder:
-    createdAt: booking.createdAt,
-    statusUpdatedAt: booking.statusUpdatedAt,
-    source: booking.source,
-    notizen: booking.notizen,
-  };
-}
 
 
   async updateBooking(bookingId: string, updateData: Partial<Booking>) {

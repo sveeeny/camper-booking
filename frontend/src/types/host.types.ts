@@ -11,6 +11,7 @@ export interface HostBookingSummary {
   adults: number;
   children: number;
   status: BookingStatus; // oder BookingStatus, falls importiert
+  source: 'guest' | 'host';
 }
 
 
