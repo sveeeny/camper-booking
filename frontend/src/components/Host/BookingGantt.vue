@@ -2,14 +2,14 @@
 <template>
   <div class="grid" :style="`grid-template-columns: 120px repeat(${daysOfWeek.length}, 1fr);`">
     <!-- Kopfzeile -->
-    <div class="p-2 font-medium border bg-slate-100 dark:bg-slate-800">Plätze frei</div>
+    <div class="p-2 font-medium border bg-slate-100 dark:bg-slate-800"></div>
     <div v-for="(day, i) in daysOfWeek" :key="i"
       class="p-2 border text-sm font-medium text-slate-700 dark:text-white bg-slate-100 dark:bg-slate-800">
       {{ formatDay(day) }}
     </div>
 
     <!-- Freie Plätze -->
-    <div class="p-2 font-medium border-l border-b min-h-12 flex items-center">Frei</div>
+    <div class="p-2 font-medium border-l border-b min-h-12 flex items-center">Freie Plätze</div>
     <div v-for="(free, i) in freeSpotsPerDay" :key="'free-' + i"
       class="p-2 text-center font-semibold border-b border-r min-h-12 flex items-center justify-center"
       :class="getSpotColor(free)">

@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import { formatDateToYMD } from '@/composables/utils/dateUtils';
+import { formatDateLocalYMD } from '@/composables/utils/dateUtils';
 import { useHostBookings } from '@/composables/Host/useHostBookings';
 import { format } from 'date-fns';
 import BookingDetailPanel from '@/components/Host/BookingDetailPanel.vue';
@@ -60,14 +60,14 @@ const weekEnd = computed(() => {
 });
 
 onMounted(() => {
-  const from = formatDateToYMD(weekStart.value);
-  const to = formatDateToYMD(weekEnd.value);
+  const from = formatDateLocalYMD(weekStart.value);
+  const to = formatDateLocalYMD(weekEnd.value);
   loadBookings(from, to);
 });
 
 watch(weekStart, () => {
-  const from = formatDateToYMD(weekStart.value);
-  const to = formatDateToYMD(weekEnd.value);
+  const from = formatDateLocalYMD(weekStart.value);
+  const to = formatDateLocalYMD(weekEnd.value);
   loadBookings(from, to);
 });
 
