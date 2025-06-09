@@ -36,6 +36,7 @@ export function useHostBookings() {
   };
 }
 
+
 // 🔍 Detailabruf einer Buchung
 export async function fetchBookingById(id: string): Promise<HostBookingDetailData | null> {
   try {
@@ -54,6 +55,28 @@ export async function markBookingAsPaid(id: string) {
     return response.data;
   } catch (error) {
     console.error('❌ Fehler beim Aktualisieren des Buchungsstatus', error);
+    throw error;
+  }
+}
+
+
+// 🔄 Buchung aktualisieren
+export async function updateBooking(id: string, payload: Partial<HostBookingDetailData>) {
+  try {
+    const response = await api.patch(`/bookings/${id}`, payload);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Fehler beim Aktualisieren der Buchung', error);
+    throw error;
+  }
+}
+
+// 🗑️ Buchung löschen
+export async function deleteBookingById(id: string) {
+  try {
+    await api.delete(`/bookings/${id}`);
+  } catch (error) {
+    console.error('❌ Fehler beim Löschen der Buchung', error);
     throw error;
   }
 }

@@ -1,4 +1,3 @@
-<!-- src/components/Host/BookingDetailPanel.vue -->
 <template>
   <!-- Overlay -->
   <div class="fixed inset-0 bg-black/30 z-40" @click.self="emitClose" />
@@ -17,7 +16,25 @@
     <!-- Inhalt -->
     <div class="p-4 overflow-y-auto max-h-[calc(100vh-64px)]">
       <div v-if="booking" class="space-y-6 text-left text-sm md:text-base">
-      <p><strong>ID:</strong> {{ booking.id }}</p>
+        <!-- Metadaten -->
+        <div class="text-xs text-slate-500 dark:text-slate-400">
+          <p><strong>Erstellt am:</strong> {{ formatTimestamp(booking.createdAt) }}</p>
+          <p><strong>Status aktualisiert:</strong> {{ formatTimestamp(booking.statusUpdatedAt) }}</p>
+          <p><strong>Booking-ID:</strong> {{ booking.id }}</p>
+          <p v-if="booking.source === 'host'" class="mt-1 inline-block bg-slate-200 dark:bg-slate-600 px-2 py-1 rounded">Manuelle Buchung</p>
+        </div>
+
+        <!-- Bearbeiten-Button -->
+        <div class="flex items-center gap-3">
+          <button @click="toggleEditing" class="text-blue-600 hover:underline">
+            {{ isEditing ? 'Bearbeiten beenden' : 'Bearbeiten aktivieren' }}
+          </button>
+
+          <button v-if="canBeDeleted" @click="deleteBooking" class="text-red-600 hover:underline ml-auto">
+            Buchung löschen
+          </button>
+        </div>
+
         <!-- Block 1: Buchungsinfo -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div class="bg-white dark:bg-slate-800 p-4 rounded shadow border dark:border-slate-700">
@@ -30,11 +47,29 @@
 
           <!-- Block 2: Gastinfo -->
           <div class="bg-white dark:bg-slate-800 p-4 rounded shadow border dark:border-slate-700">
-            <p><strong>Anrede:</strong> {{ booking.guest?.salutation }}</p>
-            <p><strong>Name:</strong> {{ booking.guest?.firstName }} {{ booking.guest?.lastName }}</p>
-            <p><strong>Nationalität:</strong> {{ booking.guest?.nationality }}</p>
-            <p><strong>E-Mail:</strong> {{ booking.guest?.email }}</p>
-            <p><strong>Telefon:</strong> {{ booking.guest?.phoneCountryCode }} {{ booking.guest?.phoneNumber }}</p>
+            <p><strong>Anrede:</strong>
+              <input v-if="isEditing" v-model="editable.salutation" class="input" />
+              <span v-else>{{ booking.guest?.salutation }}</span>
+            </p>
+            <p><strong>Name:</strong>
+              <input v-if="isEditing" v-model="editable.firstName" class="input" placeholder="Vorname" />
+              <span v-else>{{ booking.guest?.firstName }}</span>
+              <input v-if="isEditing" v-model="editable.lastName" class="input ml-2" placeholder="Nachname" />
+              <span v-else>{{ booking.guest?.lastName }}</span>
+            </p>
+            <p><strong>Nationalität:</strong>
+              <input v-if="isEditing" v-model="editable.nationality" class="input" />
+              <span v-else>{{ booking.guest?.nationality }}</span>
+            </p>
+            <p><strong>E-Mail:</strong>
+              <input v-if="isEditing" v-model="editable.email" class="input" />
+              <span v-else>{{ booking.guest?.email }}</span>
+            </p>
+            <p><strong>Telefon:</strong>
+              <input v-if="isEditing" v-model="editable.phoneCountryCode" class="input w-16" />
+              <input v-if="isEditing" v-model="editable.phoneNumber" class="input ml-2" />
+              <span v-else>{{ booking.guest?.phoneCountryCode }} {{ booking.guest?.phoneNumber }}</span>
+            </p>
           </div>
         </div>
 
@@ -42,17 +77,7 @@
         <div class="mb-4 px-4">
           <p class="text-sm font-medium">
             Status:
-            <span
-              :class="[
-                'inline-block ml-2 px-2 py-1 rounded text-xs font-semibold',
-                booking.status === 'paid' ? 'bg-green-200 text-green-800 dark:bg-green-700 dark:text-white' :
-                booking.status === 'pending' ? 'bg-yellow-200 text-yellow-800 dark:bg-yellow-700 dark:text-white' :
-                booking.status === 'cancelled' ? 'bg-red-200 text-red-800 dark:bg-red-700 dark:text-white' :
-                'bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-white'
-              ]"
-            >
-              {{ booking.status }}
-            </span>
+            <span :class="getStatusBadge(booking.status)">{{ booking.status }}</span>
           </p>
 
           <button
@@ -65,22 +90,9 @@
           </button>
         </div>
 
-        <!-- Fahrzeugübersicht -->
-        <div
-          :class="[
-            'grid gap-3',
-            (booking.cars?.length ?? 0) === 1
-              ? 'grid-cols-1'
-              : (booking.cars?.length ?? 0) === 2
-              ? 'grid-cols-1 md:grid-cols-2'
-              : 'grid-cols-1 md:grid-cols-3'
-          ]"
-        >
-          <div
-            v-for="(car, index) in booking.cars ?? []"
-            :key="car.carPlate"
-            class="bg-white dark:bg-slate-800 p-4 rounded shadow border dark:border-slate-700"
-          >
+        <!-- Fahrzeuge -->
+        <div class="grid gap-3" :class="gridClass">
+          <div v-for="(car, index) in booking.cars ?? []" :key="car.carPlate" class="bg-white dark:bg-slate-800 p-4 rounded shadow border dark:border-slate-700">
             <h3 class="font-semibold mb-2">Fahrzeug {{ index + 1 }}</h3>
             <p><strong>KFZ-Nr:</strong> {{ car.carPlate }}</p>
             <p><strong>Erwachsene:</strong> {{ car.adults }}</p>
@@ -97,44 +109,108 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { formatToCH } from '@/composables/utils/dateUtils';
+import { ref, computed, reactive, onMounted, watch, onBeforeUnmount } from 'vue';
+import { formatToCH, formatTimestamp } from '@/composables/utils/dateUtils';
 import type { HostBookingDetailData } from '@/types';
-import { fetchBookingById, markBookingAsPaid } from '@/composables/Host/useHostBookings';
+import { fetchBookingById, markBookingAsPaid, updateBooking, deleteBookingById } from '@/composables/Host/useHostBookings';
+import emitter from '@/composables/utils/eventBus';
+
 
 const props = defineProps<{ bookingId: string }>();
 const emit = defineEmits(['close']);
 
 const booking = ref<HostBookingDetailData | null>(null);
-const updatingStatus = ref(false);
 const show = ref(false);
+const updatingStatus = ref(false);
+const isEditing = ref(false);
+const editable = reactive<any>({});
 
 const emitClose = () => {
   show.value = false;
-  setTimeout(() => emit('close'), 300); // Animation sauber beenden
+  setTimeout(() => emit('close'), 300);
+};
+
+const toggleEditing = () => {
+  isEditing.value = !isEditing.value;
+  if (!isEditing.value) saveChanges();
+};
+
+const saveChanges = async () => {
+  if (!booking.value || !isEditing.value) return;
+  try {
+    await updateBooking(booking.value.id, editable);
+  } catch (err) {
+    console.error('Fehler beim Speichern:', err);
+  }
+  emitter.emit('booking-updated');
+};
+
+const deleteBooking = async () => {
+  if (!booking.value) return;
+  const confirmed = confirm('Diese Buchung wirklich löschen?');
+  if (!confirmed) return;
+  await deleteBookingById(booking.value.id);
+  emitter.emit('booking-updated');
+  emitClose();
 };
 
 const markAsPaid = async () => {
   if (!booking.value) return;
-  if (!confirm('Diese Buchung wirklich als bezahlt markieren?')) return;
-
   updatingStatus.value = true;
   try {
     await markBookingAsPaid(booking.value.id);
     booking.value.status = 'paid';
   } catch (err) {
     alert('❌ Status konnte nicht aktualisiert werden.');
-    console.error(err);
   } finally {
     updatingStatus.value = false;
   }
+  emitter.emit('booking-updated');
 };
 
 onMounted(async () => {
   booking.value = await fetchBookingById(props.bookingId);
+  if (booking.value) {
+    Object.assign(editable, booking.value.guest);
+  }
   show.value = true;
+});
+
+onBeforeUnmount(() => {
+  if (isEditing.value) saveChanges();
+});
+
+const canBeDeleted = computed(() => {
+  if (!booking.value || booking.value.status === 'paid') return false;
+  const created = new Date(booking.value.createdAt);
+  return Date.now() - created.getTime() > 10 * 60 * 1000;
 });
 
 const formatDate = (d: string | Date) =>
   typeof d === 'string' ? formatToCH(new Date(d)) : formatToCH(d);
+
+const getStatusBadge = (status: string) => {
+  const base = 'inline-block ml-2 px-2 py-1 rounded text-xs font-semibold';
+  return [
+    base,
+    status === 'paid'
+      ? 'bg-green-200 text-green-800 dark:bg-green-700 dark:text-white'
+      : status === 'pending'
+      ? 'bg-yellow-200 text-yellow-800 dark:bg-yellow-700 dark:text-white'
+      : status === 'cancelled'
+      ? 'bg-red-200 text-red-800 dark:bg-red-700 dark:text-white'
+      : 'bg-slate-200 text-slate-700 dark:bg-slate-600 dark:text-white',
+  ];
+};
+
+const gridClass = computed(() => {
+  const n = booking.value?.cars?.length ?? 0;
+  return n === 1 ? 'grid-cols-1' : n === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3';
+});
 </script>
+
+<style scoped>
+.input {
+  @apply w-full mt-1 p-1 border rounded dark:bg-slate-700 dark:text-white;
+}
+</style>

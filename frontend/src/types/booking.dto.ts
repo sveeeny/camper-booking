@@ -19,6 +19,19 @@ export interface CarsDto {
   basePrice: number;
 }
 
+export interface GuestDto {
+  salutation: string;
+  firstName: string;
+  lastName: string;
+  nationality: string;
+  email: string;
+  phoneCountryCode: string;
+  phoneNumber: string;
+}
+
+
+
+
 export interface CreateBookingGuestDto {
   salutation: 'Herr' | 'Frau';
   bookingId: string;

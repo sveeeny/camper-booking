@@ -1,4 +1,5 @@
 import type { BookingStatus, CarsDto } from '@/types';
+import type { GuestDto } from './booking.dto';
 
 export interface HostBookingSummary {
   id: string;
@@ -15,20 +16,13 @@ export interface HostBookingSummary {
 
 export interface HostBookingDetailData {
   id: string;
-  priceTotal: number;
   checkIn: string;
   checkOut: string;
+  priceTotal: number;
   status: BookingStatus;
-
-  guest: {
-    salutation: string;
-    firstName: string;
-    lastName: string;
-    nationality: string;
-    email: string;
-    phoneCountryCode: string;
-    phoneNumber: string;
-  };
-
+  createdAt: string;
+  statusUpdatedAt: string | null;
+  source: 'guest' | 'host';
+  guest: GuestDto;
   cars: CarsDto[];
 }

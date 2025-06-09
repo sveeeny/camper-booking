@@ -22,6 +22,7 @@ import { generateBookingPDF } from './booking-pdf.service';
 import { verifyDownloadToken } from '@/utils/jwt-download.util';
 import { generateDownloadToken } from '@/utils/jwt-download.util';
 import { StripeService } from '@/stripe/stripe.service';
+import { Booking } from '@/entities/booking.entity';
 
 @Public()
 @Controller('bookings')
@@ -53,9 +54,10 @@ export class BookingController {
   // ❌ Buchung stornieren und löschen
   @Public()
   @Delete(':id')
-  async cancelBooking(@Param('id') bookingId: string) {
+  async deleteBookingById(@Param('id') bookingId: string) {
     return this.bookingService.deleteBooking(bookingId);
   }
+
 
   @Public()
   @Get('range')
@@ -105,7 +107,7 @@ export class BookingController {
   @Header('Content-Type', 'application/pdf')
   @Header('Content-Disposition', 'attachment; filename=Confirmation.pdf')
   async downloadPdfSecure(
-    @Query('token') token: string, 
+    @Query('token') token: string,
     @Query('lang') lang: string = 'en',
     @Res() res: Response) {
     if (!token) throw new BadRequestException('Token fehlt');
@@ -140,6 +142,18 @@ export class BookingController {
   async getBookingById(@Param('id') bookingId: string) {
     return this.bookingService.getBookingById(bookingId);
   }
+
+  //Host
+  @Public()
+  @Patch(':id')
+  async updateBooking(
+    @Param('id') bookingId: string,
+    @Body() updateData: Partial<Booking>,
+  ) {
+    return this.bookingService.updateBooking(bookingId, updateData);
+  }
+
+
 
 
 }

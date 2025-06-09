@@ -40,11 +40,27 @@
 import { computed } from 'vue';
 import type { HostBookingSummary } from '@/types';
 import { formatDateLocalYMD, formatDateToYMD, normalizeDate } from '@/composables/utils/dateUtils';
+import emitter from '@/composables/utils/eventBus';
+import { onMounted, onUnmounted } from 'vue';
+
+
+onMounted(() => {
+  emitter.on('booking-updated', props.loadBookings);
+});
+
+onUnmounted(() => {
+  emitter.off('booking-updated', props.loadBookings);
+});
+
+
+
+
 
 const props = defineProps<{
   bookings: HostBookingSummary[];
   startDate: Date;
   maxSpots: number;
+  loadBookings: () => void;
 }>();
 
 const emit = defineEmits<{

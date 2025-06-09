@@ -15,6 +15,7 @@
       :bookings="bookings"
       :start-date="weekStart"
       :max-spots="MAX_SPOTS"
+      :load-bookings="reloadBookings"
       @select="showBookingDetail"
     />
 
@@ -33,7 +34,7 @@ import { useHostBookings } from '@/composables/Host/useHostBookings';
 import { format } from 'date-fns';
 import BookingDetailPanel from '@/components/Host/BookingDetailPanel.vue';
 import BookingGantt from '@/components/Host/BookingGantt.vue';
-import type { HostBookingSummary } from '@/types';
+
 
 const selectedBookingId = ref<string | null>(null);
 const showBookingDetail = (id: string) => selectedBookingId.value = id;
@@ -51,6 +52,13 @@ const getMonday = (d: Date) => {
   monday.setHours(0, 0, 0, 0);
   return monday;
 };
+
+const reloadBookings = () => {
+  const from = formatDateLocalYMD(weekStart.value);
+  const to = formatDateLocalYMD(weekEnd.value);
+  loadBookings(from, to);
+};
+
 
 const weekStart = ref(getMonday(today));
 const weekEnd = computed(() => {

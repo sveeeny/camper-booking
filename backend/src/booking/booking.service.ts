@@ -179,6 +179,61 @@ export class BookingService {
   }
 
   async getBookingById(bookingId: string) {
+  const booking = await this.bookingRepository.findOne({
+    where: { booking_id: bookingId },
+  });
+
+  if (!booking) {
+    throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
+  }
+
+  const cars = await this.carRepository.find({
+    where: { booking_id: bookingId, isCancelled: false },
+  });
+
+  const priceBase = cars.reduce((acc, c) => acc + Number(c.basePrice ?? 0), 0);
+  const priceTax = cars.reduce((acc, c) => acc + Number(c.touristTax ?? 0), 0);
+
+  return {
+    id: booking.booking_id,
+    checkIn: cars[0]?.checkInDate ?? null,
+    checkOut: cars[0]?.checkOutDate ?? null,
+    status: booking.status,
+    spot: cars[0]?.car_slot ?? null,
+
+    guestName: `${booking.firstName} ${booking.lastName}`,
+    guest: {
+      salutation: booking.salutation,
+      firstName: booking.firstName,
+      lastName: booking.lastName,
+      nationality: booking.nationality,
+      email: booking.email,
+      phoneCountryCode: booking.phoneCountryCode,
+      phoneNumber: booking.phoneNumber,
+    },
+
+    cars: cars.map((car) => ({
+      carPlate: car.carPlate,
+      adults: car.adults,
+      children: car.children,
+      basePrice: Number(car.basePrice ?? 0),
+      touristTax: Number(car.touristTax ?? 0),
+    })),
+
+    priceBase,
+    priceTax,
+    priceTotal: Number(booking.totalPrice ?? 0),
+
+    // ✅ Zusätzliche Felder:
+    createdAt: booking.createdAt,
+    statusUpdatedAt: booking.statusUpdatedAt,
+    source: booking.source,
+    notizen: booking.notizen,
+  };
+}
+
+
+  async updateBooking(bookingId: string, updateData: Partial<Booking>) {
     const booking = await this.bookingRepository.findOne({
       where: { booking_id: bookingId },
     });
@@ -187,43 +242,32 @@ export class BookingService {
       throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
     }
 
-    const cars = await this.carRepository.find({
-      where: { booking_id: bookingId, isCancelled: false },
-    });
-    
-    const priceBase = cars.reduce((acc, c) => acc + Number(c.basePrice ?? 0), 0);
-    const priceTax = cars.reduce((acc, c) => acc + Number(c.touristTax ?? 0), 0);
+    // Nur erlaubte Felder übernehmen
+    const allowedFields: (keyof Booking)[] = [
+      'salutation',
+      'firstName',
+      'lastName',
+      'nationality',
+      'phoneCountryCode',
+      'phoneNumber',
+      'email',
+      'notizen',
+      'status',
+      'source',
+      'statusUpdatedAt',
+      'totalPrice',
+      'refundedAmount',
+    ];
 
-    return {
-      id: booking.booking_id,
-      checkIn: cars[0]?.checkInDate ?? null,
-      checkOut: cars[0]?.checkOutDate ?? null,
-      status: booking.status,
-      spot: cars[0]?.car_slot ?? null, // zur Not: null, wenn kein Auto vorhanden
+    for (const field of allowedFields) {
+      if (updateData[field] !== undefined) {
+        (booking as any)[field] = updateData[field];
+      }
+    }
 
-      guestName: `${booking.firstName} ${booking.lastName}`,
-      guest: {
-        salutation: booking.salutation,
-        firstName: booking.firstName,
-        lastName: booking.lastName,
-        nationality: booking.nationality,
-        email: booking.email,
-        phoneCountryCode: booking.phoneCountryCode,
-        phoneNumber: booking.phoneNumber,
-      },
 
-      cars: cars.map((car) => ({
-        carPlate: car.carPlate,
-        adults: car.adults,
-        children: car.children,
-        basePrice: Number(car.basePrice ?? 0),
-        touristTax: Number(car.touristTax ?? 0),
-      })),
-      
-      priceBase,
-      priceTax,
-      priceTotal: Number(booking.totalPrice ?? 0),
-    };
+    await this.bookingRepository.save(booking);
+    return { message: 'Buchung erfolgreich aktualisiert.' };
   }
 
 
