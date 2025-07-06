@@ -92,8 +92,8 @@
       "4": "Personal data will only be used to process the booking."
     },
     "close": "Close",
-    "back": "Back to \"{step}\"",
-    "next": "Continue to \"{step}\"",
+    "back": "Back",
+    "next": "Continue",
     "confirm": {
       "host": "Save booking",
       "guest": "Proceed to payment"

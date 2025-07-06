@@ -1,15 +1,14 @@
 <template>
-  <div class="summary-container space-y-6">
-    <h2 class="text-2xl font-bold text-center text-slate-800 dark:text-white mb-4">
+  <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <h2 class="text-2xl font-bold text-center text-slate-800 dark:text-white">
       {{ t('summary.title') }}
     </h2>
 
     <!-- 👤 Gastinfo + 📅 Zeitraum -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-left">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
       <!-- 👤 Gastinfo -->
-      <div
-        class="bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 h-[280px] flex flex-col justify-center space-y-2 text-sm md:text-base">
-        <p><strong>{{ t('summary.guestInfo.title') }}</strong></p>
+      <div class="bg-white dark:bg-slate-600 p-4 rounded-lg shadow border border-slate-200 dark:border-slate-700 space-y-1">
+        <p class="font-semibold mb-2">{{ t('summary.guestInfo.title') }}</p>
         <p>{{ t('summary.guestInfo.salutation') }}: {{ guestInfo.salutation }}</p>
         <p>{{ t('summary.guestInfo.name') }}: {{ guestInfo.firstName }} {{ guestInfo.lastName }}</p>
         <p>{{ t('summary.guestInfo.nationality') }}: {{ guestInfo.nationality }}</p>
@@ -18,9 +17,8 @@
       </div>
 
       <!-- 📅 Zeitraum + Preis -->
-      <div
-        class="bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 h-[280px] flex flex-col justify-center space-y-2 text-sm md:text-base">
-        <p><strong>{{ t('summary.period.title') }}</strong></p>
+      <div class="bg-white dark:bg-slate-600 p-4 rounded-lg shadow border border-slate-200 dark:border-slate-700 space-y-1">
+        <p class="font-semibold mb-2">{{ t('summary.period.title') }}</p>
         <p>{{ t('summary.period.checkin', { date: checkInDateFormatted, time: checkInTime }) }}</p>
         <p>{{ t('summary.period.checkout', { date: checkOutDateFormatted, time: checkOutTime }) }}</p>
         <p>{{ t('summary.period.vehicles', { count: numberOfCars }) }}</p>
@@ -28,32 +26,34 @@
     </div>
 
     <!-- 🚐 Fahrzeuge -->
-    <div :class="['grid gap-3',
-      cars.length === 1 ? 'grid-cols-1'
-        : cars.length === 2 ? 'grid-cols-1 md:grid-cols-2'
-          : cars.length === 3 ? 'grid-cols-1 md:grid-cols-3'
-            : cars.length === 4 ? 'grid-cols-1 md:grid-cols-4'
-              : 'grid-cols-1 md:grid-cols-5'
+    <div :class="[
+      'grid gap-4',
+      cars.length === 1 ? 'grid-cols-1' :
+      cars.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
+      cars.length === 3 ? 'grid-cols-1 md:grid-cols-3' :
+      cars.length === 4 ? 'grid-cols-1 md:grid-cols-4' : 'grid-cols-1 md:grid-cols-5'
     ]">
-      <div v-for="(car, index) in cars" :key="index"
-        class="bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 h-auto text-left">
-        <h3 class="font-semibold mb-2">{{ t('summary.car.title', { index: index + 1 }) }}</h3>
+      <div
+        v-for="(car, index) in cars"
+        :key="index"
+        class="bg-white dark:bg-slate-600 p-4 rounded-lg shadow border border-slate-200 dark:border-slate-700 space-y-1 text-left"
+      >
+        <p class="font-semibold mb-2">{{ t('summary.car.title', { index: index + 1 }) }}</p>
         <p><strong>{{ t('summary.car.plate') }}</strong> {{ car.carPlate }}</p>
         <p><strong>{{ t('summary.car.adults') }}</strong> {{ car.adults }}</p>
         <p><strong>{{ t('summary.car.children') }}</strong> {{ car.children }}</p>
         <p><strong>{{ t('summary.car.basePrice') }}</strong> CHF {{ (car.basePrice ?? 0).toFixed(2) }}</p>
         <p><strong>{{ t('summary.car.tax') }}</strong> CHF {{ (car.touristTax ?? 0).toFixed(2) }}</p>
-
       </div>
     </div>
 
     <!-- 💰 Gesamtpreis -->
-    <div
-      class="bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 text-center font-semibold text-lg">
+    <div class="bg-white dark:bg-slate-600 p-4 rounded-lg shadow border border-slate-200 dark:border-slate-700 text-center font-semibold text-lg">
       {{ t('summary.total.label', { price: (priceInfo.total ?? 0).toFixed(2) }) }}
     </div>
   </div>
 </template>
+
 
 
 <script setup lang="ts">

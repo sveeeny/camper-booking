@@ -1,9 +1,9 @@
 <template>
-  <div class="w-full">
+  <div class="w-full px-4">
 
     <!-- ✅ Nur bei Schritt 2 UND nicht host/admin -->
     <div v-if="props.step === 2 && !isHostOrAdmin"
-      class="mb-6 bg-white dark:bg-slate-900 p-4 rounded shadow border border-slate-200 dark:border-slate-700 space-y-3 text-sm md:text-base">
+      class="mb-6 bg-white dark:bg-slate-600 p-4 rounded-lg  shadow border border-slate-200 dark:border-slate-700 space-y-3 text-sm md:text-base">
       <label class="flex items-start space-x-2">
         <input type="checkbox" v-model="confirmCorrectInfo" class="mt-1 accent-blue-500" />
         <span>{{ t('timeline.confirmInfo') }}</span>
@@ -13,7 +13,7 @@
         <input type="checkbox" v-model="acceptRules" class="mt-1 accent-blue-500" />
         <span>
           {{ t('timeline.acceptRules') }}
-          <button @click="showRules = true" type="button" class="underline text-blue-600 hover:text-blue-800">
+          <button @click="showRules = true" type="button" class="p-1 underline text-blue-500 font-bold hover:text-blue-800 dark:bg-slate-600">
             {{ t('timeline.rulesButton') }}
           </button>.
         </span>
@@ -39,16 +39,16 @@
     <!-- 🔁 Navigation Buttons -->
     <div class="flex justify-between mt-4">
       <button v-if="step > 0" @click="$emit('prev')"
-        class="bg-slate-600 hover:bg-slate-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 py-2 px-4 rounded-md">
-        {{ t('timeline.back', { step: steps[step - 1] }) }}
+        class="bg-slate-600 hover:bg-slate-700 text-white dark:bg-slate-700 dark:hover:bg-slate-600 py-2 px-4 rounded-md">
+        {{ t('timeline.back')}}
       </button>
 
       <span></span>
 
       <!-- 🔄 Weiter-Button -->
       <button v-if="step < steps.length - 2" :disabled="!canProceed" @click="$emit('next')"
-        class="bg-slate-600 hover:bg-slate-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 py-2 px-4 rounded-md">
-        {{ t('timeline.next', { step: steps[step + 1] }) }}"
+        class="bg-slate-600 hover:bg-slate-700 text-white dark:bg-slate-700 dark:hover:bg-slate-600 py-2 px-4 rounded-md">
+        {{ t('timeline.next')}} 
       </button>
 
       <!-- 🟢 Zahlung oder Speichern -->

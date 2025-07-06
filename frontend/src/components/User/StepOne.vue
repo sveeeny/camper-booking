@@ -2,27 +2,32 @@
 <template>
   <div class="flex flex-col gap-6">
       <!-- 🧭 Titel -->
-      <h3 class="text-xl font-semibold text-slate-600 dark:text-slate-300">{{ t('stepOne.title') }}</h3>
+      <h3 class="text-xl font-semibold text-slate-200">{{ t('stepOne.title') }}</h3>
 
       <!-- 🚗 Anzahl Fahrzeuge -->
       <div>
-        <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">{{ t('stepOne.vehicles') }}</label>
-        <select v-model="numberOfCars" class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-2 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <label class="block mb-1 font-medium text-slate-400">{{ t('stepOne.vehicles') }}</label>
+        <select v-model="numberOfCars" class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-2 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-500">
           <option v-for="n in 5" :key="n" :value="n">{{ n }}</option>
         </select>
       </div>
 
       <!-- 📅 Datepicker -->
       <div>
-        <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">{{ t('stepOne.maxNights') }}</label>
-        <label class="block mb-1 font-medium text-slate-600 dark:text-slate-300">
+        <label class="block mb-1 font-medium text-slate-400">{{ t('stepOne.maxNights') }}</label>
+        <label class="block mb-1 font-medium text-slate-400">
           {{ checkInDate ? 'Check-out Datum wählen' : t('stepOne.chooseCheckIn') }}
         </label>
 
         <div class="relative min-h-[300px]">
           <!-- Check-in -->
           <div v-show="!checkInDate" class="absolute inset-0">
-            <Datepicker v-model="checkInDate" v-bind="checkInProps" :markers="checkInMarkers" ref="checkInPickerRef" />
+            <Datepicker 
+            v-model="checkInDate" 
+            v-bind="checkInProps" 
+            :dark="isDarkMode"
+            :markers="checkInMarkers" 
+            ref="checkInPickerRef" />
           </div>
 
           <!-- Check-out -->
@@ -30,6 +35,7 @@
             <Datepicker
               v-model="selectedRange"
               v-bind="checkOutProps"
+              :dark="isDarkMode"
               :markers="checkOutMarkers"
               ref="checkOutPickerRef"
               @cleared="resetDates"
@@ -39,9 +45,9 @@
       </div>
 
       <!-- 💰 Preis -->
-      <div class="w-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm rounded px-4 py-2">
+      <div class="w-full bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm rounded px-4 py-2">
         <p><strong>{{ t('stepOne.basePrice') }}:</strong> {{ basePriceCHF }} CHF</p>
-        <p class="text-xs text-slate-500">{{ t('stepOne.excludingTax') }}</p>
+        <p class="text-xs text-slate-700 dark:text-slate-200">{{ t('stepOne.excludingTax') }}</p>
       </div>
 
       <!-- ❌ Fehleranzeige -->
@@ -72,6 +78,10 @@ import { useCheckInPicker } from '@/composables/useCheckInPicker';
 import { useCheckOutPicker } from '@/composables/useCheckOutPicker';
 import { isDateRangeAvailable } from '@/composables/utils/isDateRangeAvailable';
 import { useI18n } from 'vue-i18n';
+import { useDarkMode } from '@/composables/utils/useDarkMode';
+
+const { isDarkMode } = useDarkMode();
+
 
 const { t } = useI18n();
 

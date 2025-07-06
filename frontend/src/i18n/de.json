@@ -92,8 +92,8 @@
       "4": "Die persönlichen Daten werden ausschließlich zur Abwicklung der Buchung verwendet."
     },
     "close": "Schließen",
-    "back": "Zurück zu \"{step}\"",
-    "next": "Weiter zu \"{step}\"",
+    "back": "Zurück",
+    "next": "Weiter",
     "confirm": {
       "host": "Buchung speichern",
       "guest": "Zur Zahlung"

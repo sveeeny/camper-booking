@@ -10,6 +10,17 @@
         Buchung abbrechen
       </button>
 
+      <button @click="showToast" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded">
+      Zeige Test-Toast
+    </button>
+
+      <!-- 🧹 Manuelles Cleanup -->
+<button @click="runManualBackendCleanup"
+  class="px-4 py-2 rounded-md font-medium bg-emerald-600 hover:bg-emerald-700 text-white">
+  Cleanup starten
+</button>
+
+
       <!-- 🔓 Logout -->
       <button @click="handleLogout" class="px-4 py-2 rounded-md font-medium bg-slate-400 hover:bg-slate-500 text-white">
         Logout
@@ -36,11 +47,29 @@ import { useRoute, useRouter, RouterLink } from 'vue-router';
 import { useUserStore } from '@/store/userStore';
 import { useBookingCleanup } from '@/composables/useBookingCleanup';
 import { computed } from 'vue';
+import api from '@/api';
+import { useToast } from 'vue-toastification';
+
+const toast = useToast();
+
+const showToast = () => {
+  toast.success('🎉 Toast funktioniert!');
+};
 
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
 const { cleanupWithPrompt } = useBookingCleanup();
+
+const runManualBackendCleanup = async () => {
+  try {
+    const response = await api.patch('/bookings/manual-cleanup');
+    alert(response.data.message || 'Cleanup erfolgreich gestartet');
+  } catch (err) {
+    console.error('❌ Fehler beim Cleanup:', err);
+    alert('Fehler beim Cleanup');
+  }
+};
 
 // 📍 Aktuelle Route
 

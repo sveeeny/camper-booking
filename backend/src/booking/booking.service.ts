@@ -10,8 +10,15 @@ import { Availability } from '../entities/availability.entity';
 import { BookingDatesService } from './booking-dates.service';
 import { Between } from 'typeorm';
 import { eachDayOfInterval, subDays, format } from 'date-fns'; // sicherstellen, dass @types/date-fns NICHT installiert ist
-import { LessThanOrEqual, MoreThan } from 'typeorm';
+import { LessThan, LessThanOrEqual, MoreThan } from 'typeorm';
 import { BookingSource } from '../entities/booking.entity';
+import { StripeService } from '@/stripe/stripe.service';
+import { cleanupTimers } from './booking-timers';
+import { Logger } from '@nestjs/common';
+
+const logger = new Logger('BookingCleanup');
+
+
 
 function toBookingSource(value: string | undefined): BookingSource {
   if (!value || value === 'guest') return BookingSource.GUEST;
@@ -36,6 +43,7 @@ export class BookingService {
 
     private readonly configService: ConfigService,
     private readonly availabilityService: AvailabilityService,
+    private readonly stripeService: StripeService,
 
     private readonly bookingDatesService: BookingDatesService,
   ) {
@@ -43,12 +51,104 @@ export class BookingService {
     this.tableCreationThresholdDays = this.configService.get<number>('TABLE_CREATION_THRESHOLD_DAYS', 365);
   }
 
+  resetTimer(bookingId: string): void {
+    if (cleanupTimers.has(bookingId)) {
+      const existingTimeout = cleanupTimers.get(bookingId);
+      clearTimeout(existingTimeout);
+      cleanupTimers.delete(bookingId);
+    }
+
+    this.scheduleBookingCleanup(bookingId);
+    console.log(`🔁 Timer für Buchung ${bookingId} wurde zurückgesetzt.`);
+  }
+
+
+  async scheduleBookingCleanup(bookingId: string): Promise<void> {
+    // ⛔️ Timer bereits aktiv? → Nichts tun
+    if (cleanupTimers.has(bookingId)) {
+      logger.debug(`⏳ Cleanup-Timer für Buchung ${bookingId} ist bereits aktiv. Kein neuer Timer gesetzt.`);
+      return;
+    }
+
+    logger.log(`🕐 Starte Cleanup-Timer für Buchung ${bookingId} (in 1 Minute)`);
+
+    const timeout = setTimeout(async () => {
+      try {
+        logger.log(`⏰ Cleanup-Timer ausgelöst für Buchung ${bookingId}. Prüfung beginnt...`);
+
+        const booking = await this.bookingRepository.findOne({
+          where: { booking_id: bookingId },
+        });
+
+        if (!booking) {
+          logger.warn(`⚠️ Buchung ${bookingId} existiert nicht mehr. Timer wird entfernt.`);
+          cleanupTimers.delete(bookingId);
+          return;
+        }
+
+        if (booking.status === 'paid' || booking.status === 'cash') {
+          logger.log(`✅ Buchung ${bookingId} ist bereits abgeschlossen (${booking.status}). Kein Cleanup nötig.`);
+          cleanupTimers.delete(bookingId);
+          return;
+        }
+
+        if (booking.status === 'pending') {
+          logger.log(`🔄 Buchung ${bookingId} ist pending. Stripe-Zahlung wird überprüft...`);
+          const isPaid = await this.stripeService.verifyPayment(bookingId);
+
+          if (isPaid) {
+            await this.updateStatus(bookingId, 'paid');
+            logger.log(`✅ Stripe-Zahlung bestätigt. Buchung ${bookingId} wurde auf paid gesetzt.`);
+            cleanupTimers.delete(bookingId);
+            return;
+          } else {
+            logger.warn(`❌ Keine Stripe-Zahlung für Buchung ${bookingId} gefunden. Buchung wird gelöscht.`);
+          }
+        } else {
+          logger.warn(`❌ Buchung ${bookingId} hat Status "${booking.status}" und wird gelöscht.`);
+        }
+
+        await this.deleteBooking(bookingId);
+        logger.log(`🗑️ Buchung ${bookingId} erfolgreich gelöscht.`);
+        cleanupTimers.delete(bookingId);
+      } catch (err) {
+        logger.error(`❌ Fehler beim Cleanup von Buchung ${bookingId}: ${err.message}`, err.stack);
+        cleanupTimers.delete(bookingId);
+      }
+    }, 5 * 60 * 1000); // ⏳ 5 Minuten
+
+    cleanupTimers.set(bookingId, timeout);
+  }
+
+  // cronJob
+  async getOutdatedDraftsAndPending(cutoff: Date) {
+    return this.bookingRepository.find({
+      where: [
+        { status: 'draft', createdAt: LessThan(cutoff) },
+        { status: 'pending', createdAt: LessThan(cutoff) },
+      ],
+    });
+  }
 
 
   //Neue checkAvailability
   async checkAvailability(checkInDate: string, checkOutDate: string, numberOfCars: number) {
-    return this.bookingDatesService.reserveBookingDates(checkInDate, checkOutDate, numberOfCars);
+    const result = await this.bookingDatesService.reserveBookingDates(
+      checkInDate,
+      checkOutDate,
+      numberOfCars
+    );
+
+    // ⏱️ Cleanup nur bei erfolgreicher Buchung starten
+    if (result.success && result.bookingId) {
+      await this.scheduleBookingCleanup(result.bookingId);
+      console.log(`🕐 Cleanup-Timer für Buchung ${result.bookingId} gestartet.`);
+
+    }
+
+    return result;
   }
+
 
 
   //Neue createBooking

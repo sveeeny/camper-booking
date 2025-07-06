@@ -15,7 +15,10 @@ export const emptyGuestInfo: CreateBookingGuestDto = {
   phoneCountryCode: '',
   phoneNumber: '',
   totalPrice: 0,
+  source: "guest",
   cars: [],
+  
+  
 };
 
 export const emptyPriceInfo: PriceInfo = {

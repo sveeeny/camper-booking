@@ -5,11 +5,12 @@ import { ConfigModule } from '@nestjs/config';
 import { BookingModule } from '@/booking/booking.module';
 import { ResendModule } from '@/resend/resend.module';
 import { SettingsModule } from '@/settings/settings.module';
+import { forwardRef } from '@nestjs/common';
 
 @Module({
   imports: [
     ConfigModule, 
-    BookingModule,
+    forwardRef(() => BookingModule),
     ResendModule, 
     SettingsModule,   
   ], 

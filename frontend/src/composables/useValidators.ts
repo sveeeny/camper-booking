@@ -23,7 +23,9 @@ export function validateGuestInfo(
     if (!guest.email.includes('@')) errors.push('E-Mail');
     if (!guest.nationality) errors.push('Nationalität');
     if (!guest.phoneCountryCode) errors.push('Vorwahl');
-    if (guest.phoneNumber.trim().length < 8) errors.push('Telefonnummer');
+    if (guest.phoneNumber.replace(/\s+/g, '').length < 8) {errors.push('Telefonnummer');
+      
+    }
 
     cars.forEach((car, i) => {
       if (!car.carPlate.trim()) errors.push(`Autokennzeichen für Auto ${i + 1}`);

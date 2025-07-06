@@ -10,6 +10,10 @@ import { Car } from '@/entities/cars.entity';
 import { BookingDatesService } from './booking-dates.service';
 import { ResendModule } from '@/resend/resend.module';
 import { SettingsModule } from '@/settings/settings.module';
+import { cleanupTimers } from './booking-timers';
+import { forwardRef } from '@nestjs/common';
+import { StripeModule } from '@/stripe/stripe.module';
+import { BookingCronService } from './booking-cron.service';
 
 @Module({
   imports: [
@@ -17,9 +21,10 @@ import { SettingsModule } from '@/settings/settings.module';
     TypeOrmModule.forFeature([Booking, Car, Availability]),
     ResendModule,
     SettingsModule, 
+    forwardRef(() => StripeModule),
   ],
   controllers: [BookingController],
-  providers: [BookingService, AvailabilityService, BookingDatesService], 
+  providers: [BookingService, AvailabilityService, BookingDatesService, BookingCronService], 
   exports: [TypeOrmModule, BookingService],
 })
 export class BookingModule {}

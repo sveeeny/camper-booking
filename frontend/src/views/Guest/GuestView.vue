@@ -37,12 +37,26 @@ import { useSettingsStore } from '@/store/settingsStore';
 
 import LanguageSwitcher from '@/components/User/LanguageSwitcher.vue';
 import { useI18n } from 'vue-i18n';
-import { useIdleTimer } from '@/composables/useIdleTimer';
+
 
 import { useBookingStore } from '@/store/bookingStore';
+import { storeToRefs } from 'pinia';
+import api from '@/api';
+
+
+const pingBookingTimer = async () => {
+    if (!bookingId.value) return;
+
+    try {
+      await api.patch(`/bookings/${bookingId.value}/timer-reset`);
+      console.log('⏱️ Timer verlängert');
+    } catch (err) {
+      console.warn('⚠️ Timer-Reset fehlgeschlagen:', err);
+    }
+  };
 
 const bookingStore = useBookingStore();
-
+const {step} = storeToRefs(bookingStore);
 
 
 
@@ -51,7 +65,7 @@ const {t} = useI18n();
 
 const settingsStore = useSettingsStore();
 
-const step = ref(1);
+
 const stepIndex = computed(() => step.value - 1);
 const maxStep = bookingStepKeys.length;
 
@@ -80,24 +94,8 @@ const {
   initModeFromUser,
 } = useBooking();
 
-const { clearOnlyLocal, cleanupWithPrompt } = useBookingCleanup();
-
-useIdleTimer({
-  timeoutMinutes: 5,
-  onTimeout: async () => {
-    console.warn('⏱️ Benutzer war zu lange inaktiv – Buchung wird gelöscht');
-    await cleanupWithPrompt({
-      message: 'Du warst zu lange inaktiv. Die Buchung wurde abgebrochen.',
-      redirect: '/', // z. B. zur Startseite
-    });
-    await clearOnlyLocal();
-  },
-});
-
 
 useBookingCleanup({ requireConfirmation: true });
-
-
 
 
 onMounted(async () => {
@@ -125,7 +123,7 @@ onMounted(async () => {
         cars.value = parsed.cars;
         guestInfo.value = parsed.guestInfo;
         bookingId.value = parsed.bookingId;
-        step.value = parsed.step || 1;
+        bookingStore.setStep(parsed.step || 1);
         console.log('⚠️ Buchung aus localStorage geladen (nach abgebrochener Zahlung)');
       } catch (e) {
         console.error('❌ Fehler beim Parsen von pendingBooking:', e);
@@ -144,12 +142,20 @@ onMounted(async () => {
 
 const handleStepOneSubmit = async () => {
   const success = await submitBookingStepOne();
-  if (success) step.value = 2;
+  if (success) {
+    bookingStore.setStep(2);
+    pingBookingTimer();
+  }
+
 };
 
 const handleStepTwoSubmit = async () => {
   const success = await submitBookingStepTwo();
-  if (success) step.value = 3;
+  if (success) {
+    bookingStore.setStep(3);
+    pingBookingTimer();
+  }
+
 };
 
 const handleSummaryConfirm = async () => {
@@ -179,7 +185,8 @@ const handleSummaryConfirm = async () => {
 
   warnOnUnload.value = false;
 
-
+  pingBookingTimer();
+  
   try {
     const amountInRappen = Math.round(priceInfo.value.total * 100);
     const response = await axios.post('/stripe/checkout', {
@@ -204,7 +211,7 @@ const handleSummaryConfirm = async () => {
 const handleNext = async () => {
   if (step.value === 1) await handleStepOneSubmit();
   else if (step.value === 2) await handleStepTwoSubmit();
-  else if (step.value < maxStep) step.value++;
+  else if (step.value < maxStep) bookingStore.setStep(step.value + 1);
 };
 </script>
 

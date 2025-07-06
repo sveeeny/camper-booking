@@ -3,8 +3,8 @@
   <div class="flex flex-col md:flex-row gap-6 max-w-5xl mx-auto px-4 py-6">
     <!-- 🧍 Gästeformular -->
     <div
-      class="flex-1 bg-white dark:bg-slate-900 p-6 rounded-md shadow-sm space-y-4 border border-slate-200 dark:border-slate-700">
-      <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">{{ t('stepTwo.title') }}</h2>
+      class="flex-1 bg-slate-100 dark:bg-slate-700 p-6 rounded-md shadow-sm space-y-4 border border-slate-200 dark:border-slate-600">
+      <h2 class="text-xl font-semibold text-slate-600 dark:text-slate-300">{{ t('stepTwo.title') }}</h2>
 
       <!-- Anrede, Vorname, Nachname -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -33,15 +33,14 @@
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.nationality.title') }}</label>
           
           <Multiselect 
-          v-model="guestCountry" 
-          :options="translatedCountries" 
-          track-by="code" 
-          label="name"
-          :placeholder="t('stepTwo.nationality.placeholder')" 
-          :searchable="true" 
-          :close-on-select="true"
-          :class="['multiselect', { 'border-red-500': errorFields.includes('Nationalität') }]" />
-
+            v-model="guestCountry" 
+            :options="translatedCountries" 
+            track-by="code" 
+            label="name"
+            :placeholder="t('stepTwo.nationality.placeholder')" 
+            :searchable="true" 
+            :close-on-select="true"
+            :class="['multiselect', { 'border-red-500': errorFields.includes('Nationalität') }]" />
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.email') }}</label>
@@ -54,25 +53,25 @@
       <div>
         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.phone.label') }}</label>
         <div class="flex gap-2 py-2 items-stretch min-h-[42px]">
-          
           <Multiselect 
-          v-model="guestDialCode" 
-          :options="dialCodes" 
-          :searchable="true" 
-          :close-on-select="true"
-          :allow-empty="false" track-by="dialCode" 
-          :placeholder="t('stepTwo.phone.countryCode')" 
-          :custom-label="countryLabel"
-          :class="['multiselect', 'w-1/2', { 'border-red-500': errorFields.includes('Vorwahl') }]" />
-
+            v-model="guestDialCode" 
+            :options="dialCodes" 
+            :searchable="true" 
+            :close-on-select="true"
+            :allow-empty="false" track-by="dialCode" 
+            :placeholder="t('stepTwo.phone.countryCode')" 
+            :custom-label="countryLabel"
+            :class="['multiselect', 'w-1/2', { 'border-red-500': errorFields.includes('Vorwahl') }]" />
           <input type="text" v-model="guestInfo.phoneNumber" :placeholder="t('stepTwo.phone.placeholder')"
             :class="inputClass(errorFields.includes('Telefonnummer')) + ' w-1/2'" />
         </div>
       </div>
 
       <!-- Fahrzeugdaten -->
-      <div v-for="(car, index) in cars" :key="index" class="mt-6 border-t pt-4">
-        <h3 class="text-base font-semibold text-slate-800 dark:text-slate-200 mb-2">{{ t('stepTwo.car.title', { index: index + 1 }) }}</h3>
+      <div v-for="(car, index) in cars" :key="index" class="mt-6 border-t border-slate-300 dark:border-slate-600 pt-4">
+        <h3 class="text-base font-semibold text-slate-600 dark:text-slate-300 mb-2">
+          {{ t('stepTwo.car.title', { index: index + 1 }) }}
+        </h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">{{ t('stepTwo.car.plate') }}</label>
@@ -95,25 +94,25 @@
 
     <!-- 📋 Buchungsinfos -->
     <div class="w-full md:w-1/3 flex flex-col gap-4">
-      <div class="bg-white dark:bg-slate-900 p-4 rounded-md border border-slate-200 dark:border-slate-700">
-        <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200 mb-2">{{ t('stepTwo.checkin.title') }}</h3>
+      <div class="bg-slate-100 dark:bg-slate-700 p-4 rounded-md border border-slate-200 dark:border-slate-600">
+        <h3 class="text-base font-semibold text-slate-600 dark:text-slate-300 mb-2">{{ t('stepTwo.checkin.title') }}</h3>
         <DateDisplay :date="checkInDate" :label="t('stepTwo.checkin.label')" />
         <DateDisplay :date="checkOutDate" :label="t('stepTwo.checkout.label')" />
-        <h3 class="text-base text-slate-700 dark:text-slate-200 mb-2">{{ t('stepTwo.vehicles.count', { count: numberOfCars }) }}</h3>
+        <h3 class="text-base text-slate-600 dark:text-slate-300 mb-2">{{ t('stepTwo.vehicles.count', { count: numberOfCars }) }}</h3>
       </div>
 
-      <div class="bg-white dark:bg-slate-900 p-4 rounded-md border border-slate-200 dark:border-slate-700">
-        <h3 class="text-base font-semibold text-slate-700 dark:text-slate-200 mb-2">{{ t('stepTwo.price.title') }}</h3>
-        <p class="flex justify-between text-sm text-slate-700 dark:text-slate-300">
+      <div class="bg-slate-100 dark:bg-slate-700 p-4 rounded-md border border-slate-200 dark:border-slate-600">
+        <h3 class="text-base font-semibold text-slate-600 dark:text-slate-300 mb-2">{{ t('stepTwo.price.title') }}</h3>
+        <p class="flex justify-between text-sm text-slate-600 dark:text-slate-300">
           <span>{{ t('stepTwo.price.base') }}</span>
           <span> CHF {{ priceInfo.base.toFixed(2) }}</span>
         </p>
-        <p class="flex justify-between text-sm text-slate-700 dark:text-slate-300">
+        <p class="flex justify-between text-sm text-slate-600 dark:text-slate-300">
           <span>{{ t('stepTwo.price.tax') }}</span>
           <span> CHF {{ priceInfo.tax.toFixed(2) }}</span>
         </p>
-        <hr class="my-2 border-slate-300 dark:border-slate-600" />
-        <p class="flex justify-between font-semibold text-slate-800 dark:text-white">
+        <hr class="my-2 border-slate-300 dark:border-slate-500" />
+        <p class="flex justify-between font-semibold text-slate-700 dark:text-white">
           <span>{{ t('stepTwo.price.total') }}</span>
           <span> CHF {{ priceInfo.total.toFixed(2) }}</span>
         </p>
@@ -121,6 +120,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { computed } from 'vue';

@@ -6,6 +6,14 @@ import * as passport from 'passport';
 import { AppDataSource } from 'data-source';
 import * as express from 'express';
 import { json, urlencoded } from 'express';
+import * as nodeCrypto from 'crypto';
+
+if (!globalThis.crypto) {
+  globalThis.crypto = {
+    // minimale Polyfill-Definition
+    randomUUID: nodeCrypto.randomUUID,
+  } as Crypto;
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

@@ -23,6 +23,7 @@ import { verifyDownloadToken } from '@/utils/jwt-download.util';
 import { generateDownloadToken } from '@/utils/jwt-download.util';
 import { StripeService } from '@/stripe/stripe.service';
 import { Booking } from '@/entities/booking.entity';
+import { BookingCronService } from './booking-cron.service';
 
 @Public()
 @Controller('bookings')
@@ -31,6 +32,7 @@ export class BookingController {
     private readonly bookingService: BookingService,
     private readonly bookingDatesService: BookingDatesService,
     private readonly settingsService: SettingsService,
+    private readonly bookingCronService: BookingCronService,
   ) { }
 
   // 🏕 Verfügbarkeit prüfen (provisorische Reservierung)
@@ -144,6 +146,23 @@ export class BookingController {
   }
 
   //Host
+
+  // 🧹 Manuelles Triggern des täglichen Cleanups (für Tests/Admin)
+  @Public()
+  @Patch('manual-cleanup')
+  async manualCleanup() {
+    await this.bookingCronService.handleDailyCleanup();
+    return { success: true, message: '📅 Tägliches Cleanup manuell ausgeführt.' };
+  }
+
+  @Public()
+  @Patch(':id/timer-reset')
+  async resetBookingTimer(@Param('id') bookingId: string) {
+    this.bookingService.resetTimer(bookingId);
+    return { message: 'Timer zurückgesetzt' };
+  }
+
+
   @Public()
   @Patch(':id')
   async updateBooking(
@@ -152,6 +171,7 @@ export class BookingController {
   ) {
     return this.bookingService.updateBooking(bookingId, updateData);
   }
+
 
 
 

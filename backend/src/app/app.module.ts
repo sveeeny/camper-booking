@@ -11,6 +11,7 @@ import { AvailabilityModule } from '@/availability/availability.module';
 import { AppDataSource } from 'data-source';
 import { StripeModule } from '@/stripe/stripe.module';
 import { SettingsModule } from '@/settings/settings.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { SettingsModule } from '@/settings/settings.module';
     AvailabilityModule,
     StripeModule,
     SettingsModule,
+    ScheduleModule.forRoot(),
   ],
   providers: [
     {

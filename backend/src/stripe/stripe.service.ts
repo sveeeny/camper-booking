@@ -8,15 +8,33 @@ import { SettingsService } from '@/settings/settings.service';
 import { generateBookingPDF } from '@/booking/booking-pdf.service';
 import { generateDownloadToken } from '@/utils/jwt-download.util';
 import { stringify } from 'querystring';
+import { cleanupTimers } from '@/booking/booking-timers';
+import { Inject } from '@nestjs/common';
+import { forwardRef } from '@nestjs/common';
 
 
 @Injectable()
 export class StripeService {
+
+  async verifyPayment(bookingId: string): Promise<boolean> {
+  const sessions = await this.stripe.checkout.sessions.list({ limit: 50 }); // optional: filter nach Zeit
+
+  const session = sessions.data.find((s) => s.metadata?.bookingId === bookingId);
+
+  if (!session) {
+    this.logger.warn(`⚠️ Keine Stripe-Session für Buchung ${bookingId} gefunden.`);
+    return false;
+  }
+
+  return session.payment_status === 'paid';
+}
+
   private stripe: Stripe;
   private readonly logger = new Logger(StripeService.name);
 
   constructor(
     private configService: ConfigService,
+    @Inject(forwardRef(() => BookingService))
     private bookingService: BookingService,
     private resendService: ResendService,
     private settingsService: SettingsService,
@@ -93,6 +111,14 @@ export class StripeService {
           // 1. Status auf paid setzen
           await this.bookingService.updateStatus(bookingId, 'paid');
           this.logger.log(`📌 Status für Buchung ${bookingId} erfolgreich auf "paid" gesetzt.`);
+
+          // ⏹️ Cleanup-Timer abbrechen, falls vorhanden
+ if (cleanupTimers.has(bookingId)) {
+  clearTimeout(cleanupTimers.get(bookingId));
+  cleanupTimers.delete(bookingId);
+  this.logger.log(`🧹 Cleanup-Timer für Buchung ${bookingId} gestoppt.`);
+}
+
 
           // 2. Buchung und Settings laden
           const booking = await this.bookingService.getBookingById(bookingId);
