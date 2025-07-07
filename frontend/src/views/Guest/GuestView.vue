@@ -1,21 +1,21 @@
 <template>
-  <header class="flex justify-end items-center p-4">
-    <LanguageSwitcher />
-  </header>
-  <div class="booking-form">
-    <!-- 🧭 Step 1: Zeitraum & Fahrzeug -->
-    <StepOne v-if="step === 1" @next="handleStepOneSubmit" />
+  <div class="min-h-screen w-full bg-cover bg-center bg-no-repeat" style="background-image: url('/chicken.jpg')">
+    <div class="bg-black/40 min-h-screen backdrop-blur-sm flex flex-col justify-between">
+      <header class="flex justify-end items-center p-4">
+        <LanguageSwitcher />
+      </header>
 
-    <!-- 👤 Step 2: Gästeinfos -->
-    <StepTwo v-else-if="step === 2" @submit="handleStepTwoSubmit" />
+      <div class="w-full max-w-3xl mx-auto px-[2.5%]">
+        <StepOne v-if="step === 1" @next="handleStepOneSubmit" />
+        <StepTwo v-else-if="step === 2" @submit="handleStepTwoSubmit" />
+        <Summary v-else-if="step === 3" @confirm="handleSummaryConfirm" />
+      </div>
 
-    <!-- 📋 Step 3: Zusammenfassung -->
-    <Summary v-else-if="step === 3" @confirm="handleSummaryConfirm" />
+      <Timeline :step="stepIndex" :can-proceed="true" @next="handleNext" @prev="step--" @confirm="handleSummaryConfirm" />
+    </div>
   </div>
-
-  <!-- 📍 Timeline-Navigation -->
-  <Timeline :step="stepIndex" :can-proceed="true" @next="handleNext" @prev="step--" @confirm="handleSummaryConfirm" />
 </template>
+
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
@@ -45,23 +45,23 @@ import api from '@/api';
 
 
 const pingBookingTimer = async () => {
-    if (!bookingId.value) return;
+  if (!bookingId.value) return;
 
-    try {
-      await api.patch(`/bookings/${bookingId.value}/timer-reset`);
-      console.log('⏱️ Timer verlängert');
-    } catch (err) {
-      console.warn('⚠️ Timer-Reset fehlgeschlagen:', err);
-    }
-  };
+  try {
+    await api.patch(`/bookings/${bookingId.value}/timer-reset`);
+    console.log('⏱️ Timer verlängert');
+  } catch (err) {
+    console.warn('⚠️ Timer-Reset fehlgeschlagen:', err);
+  }
+};
 
 const bookingStore = useBookingStore();
-const {step} = storeToRefs(bookingStore);
+const { step } = storeToRefs(bookingStore);
 
 
 
 const { locale } = useI18n();
-const {t} = useI18n();
+const { t } = useI18n();
 
 const settingsStore = useSettingsStore();
 
@@ -186,7 +186,7 @@ const handleSummaryConfirm = async () => {
   warnOnUnload.value = false;
 
   pingBookingTimer();
-  
+
   try {
     const amountInRappen = Math.round(priceInfo.value.total * 100);
     const response = await axios.post('/stripe/checkout', {
@@ -214,10 +214,3 @@ const handleNext = async () => {
   else if (step.value < maxStep) bookingStore.setStep(step.value + 1);
 };
 </script>
-
-<style scoped>
-.booking-form {
-  max-width: 800px;
-  margin: 0 auto;
-}
-</style>

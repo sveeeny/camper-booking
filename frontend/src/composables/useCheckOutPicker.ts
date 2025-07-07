@@ -162,8 +162,6 @@ export function useCheckOutPicker(
       clearable: true,
       alwaysClearable: true,
       autoApply: true,
-      modelAuto: false,
-      actionRow: { showCancel: false, showPreview: false },
       transitions: false,
       placeholder: checkInDate.value
         ? `${formatToCH(checkInDate.value)} –`

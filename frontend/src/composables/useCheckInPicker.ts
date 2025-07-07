@@ -94,10 +94,10 @@ export function useCheckInPicker(
     enableTimePicker: false,
     hideOffsetDates: false,
     preventMinMaxNavigation: true,
-    clearable: false,
-    alwaysClearable: false,
+    clearable: true,
+    alwaysClearable: true,
     autoApply: true,
-    actionRow: { showCancel: false, showPreview: false },
+    actionRow: false,
     placeholder: 'Check-in auswählen',
     transitions: false,
   };
