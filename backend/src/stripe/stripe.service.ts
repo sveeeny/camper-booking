@@ -80,6 +80,25 @@ export class StripeService {
     return session.url!;
   }
 
+  /**
+ * Prüft, ob eine Stripe-Session existiert, die noch aktiv ist (nicht abgelaufen und nicht bezahlt).
+ */
+async sessionStillActive(bookingId: string): Promise<boolean> {
+  const sessions = await this.stripe.checkout.sessions.list({ limit: 50 });
+
+  const session = sessions.data.find((s) => s.metadata?.bookingId === bookingId);
+
+  if (!session) {
+    this.logger.warn(`⚠️ Keine Stripe-Session für Buchung ${bookingId} gefunden.`);
+    return false;
+  }
+
+  const isExpired = session.expires_at && session.expires_at * 1000 < Date.now();
+  const isPaid = session.payment_status === 'paid';
+
+  return !isExpired && !isPaid;
+}
+
 
   async handleWebhook(req: any, sig: string): Promise<{ success: boolean }> {
     const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');

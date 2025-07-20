@@ -101,9 +101,18 @@ export class BookingService {
             logger.log(`✅ Stripe-Zahlung bestätigt. Buchung ${bookingId} wurde auf paid gesetzt.`);
             cleanupTimers.delete(bookingId);
             return;
-          } else {
-            logger.warn(`❌ Keine Stripe-Zahlung für Buchung ${bookingId} gefunden. Buchung wird gelöscht.`);
           }
+
+          const stillActive = await this.stripeService.sessionStillActive(bookingId);
+
+          if (stillActive) {
+            logger.log(`⏳ Stripe-Session für Buchung ${bookingId} ist noch aktiv – Timer wird neu gestartet.`);
+            this.resetTimer(bookingId); // verlängert den Timer
+            return;
+          }
+
+          logger.warn(`❌ Keine Zahlung & keine aktive Session für Buchung ${bookingId}. Buchung wird gelöscht.`);
+
         } else {
           logger.warn(`❌ Buchung ${bookingId} hat Status "${booking.status}" und wird gelöscht.`);
         }
@@ -115,7 +124,7 @@ export class BookingService {
         logger.error(`❌ Fehler beim Cleanup von Buchung ${bookingId}: ${err.message}`, err.stack);
         cleanupTimers.delete(bookingId);
       }
-    }, 5 * 60 * 1000); // ⏳ 5 Minuten
+    }, 10 * 60 * 1000); // ⏳ 10 Minuten
 
     cleanupTimers.set(bookingId, timeout);
   }

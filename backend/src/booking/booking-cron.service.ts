@@ -30,14 +30,23 @@ export class BookingCronService {
         this.logger.log(`❌ Alte draft-Buchung gelöscht: ${booking.booking_id}`);
       } else if (booking.status === 'pending') {
         const isPaid = await this.stripeService.verifyPayment(booking.booking_id);
+
         if (isPaid) {
           await this.bookingService.updateStatus(booking.booking_id, 'paid');
           this.logger.log(`✅ Zahlung gefunden – Status auf paid gesetzt: ${booking.booking_id}`);
         } else {
+          const stillActive = await this.stripeService.sessionStillActive(booking.booking_id);
+
+          if (stillActive) {
+            this.logger.log(`⏳ Stripe-Session für Buchung ${booking.booking_id} ist noch aktiv – Cleanup verschoben.`);
+            continue;
+          }
+
           await this.bookingService.deleteBooking(booking.booking_id);
-          this.logger.log(`❌ Nicht bezahlte pending-Buchung gelöscht: ${booking.booking_id}`);
+          this.logger.log(`❌ Nicht bezahlte und inaktive pending-Buchung gelöscht: ${booking.booking_id}`);
         }
       }
+
     }
 
     this.logger.log(`🧼 ${bookingsToCheck.length} potenzielle Buchungen bereinigt.`);
