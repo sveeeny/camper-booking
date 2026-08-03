@@ -6,7 +6,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Repository, DataSource } from 'typeorm';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateBookingGuestDto } from './dto/create-booking-guest.dto';
 import { ConfigService } from '@nestjs/config';
@@ -23,8 +23,6 @@ import { StripeService } from '@/stripe/stripe.service';
 import { cleanupTimers } from './booking-timers';
 
 const logger = new Logger('BookingCleanup');
-
-
 
 function toBookingSource(value: string | undefined): BookingSource {
   if (!value || value === 'guest') return BookingSource.GUEST;
@@ -54,8 +52,14 @@ export class BookingService {
 
     private readonly bookingDatesService: BookingDatesService,
   ) {
-    this.maxBookingFutureDays = this.configService.get<number>('MAX_BOOKING_FUTURE_DAYS', 540);
-    this.tableCreationThresholdDays = this.configService.get<number>('TABLE_CREATION_THRESHOLD_DAYS', 365);
+    this.maxBookingFutureDays = this.configService.get<number>(
+      'MAX_BOOKING_FUTURE_DAYS',
+      540,
+    );
+    this.tableCreationThresholdDays = this.configService.get<number>(
+      'TABLE_CREATION_THRESHOLD_DAYS',
+      365,
+    );
   }
 
   resetTimer(bookingId: string): void {
@@ -66,72 +70,98 @@ export class BookingService {
     }
 
     this.scheduleBookingCleanup(bookingId);
-    console.log(`🔁 Timer für Buchung ${bookingId} wurde zurückgesetzt.`);
+    logger.debug(`Cleanup-Timer für Buchung ${bookingId} wurde zurückgesetzt.`);
   }
-
 
   async scheduleBookingCleanup(bookingId: string): Promise<void> {
     // ⛔️ Timer bereits aktiv? → Nichts tun
     if (cleanupTimers.has(bookingId)) {
-      logger.debug(`⏳ Cleanup-Timer für Buchung ${bookingId} ist bereits aktiv. Kein neuer Timer gesetzt.`);
+      logger.debug(
+        `⏳ Cleanup-Timer für Buchung ${bookingId} ist bereits aktiv. Kein neuer Timer gesetzt.`,
+      );
       return;
     }
 
-    logger.log(`🕐 Starte Cleanup-Timer für Buchung ${bookingId} (in 1 Minute)`);
+    logger.log(
+      `🕐 Starte Cleanup-Timer für Buchung ${bookingId} (in 10 Minuten)`,
+    );
 
-    const timeout = setTimeout(async () => {
-      try {
-        logger.log(`⏰ Cleanup-Timer ausgelöst für Buchung ${bookingId}. Prüfung beginnt...`);
+    const timeout = setTimeout(
+      async () => {
+        try {
+          logger.log(
+            `⏰ Cleanup-Timer ausgelöst für Buchung ${bookingId}. Prüfung beginnt...`,
+          );
 
-        const booking = await this.bookingRepository.findOne({
-          where: { booking_id: bookingId },
-        });
+          const booking = await this.bookingRepository.findOne({
+            where: { booking_id: bookingId },
+          });
 
-        if (!booking) {
-          logger.warn(`⚠️ Buchung ${bookingId} existiert nicht mehr. Timer wird entfernt.`);
-          cleanupTimers.delete(bookingId);
-          return;
-        }
-
-        if (booking.status === 'paid' || booking.status === 'cash') {
-          logger.log(`✅ Buchung ${bookingId} ist bereits abgeschlossen (${booking.status}). Kein Cleanup nötig.`);
-          cleanupTimers.delete(bookingId);
-          return;
-        }
-
-        if (booking.status === 'pending') {
-          logger.log(`🔄 Buchung ${bookingId} ist pending. Stripe-Zahlung wird überprüft...`);
-          const isPaid = await this.stripeService.verifyPayment(bookingId);
-
-          if (isPaid) {
-            await this.stripeService.completePaidBooking(bookingId, 'en');
-            logger.log(`✅ Stripe-Zahlung bestätigt und Buchung ${bookingId} abgeschlossen.`);
+          if (!booking) {
+            logger.warn(
+              `⚠️ Buchung ${bookingId} existiert nicht mehr. Timer wird entfernt.`,
+            );
             cleanupTimers.delete(bookingId);
             return;
           }
 
-          const stillActive = await this.stripeService.sessionStillActive(bookingId);
-
-          if (stillActive) {
-            logger.log(`⏳ Stripe-Session für Buchung ${bookingId} ist noch aktiv – Timer wird neu gestartet.`);
-            this.resetTimer(bookingId); // verlängert den Timer
+          if (booking.status === 'paid' || booking.status === 'cash') {
+            logger.log(
+              `✅ Buchung ${bookingId} ist bereits abgeschlossen (${booking.status}). Kein Cleanup nötig.`,
+            );
+            cleanupTimers.delete(bookingId);
             return;
           }
 
-          logger.warn(`❌ Keine Zahlung & keine aktive Session für Buchung ${bookingId}. Buchung wird gelöscht.`);
+          if (booking.status === 'pending') {
+            logger.log(
+              `🔄 Buchung ${bookingId} ist pending. Stripe-Zahlung wird überprüft...`,
+            );
+            const payment =
+              await this.stripeService.getCheckoutSessionStatus(bookingId);
 
-        } else {
-          logger.warn(`❌ Buchung ${bookingId} hat Status "${booking.status}" und wird gelöscht.`);
+            if (payment.isPaid) {
+              await this.stripeService.completePaidBooking(
+                bookingId,
+                payment.language,
+              );
+              logger.log(
+                `✅ Stripe-Zahlung bestätigt und Buchung ${bookingId} abgeschlossen.`,
+              );
+              cleanupTimers.delete(bookingId);
+              return;
+            }
+
+            if (payment.isActive) {
+              logger.log(
+                `⏳ Stripe-Session für Buchung ${bookingId} ist noch aktiv – Timer wird neu gestartet.`,
+              );
+              this.resetTimer(bookingId); // verlängert den Timer
+              return;
+            }
+
+            logger.warn(
+              `❌ Keine Zahlung & keine aktive Session für Buchung ${bookingId}. Buchung wird gelöscht.`,
+            );
+          } else {
+            logger.warn(
+              `❌ Buchung ${bookingId} hat Status "${booking.status}" und wird gelöscht.`,
+            );
+          }
+
+          await this.deleteBooking(bookingId);
+          logger.log(`🗑️ Buchung ${bookingId} erfolgreich gelöscht.`);
+          cleanupTimers.delete(bookingId);
+        } catch (err) {
+          logger.error(
+            `❌ Fehler beim Cleanup von Buchung ${bookingId}: ${err.message}`,
+            err.stack,
+          );
+          cleanupTimers.delete(bookingId);
         }
-
-        await this.deleteBooking(bookingId);
-        logger.log(`🗑️ Buchung ${bookingId} erfolgreich gelöscht.`);
-        cleanupTimers.delete(bookingId);
-      } catch (err) {
-        logger.error(`❌ Fehler beim Cleanup von Buchung ${bookingId}: ${err.message}`, err.stack);
-        cleanupTimers.delete(bookingId);
-      }
-    }, 10 * 60 * 1000); // ⏳ 10 Minuten
+      },
+      10 * 60 * 1000,
+    ); // ⏳ 10 Minuten
 
     cleanupTimers.set(bookingId, timeout);
   }
@@ -146,26 +176,26 @@ export class BookingService {
     });
   }
 
-
   //Neue checkAvailability
-  async checkAvailability(checkInDate: string, checkOutDate: string, numberOfCars: number) {
+  async checkAvailability(
+    checkInDate: string,
+    checkOutDate: string,
+    numberOfCars: number,
+  ) {
     const result = await this.bookingDatesService.reserveBookingDates(
       checkInDate,
       checkOutDate,
-      numberOfCars
+      numberOfCars,
     );
 
     // ⏱️ Cleanup nur bei erfolgreicher Buchung starten
     if (result.success && result.bookingId) {
       await this.scheduleBookingCleanup(result.bookingId);
-      console.log(`🕐 Cleanup-Timer für Buchung ${result.bookingId} gestartet.`);
-
+      logger.debug(`Cleanup-Timer für Buchung ${result.bookingId} gestartet.`);
     }
 
     return result;
   }
-
-
 
   //Neue createBooking
   async createBooking(dto: CreateBookingGuestDto): Promise<any> {
@@ -176,8 +206,6 @@ export class BookingService {
     if (!booking) {
       throw new NotFoundException('Buchung nicht gefunden');
     }
-
-
 
     // ➕ Gästeinfos speichern
     booking.salutation = dto.salutation;
@@ -190,7 +218,6 @@ export class BookingService {
     booking.totalPrice = dto.totalPrice;
     booking.source = toBookingSource(dto.source ?? 'guest');
 
-
     await this.bookingRepository.save(booking);
 
     // ➕ Fahrzeugeinträge aktualisieren (→ ausgelagert)
@@ -201,10 +228,11 @@ export class BookingService {
       dto.cars,
     );
 
-    return { message: 'Buchung erfolgreich gespeichert!', bookingId: booking.booking_id };
+    return {
+      message: 'Buchung erfolgreich gespeichert!',
+      bookingId: booking.booking_id,
+    };
   }
-
-
 
   // HARD DELETE
   async deleteBooking(bookingId: string): Promise<{ message: string }> {
@@ -237,7 +265,10 @@ export class BookingService {
       });
 
       if (availability) {
-        availability.occupied = Math.max(0, availability.occupied - numberOfCars);
+        availability.occupied = Math.max(
+          0,
+          availability.occupied - numberOfCars,
+        );
         await this.availabilityRepository.save(availability);
       }
     }
@@ -246,10 +277,6 @@ export class BookingService {
 
     return { message: `Buchung ${bookingId} wurde vollständig gelöscht.` };
   }
-
-
-
-
 
   async getBookingsInRange(from: string, to: string) {
     const cars = await this.carRepository.find({
@@ -287,7 +314,6 @@ export class BookingService {
     return { status: booking.status };
   }
 
-
   async updateStatus(bookingId: string, newStatus: string) {
     const booking = await this.bookingRepository.findOne({
       where: { booking_id: bookingId },
@@ -304,35 +330,138 @@ export class BookingService {
     return { message: `Status auf ${newStatus} gesetzt.` };
   }
 
-  async markAsPaidIfNeeded(
+  async setStripeCheckoutSessionId(
     bookingId: string,
-  ): Promise<'updated' | 'already-paid'> {
+    stripeCheckoutSessionId: string,
+  ): Promise<void> {
     const result = await this.bookingRepository
       .createQueryBuilder()
       .update(Booking)
-      .set({
-        status: 'paid',
-        statusUpdatedAt: new Date(),
-      })
+      .set({ stripeCheckoutSessionId })
       .where('booking_id = :bookingId', { bookingId })
-      .andWhere('(status IS NULL OR status != :paidStatus)', {
-        paidStatus: 'paid',
-      })
       .execute();
 
-    if (result.affected === 1) {
-      return 'updated';
+    if (result.affected !== 1) {
+      throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
     }
+  }
 
+  async getStripeCheckoutSessionId(bookingId: string): Promise<string | null> {
     const booking = await this.bookingRepository.findOne({
       where: { booking_id: bookingId },
+      select: { booking_id: true, stripeCheckoutSessionId: true },
     });
 
     if (!booking) {
       throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
     }
 
-    return 'already-paid';
+    return booking.stripeCheckoutSessionId;
+  }
+
+  async recordPaymentConfirmed(bookingId: string): Promise<void> {
+    const now = new Date();
+    const result = await this.bookingRepository
+      .createQueryBuilder()
+      .update(Booking)
+      .set({
+        status: 'paid',
+        statusUpdatedAt: now,
+        paymentConfirmedAt: () =>
+          'COALESCE("paymentConfirmedAt", CURRENT_TIMESTAMP)',
+      })
+      .where('booking_id = :bookingId', { bookingId })
+      .execute();
+
+    if (result.affected !== 1) {
+      throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
+    }
+  }
+
+  async isLegacyPaidBooking(bookingId: string): Promise<boolean> {
+    const booking = await this.bookingRepository.findOne({
+      where: { booking_id: bookingId },
+      select: {
+        booking_id: true,
+        status: true,
+        paymentConfirmedAt: true,
+        confirmationSentAt: true,
+      },
+    });
+
+    if (!booking) {
+      throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
+    }
+
+    return (
+      booking.status === 'paid' &&
+      !booking.paymentConfirmedAt &&
+      !booking.confirmationSentAt
+    );
+  }
+
+  async claimBookingConfirmation(
+    bookingId: string,
+  ): Promise<'claimed' | 'sent' | 'in-progress'> {
+    const now = new Date();
+    const staleBefore = new Date(now.getTime() - 15 * 60 * 1000);
+    const result = await this.bookingRepository
+      .createQueryBuilder()
+      .update(Booking)
+      .set({
+        confirmationProcessingAt: now,
+        confirmationLastError: null,
+      })
+      .where('booking_id = :bookingId', { bookingId })
+      .andWhere('"confirmationSentAt" IS NULL')
+      .andWhere(
+        '("confirmationProcessingAt" IS NULL OR "confirmationProcessingAt" < :staleBefore)',
+        { staleBefore },
+      )
+      .execute();
+
+    if (result.affected === 1) {
+      return 'claimed';
+    }
+
+    const booking = await this.bookingRepository.findOne({
+      where: { booking_id: bookingId },
+      select: {
+        booking_id: true,
+        confirmationSentAt: true,
+        confirmationProcessingAt: true,
+      },
+    });
+
+    if (!booking) {
+      throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
+    }
+
+    return booking.confirmationSentAt ? 'sent' : 'in-progress';
+  }
+
+  async markBookingConfirmationSent(bookingId: string): Promise<void> {
+    await this.bookingRepository.update(
+      { booking_id: bookingId },
+      {
+        confirmationSentAt: new Date(),
+        confirmationProcessingAt: null,
+        confirmationLastError: null,
+      },
+    );
+  }
+
+  async markBookingConfirmationFailed(
+    bookingId: string,
+    errorMessage: string,
+  ): Promise<void> {
+    await this.bookingRepository.update(
+      { booking_id: bookingId },
+      {
+        confirmationProcessingAt: null,
+        confirmationLastError: errorMessage.slice(0, 2_000),
+      },
+    );
   }
 
   async getBookingById(bookingId: string) {
@@ -348,8 +477,14 @@ export class BookingService {
       where: { booking_id: bookingId, isCancelled: false },
     });
 
-    const priceBase = cars.reduce((acc, c) => acc + Number(c.basePrice ?? 0), 0);
-    const priceTax = cars.reduce((acc, c) => acc + Number(c.touristTax ?? 0), 0);
+    const priceBase = cars.reduce(
+      (acc, c) => acc + Number(c.basePrice ?? 0),
+      0,
+    );
+    const priceTax = cars.reduce(
+      (acc, c) => acc + Number(c.touristTax ?? 0),
+      0,
+    );
 
     return {
       id: booking.booking_id,
@@ -389,7 +524,6 @@ export class BookingService {
     };
   }
 
-
   async updateBooking(bookingId: string, updateData: Partial<Booking>) {
     const booking = await this.bookingRepository.findOne({
       where: { booking_id: bookingId },
@@ -422,11 +556,7 @@ export class BookingService {
       }
     }
 
-
     await this.bookingRepository.save(booking);
     return { message: 'Buchung erfolgreich aktualisiert.' };
   }
-
-
 }
-

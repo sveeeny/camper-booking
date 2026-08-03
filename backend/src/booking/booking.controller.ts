@@ -33,7 +33,7 @@ export class BookingController {
     private readonly bookingDatesService: BookingDatesService,
     private readonly settingsService: SettingsService,
     private readonly bookingCronService: BookingCronService,
-  ) { }
+  ) {}
 
   // 🏕 Verfügbarkeit prüfen (provisorische Reservierung)
   @Public()
@@ -42,7 +42,7 @@ export class BookingController {
     return this.bookingService.checkAvailability(
       dto.checkInDate,
       dto.checkOutDate,
-      dto.numberOfCars
+      dto.numberOfCars,
     );
   }
 
@@ -59,7 +59,6 @@ export class BookingController {
   async deleteBookingById(@Param('id') bookingId: string) {
     return this.bookingService.deleteBooking(bookingId);
   }
-
 
   @Public()
   @Get('range')
@@ -96,7 +95,6 @@ export class BookingController {
   @Public()
   @Get('download-token/:id')
   async getDownloadToken(@Param('id') bookingId: string) {
-    console.log('🧪 bookingId received in download-token:', bookingId);
     // Du kannst hier optional prüfen, ob die Buchung existiert
     await this.bookingService.getBookingById(bookingId); // gibt 404 bei ungültiger ID
 
@@ -111,7 +109,8 @@ export class BookingController {
   async downloadPdfSecure(
     @Query('token') token: string,
     @Query('lang') lang: string = 'en',
-    @Res() res: Response) {
+    @Res() res: Response,
+  ) {
     if (!token) throw new BadRequestException('Token fehlt');
 
     let payload: { bookingId: string };
@@ -135,7 +134,11 @@ export class BookingController {
     };
 
     const language = ['de', 'en'].includes(lang) ? lang : 'en'; // optional absichern
-    const pdfBuffer = await generateBookingPDF(bookingForPdf, settings, language);
+    const pdfBuffer = await generateBookingPDF(
+      bookingForPdf,
+      settings,
+      language,
+    );
     return res.send(pdfBuffer);
   }
 
@@ -152,7 +155,10 @@ export class BookingController {
   @Patch('manual-cleanup')
   async manualCleanup() {
     await this.bookingCronService.handleDailyCleanup();
-    return { success: true, message: '📅 Tägliches Cleanup manuell ausgeführt.' };
+    return {
+      success: true,
+      message: '📅 Tägliches Cleanup manuell ausgeführt.',
+    };
   }
 
   @Public()
@@ -162,7 +168,6 @@ export class BookingController {
     return { message: 'Timer zurückgesetzt' };
   }
 
-
   @Public()
   @Patch(':id')
   async updateBooking(
@@ -171,9 +176,4 @@ export class BookingController {
   ) {
     return this.bookingService.updateBooking(bookingId, updateData);
   }
-
-
-
-
-
 }

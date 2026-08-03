@@ -9,23 +9,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET'),
+      secretOrKey: configService.getOrThrow<string>('JWT_SECRET'),
     });
   }
 
-  async validate(payload: { email: string; sub: number; role: string }) {
-    console.log('🔥 JwtStrategy.validate() wurde aufgerufen!');
-    console.log('✅ JWT Payload:', payload);
-
+  validate(payload: { email: string; sub: number; role: string }) {
     if (!payload || !payload.sub || !payload.email || !payload.role) {
-      console.error('❌ Fehler: Ungültiges Token-Payload!');
       throw new UnauthorizedException('Token ist ungültig.');
     }
 
-    const user = { id: payload.sub, email: payload.email, role: payload.role };
-    console.log('🚀 validate() gibt zurück:', JSON.stringify(user));
-    return user;
-}
-
-  
+    return { id: payload.sub, email: payload.email, role: payload.role };
+  }
 }
