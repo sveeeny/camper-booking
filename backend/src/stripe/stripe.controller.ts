@@ -1,19 +1,31 @@
 import { Controller, Post, Req, Res, Headers, Body } from '@nestjs/common';
 import { StripeService } from './stripe.service';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { Public } from '@/decorators/public.decorator';
 
 @Controller('stripe')
 export class StripeController {
-  constructor(private readonly stripeService: StripeService) { }
+  constructor(private readonly stripeService: StripeService) {}
 
   @Public()
   @Post('checkout')
-  async createSession(@Body() body: { amount: number; bookingId: string; productName: string; locale: string }) {
-    const url = await this.stripeService.createCheckoutSession(body.bookingId, body.amount, body.productName, body.locale);
+  async createSession(
+    @Body()
+    body: {
+      amount: number;
+      bookingId: string;
+      productName: string;
+      locale: string;
+    },
+  ) {
+    const url = await this.stripeService.createCheckoutSession(
+      body.bookingId,
+      body.amount,
+      body.productName,
+      body.locale,
+    );
     return { url };
   }
-
 
   @Public()
   @Post('webhook')
