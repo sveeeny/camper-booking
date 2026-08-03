@@ -1,8 +1,8 @@
-import { 
-  Injectable, 
-  NotFoundException, 
-  ConflictException, 
-  BadRequestException 
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,8 +18,12 @@ export class UserService {
 
   async getAllUsers(): Promise<Partial<User>[]> {
     const users = await this.userRepository.find();
-    return users.map(({ id, email, role, createdAt, updatedAt }) => ({ 
-      id, email, role, createdAt, updatedAt 
+    return users.map(({ id, email, role, createdAt, updatedAt }) => ({
+      id,
+      email,
+      role,
+      createdAt,
+      updatedAt,
     })); // ✅ `passwordHash` wird ausgefiltert
   }
 
@@ -31,10 +35,18 @@ export class UserService {
     return { id: user.id, email: user.email, role: user.role };
   }
 
-  async createUser(email: string, password: string, role: 'admin' | 'host' = 'host'): Promise<Partial<User>> {
-    const existingUser = await this.userRepository.findOne({ where: { email } });
+  async createUser(
+    email: string,
+    password: string,
+    role: 'admin' | 'host' = 'host',
+  ): Promise<Partial<User>> {
+    const existingUser = await this.userRepository.findOne({
+      where: { email },
+    });
     if (existingUser) {
-      throw new ConflictException('Ein Benutzer mit dieser E-Mail existiert bereits.');
+      throw new ConflictException(
+        'Ein Benutzer mit dieser E-Mail existiert bereits.',
+      );
     }
 
     if (!email || !password) {
@@ -44,36 +56,39 @@ export class UserService {
     const passwordHash = await bcrypt.hash(password, 10);
     const user = this.userRepository.create({ email, passwordHash, role });
     const savedUser = await this.userRepository.save(user);
-    
+
     return { id: savedUser.id, email: savedUser.email, role: savedUser.role }; // ✅ Passwort wird nicht zurückgegeben
   }
 
-  async updateUser(id: number, email?: string, password?: string): Promise<Partial<User>> {
-    console.log(`🚀 updateUser wurde aufgerufen für ID: ${id}`);
+  async updateUser(
+    id: number,
+    email?: string,
+    password?: string,
+  ): Promise<Partial<User>> {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException(`Benutzer mit ID ${id} nicht gefunden.`);
     }
-  
+
     if (email) {
-      const existingUser = await this.userRepository.findOne({ where: { email } });
+      const existingUser = await this.userRepository.findOne({
+        where: { email },
+      });
       if (existingUser && existingUser.id !== id) {
         throw new ConflictException('Diese E-Mail ist bereits vergeben.');
       }
       user.email = email;
     }
-  
+
     if (password) {
       user.passwordHash = await bcrypt.hash(password, 10);
-      console.log(`✅ Neues gehashtes Passwort für Benutzer ${id}:`, user.passwordHash);
     }
-  
+
     // **Hier fehlt das Speichern des geänderten Users in der DB**
     await this.userRepository.save(user); // 🔥 Speichert die Änderungen in der DB!
-  
+
     return { id: user.id, email: user.email, role: user.role };
   }
-  
 
   async deleteUser(id: number): Promise<{ message: string }> {
     const user = await this.userRepository.findOne({ where: { id } });

@@ -12,6 +12,12 @@ type StripeWebhookRequest = Omit<Request, 'body'> & {
   body: Buffer;
 };
 
+export type CheckoutSessionStatus = {
+  isPaid: boolean;
+  isActive: boolean;
+  language: 'de' | 'en';
+};
+
 @Injectable()
 export class StripeService {
   private readonly stripe: Stripe;
@@ -35,37 +41,51 @@ export class StripeService {
     );
   }
 
-  async verifyPayment(bookingId: string): Promise<boolean> {
-    const sessions = await this.stripe.checkout.sessions.list({ limit: 50 });
-    const session = sessions.data.find(
-      (candidate) => candidate.metadata?.bookingId === bookingId,
-    );
+  async getCheckoutSessionStatus(
+    bookingId: string,
+  ): Promise<CheckoutSessionStatus> {
+    const storedSessionId =
+      await this.bookingService.getStripeCheckoutSessionId(bookingId);
+    let session: Stripe.Checkout.Session | undefined;
 
-    if (!session) {
-      this.logger.warn(
-        `Keine Stripe-Session für Buchung ${bookingId} gefunden.`,
+    if (storedSessionId) {
+      session = await this.stripe.checkout.sessions.retrieve(storedSessionId);
+    } else {
+      const sessions = await this.stripe.checkout.sessions.list({ limit: 100 });
+      session = sessions.data.find(
+        (candidate) => candidate.metadata?.bookingId === bookingId,
       );
-      return false;
+
+      if (session) {
+        await this.bookingService.setStripeCheckoutSessionId(
+          bookingId,
+          session.id,
+        );
+      }
     }
 
-    return session.payment_status === 'paid';
-  }
-
-  async sessionStillActive(bookingId: string): Promise<boolean> {
-    const sessions = await this.stripe.checkout.sessions.list({ limit: 50 });
-    const session = sessions.data.find(
-      (candidate) => candidate.metadata?.bookingId === bookingId,
-    );
-
     if (!session) {
       this.logger.warn(
         `Keine Stripe-Session für Buchung ${bookingId} gefunden.`,
       );
-      return false;
+      return { isPaid: false, isActive: false, language: 'en' };
     }
 
     const isExpired = session.expires_at * 1000 < Date.now();
-    return !isExpired && session.payment_status !== 'paid';
+    const isPaid = session.payment_status === 'paid';
+    return {
+      isPaid,
+      isActive: !isExpired && !isPaid,
+      language: session.metadata?.locale === 'de' ? 'de' : 'en',
+    };
+  }
+
+  async verifyPayment(bookingId: string): Promise<boolean> {
+    return (await this.getCheckoutSessionStatus(bookingId)).isPaid;
+  }
+
+  async sessionStillActive(bookingId: string): Promise<boolean> {
+    return (await this.getCheckoutSessionStatus(bookingId)).isActive;
   }
 
   async createCheckoutSession(
@@ -99,6 +119,8 @@ export class StripeService {
         `Stripe hat für Buchung ${bookingId} keine Checkout-URL zurückgegeben.`,
       );
     }
+
+    await this.bookingService.setStripeCheckoutSessionId(bookingId, session.id);
 
     return session.url;
   }
@@ -163,43 +185,73 @@ export class StripeService {
   async completePaidBooking(
     bookingId: string,
     language: string,
-  ): Promise<'processed' | 'already-paid'> {
-    const result = await this.bookingService.markAsPaidIfNeeded(bookingId);
+  ): Promise<'processed' | 'already-sent' | 'in-progress'> {
+    if (await this.bookingService.isLegacyPaidBooking(bookingId)) {
+      this.stopCleanupTimer(bookingId);
+      this.logger.log(
+        `Historische bezahlte Buchung ${bookingId} wird nicht erneut versendet.`,
+      );
+      return 'already-sent';
+    }
+
+    await this.bookingService.recordPaymentConfirmed(bookingId);
 
     this.stopCleanupTimer(bookingId);
 
-    if (result === 'already-paid') {
+    const claim = await this.bookingService.claimBookingConfirmation(bookingId);
+
+    if (claim === 'sent') {
       this.logger.log(
-        `Buchung ${bookingId} war bereits bezahlt und wird nicht erneut verarbeitet.`,
+        `Bestätigung für Buchung ${bookingId} wurde bereits versendet.`,
       );
-      return result;
+      return 'already-sent';
     }
 
-    const booking = await this.bookingService.getBookingById(bookingId);
-    const settings = await this.settingsService.getSettings();
-    const bookingForPdf = {
-      ...booking,
-      cars: booking.cars.map((car) => ({
-        carPlate: car.carPlate,
-        adults: car.adults,
-        children: car.children,
-        priceBase: Number(car.basePrice ?? 0),
-        priceTax: Number(car.touristTax ?? 0),
-      })),
-    };
+    if (claim === 'in-progress') {
+      this.logger.log(
+        `Bestätigung für Buchung ${bookingId} wird bereits verarbeitet.`,
+      );
+      return 'in-progress';
+    }
 
-    const pdf = await generateBookingPDF(
-      bookingForPdf,
-      settings,
-      language === 'de' ? 'de' : 'en',
-    );
+    try {
+      const booking = await this.bookingService.getBookingById(bookingId);
+      const settings = await this.settingsService.getSettings();
+      const bookingForPdf = {
+        ...booking,
+        cars: booking.cars.map((car) => ({
+          carPlate: car.carPlate,
+          adults: car.adults,
+          children: car.children,
+          priceBase: Number(car.basePrice ?? 0),
+          priceTax: Number(car.touristTax ?? 0),
+        })),
+      };
 
-    await this.resendService.sendBookingConfirmation(
-      booking.guest.email,
-      pdf,
-      bookingForPdf,
-      language,
-    );
+      const pdf = await generateBookingPDF(
+        bookingForPdf,
+        settings,
+        language === 'de' ? 'de' : 'en',
+      );
+
+      await this.resendService.sendBookingConfirmation(
+        booking.guest.email,
+        pdf,
+        bookingForPdf,
+        language,
+        `booking-confirmation-${bookingId}`,
+      );
+
+      await this.bookingService.markBookingConfirmationSent(bookingId);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Unbekannter Fehler';
+      await this.bookingService.markBookingConfirmationFailed(
+        bookingId,
+        message,
+      );
+      throw error;
+    }
 
     this.logger.log(
       `Buchung ${bookingId} wurde bezahlt und die Bestätigung versendet.`,
