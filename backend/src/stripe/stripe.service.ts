@@ -3,9 +3,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { BookingService } from '@/booking/booking.service';
+import { Request } from 'express';
 
-
-
+type StripeWebhookRequest = Omit<Request, 'body'> & {
+  body: Buffer;
+};
 @Injectable()
 export class StripeService {
   private stripe: Stripe;
@@ -15,11 +17,7 @@ export class StripeService {
     private configService: ConfigService,
     private bookingService: BookingService,
   ) {
-    //TODO: bei live wechseln
-    // const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
-
-    //TEST
-    const secretKey = this.configService.get<string>('STRIPE_SECRET_TEST_KEY');
+    const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
 
     if (!secretKey) {
       throw new Error('❌ STRIPE_SECRET_KEY fehlt in .env-Datei');
@@ -28,9 +26,10 @@ export class StripeService {
     this.stripe = new Stripe(secretKey);
   }
 
-
-
-  async createCheckoutSession(bookingId: string, amountInRappen: number): Promise<string> {
+  async createCheckoutSession(
+    bookingId: string,
+    amountInRappen: number,
+  ): Promise<string> {
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [
@@ -48,16 +47,20 @@ export class StripeService {
       success_url: `${process.env.FRONTEND_URL}/success?bookingId=${bookingId}`,
       cancel_url: `${process.env.FRONTEND_URL}/`,
       metadata: {
-        bookingId
+        bookingId,
       },
     });
 
     return session.url!;
   }
 
-
-  async handleWebhook(req: any, sig: string): Promise<{ success: boolean }> {
-    const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+  async handleWebhook(
+    req: StripeWebhookRequest,
+    sig: string,
+  ): Promise<{ success: boolean }> {
+    const webhookSecret = this.configService.get<string>(
+      'STRIPE_WEBHOOK_SECRET',
+    );
 
     // 🔒 TypeScript-fester Check
     if (!webhookSecret) {
@@ -70,13 +73,16 @@ export class StripeService {
     try {
       // 🔑 Verifikation der Signatur – req.body muss raw sein!
       event = this.stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    } catch (err: any) {
-      this.logger.error('❌ Stripe Webhook Signature invalid:', err.message);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Unbekannter Stripe-Fehler';
+
+      this.logger.error(`❌ Stripe Webhook Signature invalid: ${message}`);
       return { success: false };
     }
 
     if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
+      const session = event.data.object;
       const bookingId = session.metadata?.bookingId;
 
       if (bookingId) {
@@ -86,9 +92,18 @@ export class StripeService {
 
         try {
           await this.bookingService.updateStatus(bookingId, 'paid');
-          this.logger.log(`📌 Status für Buchung ${bookingId} erfolgreich auf "paid" gesetzt.`);
-        } catch (err) {
-          this.logger.error(`❌ Fehler beim Setzen des Status: ${err.message}`);
+          this.logger.log(
+            `📌 Status für Buchung ${bookingId} erfolgreich auf "paid" gesetzt.`,
+          );
+        } catch (error: unknown) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : 'Unbekannter Stripe-Fehler';
+
+          this.logger.error(
+            `❌ Fehler beim Aktualisieren der Buchung ${bookingId}: ${message}`,
+          );
           return { success: false };
         }
 
@@ -98,6 +113,4 @@ export class StripeService {
 
     return { success: false };
   }
-
-
 }
