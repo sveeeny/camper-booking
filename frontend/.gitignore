@@ -26,5 +26,5 @@ dist-ssr
 
 # Umgebungsvariablen
 .env
-.env.local
-.env.*  # Falls du mehrere Umgebungsdateien hast (z. B. .env.production)
+.env.*
+!.env.example

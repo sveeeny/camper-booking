@@ -1,8 +1,30 @@
 {
-    "CodeGPT.apiKey": "CodeGPT Plus Beta",
-    "cSpell.words": [
-        "Dekorators"
-    ],
-    "references.preferredLocation": "view",
-    "vue3snippets.enable-compile-vue-file-on-did-save-code": false
+  "CodeGPT.apiKey": "CodeGPT Plus Beta",
+
+  "cSpell.words": ["Dekorators"],
+
+  "references.preferredLocation": "view",
+
+  "editor.formatOnSave": true,
+
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  "files.eol": "\n",
+
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+
+  "eslint.validate": ["javascript", "typescript", "vue"],
+
+  "js/ts.tsdk.path": "backend/node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  "editor.minimap.enabled": true,
+
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false
 }

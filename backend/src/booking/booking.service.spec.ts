@@ -1,58 +1,63 @@
-// src/booking/booking.service.spec.ts
-import { Test, TestingModule } from '@nestjs/testing';
-import { BookingService } from './booking.service';
+import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Test, TestingModule } from '@nestjs/testing';
+import { AvailabilityService } from '@/availability/availability.service';
+import { Availability } from '@/entities/availability.entity';
 import { Booking } from '@/entities/booking.entity';
 import { Car } from '@/entities/cars.entity';
-import { AvailabilityService } from '@/availability/availability.service';
+import { StripeService } from '@/stripe/stripe.service';
 import { Repository } from 'typeorm';
-import { Availability } from '@/entities/availability.entity';
-import { ConfigService } from '@nestjs/config';
-import { DataSource } from 'typeorm';
+import { BookingDatesService } from './booking-dates.service';
+import { BookingService } from './booking.service';
 
 describe('BookingService', () => {
   let service: BookingService;
-  let bookingRepo: jest.Mocked<Repository<Booking>>;
-  let carRepo: jest.Mocked<Repository<Car>>;
-  let availabilityRepo: jest.Mocked<Repository<Availability>>;
-  let availabilityService: AvailabilityService;
+  let bookingRepository: jest.Mocked<Repository<Booking>>;
 
-  const saveMock = jest.fn();
-  const findOneMock = jest.fn();
-  const isAvailableMock = jest.fn();
+  const bookingFindOne = jest.fn();
+  const bookingSave = jest.fn();
+  const reserveBookingDates = jest.fn();
+  const updateCarEntries = jest.fn();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BookingService,
-        AvailabilityService,
         {
           provide: ConfigService,
           useValue: {
-            get: (key: string) => {
-              if (key === 'MAX_BOOKING_FUTURE_DAYS') return 540;
-              if (key === 'TABLE_CREATION_THRESHOLD_DAYS') return 365;
-              return null;
-            },
+            get: (key: string, fallback: unknown) => fallback,
           },
         },
         {
-          provide: DataSource,
+          provide: AvailabilityService,
           useValue: {},
+        },
+        {
+          provide: StripeService,
+          useValue: {
+            verifyPayment: jest.fn(),
+            sessionStillActive: jest.fn(),
+            completePaidBooking: jest.fn(),
+          },
+        },
+        {
+          provide: BookingDatesService,
+          useValue: {
+            reserveBookingDates,
+            updateCarEntries,
+          },
         },
         {
           provide: getRepositoryToken(Booking),
           useValue: {
-            findOne: findOneMock,
-            save: saveMock,
+            findOne: bookingFindOne,
+            save: bookingSave,
           },
         },
         {
           provide: getRepositoryToken(Car),
-          useValue: {
-            findOne: findOneMock,
-            save: saveMock,
-          },
+          useValue: {},
         },
         {
           provide: getRepositoryToken(Availability),
@@ -61,27 +66,21 @@ describe('BookingService', () => {
       ],
     }).compile();
 
-    service = module.get<BookingService>(BookingService);
-    bookingRepo = module.get(getRepositoryToken(Booking));
-    carRepo = module.get(getRepositoryToken(Car));
-    availabilityService = module.get(AvailabilityService);
-
-    // Optional: zentrale Mocks wie .isAvailable() mocken
-    availabilityService.isAvailable = isAvailableMock;
+    service = module.get(BookingService);
+    bookingRepository = module.get(getRepositoryToken(Booking));
   });
 
   afterEach(() => {
-    jest.clearAllMocks(); // sauberes Zurücksetzen nach jedem Test
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  // Beispiel-Test: createBooking
-  it('should update a booking and cars', async () => {
+  it('should save guest data and delegate car updates', async () => {
     const dto = {
-      bookingId: 1,
+      bookingId: 'booking-1',
       salutation: 'Herr',
       firstName: 'Max',
       lastName: 'Mustermann',
@@ -92,38 +91,40 @@ describe('BookingService', () => {
       totalPrice: 100,
       checkInDate: '2025-06-01',
       checkOutDate: '2025-06-03',
-      cars: [
-        {
-          carPlate: 'ZH123',
-          isCancelled: false,
-          adults: 2,
-          children: 0,
-          touristTax: 6,
-          checkInDate: '2025-06-01',
-          checkOutDate: '2025-06-02',
-        },
-      ],
+      cars: [],
+      source: 'guest' as const,
     };
+    const booking = { booking_id: dto.bookingId } as Booking;
+    bookingFindOne.mockResolvedValue(booking);
+    bookingSave.mockResolvedValue(booking);
 
-    const mockBooking = { booking_id: 1 };
-    const mockCar = {};
-
-    findOneMock.mockResolvedValueOnce(mockBooking as any); // find booking
-    findOneMock.mockResolvedValueOnce(mockCar as any);     // find car
-    saveMock.mockResolvedValueOnce(mockBooking as any);
-    saveMock.mockResolvedValueOnce({});
-
-    const result = await service.createBooking(dto as any);
-
-    expect(result).toEqual({ message: 'Buchung erfolgreich gespeichert!', bookingId: 1 });
-    expect(findOneMock).toHaveBeenCalled();
-    expect(saveMock).toHaveBeenCalled();
+    await expect(service.createBooking(dto)).resolves.toEqual({
+      message: 'Buchung erfolgreich gespeichert!',
+      bookingId: dto.bookingId,
+    });
+    expect(bookingRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: dto.email,
+        firstName: dto.firstName,
+      }),
+    );
+    expect(updateCarEntries).toHaveBeenCalledWith(
+      dto.bookingId,
+      dto.checkInDate,
+      dto.checkOutDate,
+      dto.cars,
+    );
   });
 
-  // Beispiel-Test: checkAvailability
-  it('should return false if no availability', async () => {
-    isAvailableMock.mockResolvedValue(false);
-    const result = await service.checkAvailability('2025-06-01', '2025-06-02', 2);
-    expect(result).toEqual({ success: false, message: 'Stellplätze wurden zwischenzeitlich belegt.' });
+  it('should return the reservation result from BookingDatesService', async () => {
+    const unavailable = {
+      success: false,
+      message: 'Stellplätze wurden zwischenzeitlich belegt.',
+    };
+    reserveBookingDates.mockResolvedValue(unavailable);
+
+    await expect(
+      service.checkAvailability('2025-06-01', '2025-06-02', 2),
+    ).resolves.toEqual(unavailable);
   });
 });

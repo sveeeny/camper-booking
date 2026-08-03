@@ -1,187 +1,220 @@
-// src/stripe/stripe.service.ts
-import { Injectable, Logger } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import Stripe from 'stripe';
 import { BookingService } from '@/booking/booking.service';
+import { generateBookingPDF } from '@/booking/booking-pdf.service';
+import { cleanupTimers } from '@/booking/booking-timers';
 import { ResendService } from '@/resend/resend.service';
 import { SettingsService } from '@/settings/settings.service';
-import { generateBookingPDF } from '@/booking/booking-pdf.service';
-import { generateDownloadToken } from '@/utils/jwt-download.util';
-import { stringify } from 'querystring';
-import { cleanupTimers } from '@/booking/booking-timers';
-import { Inject } from '@nestjs/common';
-import { forwardRef } from '@nestjs/common';
+import type { Request } from 'express';
+import Stripe from 'stripe';
 
+type StripeWebhookRequest = Omit<Request, 'body'> & {
+  body: Buffer;
+};
 
 @Injectable()
 export class StripeService {
-
-  async verifyPayment(bookingId: string): Promise<boolean> {
-  const sessions = await this.stripe.checkout.sessions.list({ limit: 50 }); // optional: filter nach Zeit
-
-  const session = sessions.data.find((s) => s.metadata?.bookingId === bookingId);
-
-  if (!session) {
-    this.logger.warn(`⚠️ Keine Stripe-Session für Buchung ${bookingId} gefunden.`);
-    return false;
-  }
-
-  return session.payment_status === 'paid';
-}
-
-  private stripe: Stripe;
+  private readonly stripe: Stripe;
   private readonly logger = new Logger(StripeService.name);
+  private readonly frontendUrl: string;
+  private readonly webhookSecret: string;
 
   constructor(
-    private configService: ConfigService,
+    private readonly configService: ConfigService,
     @Inject(forwardRef(() => BookingService))
-    private bookingService: BookingService,
-    private resendService: ResendService,
-    private settingsService: SettingsService,
+    private readonly bookingService: BookingService,
+    private readonly resendService: ResendService,
+    private readonly settingsService: SettingsService,
   ) {
-    //TODO: bei live wechseln
-    const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
-
-    //Test-Mode-Key
-    // const secretKey = this.configService.get<string>('STRIPE_SECRET_TEST_KEY');
-
-    if (!secretKey) {
-      throw new Error('❌ STRIPE_SECRET_KEY fehlt in .env-Datei');
-    }
-
-    this.stripe = new Stripe(secretKey);
+    this.stripe = new Stripe(
+      this.configService.getOrThrow<string>('STRIPE_SECRET_KEY'),
+    );
+    this.frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
+    this.webhookSecret = this.configService.getOrThrow<string>(
+      'STRIPE_WEBHOOK_SECRET',
+    );
   }
 
+  async verifyPayment(bookingId: string): Promise<boolean> {
+    const sessions = await this.stripe.checkout.sessions.list({ limit: 50 });
+    const session = sessions.data.find(
+      (candidate) => candidate.metadata?.bookingId === bookingId,
+    );
 
-  async createCheckoutSession(bookingId: string, amountInRappen: number, productName: string, locale: string): Promise<string> {
-    
+    if (!session) {
+      this.logger.warn(
+        `Keine Stripe-Session für Buchung ${bookingId} gefunden.`,
+      );
+      return false;
+    }
+
+    return session.payment_status === 'paid';
+  }
+
+  async sessionStillActive(bookingId: string): Promise<boolean> {
+    const sessions = await this.stripe.checkout.sessions.list({ limit: 50 });
+    const session = sessions.data.find(
+      (candidate) => candidate.metadata?.bookingId === bookingId,
+    );
+
+    if (!session) {
+      this.logger.warn(
+        `Keine Stripe-Session für Buchung ${bookingId} gefunden.`,
+      );
+      return false;
+    }
+
+    const isExpired = session.expires_at * 1000 < Date.now();
+    return !isExpired && session.payment_status !== 'paid';
+  }
+
+  async createCheckoutSession(
+    bookingId: string,
+    amountInRappen: number,
+    productName: string,
+    locale: string,
+  ): Promise<string> {
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [
         {
           price_data: {
             currency: 'chf',
-            product_data: {
-              name: productName,
-            },
+            product_data: { name: productName },
             unit_amount: amountInRappen,
           },
           quantity: 1,
         },
       ],
-      success_url: `${process.env.FRONTEND_URL}/success?bookingId=${bookingId}`,
-      cancel_url: `${process.env.FRONTEND_URL}/`,
+      success_url: `${this.frontendUrl}/success?bookingId=${bookingId}`,
+      cancel_url: `${this.frontendUrl}/`,
       metadata: {
         bookingId,
-        locale
+        locale: locale === 'de' ? 'de' : 'en',
       },
     });
 
-    return session.url!;
-  }
-
-  /**
- * Prüft, ob eine Stripe-Session existiert, die noch aktiv ist (nicht abgelaufen und nicht bezahlt).
- */
-async sessionStillActive(bookingId: string): Promise<boolean> {
-  const sessions = await this.stripe.checkout.sessions.list({ limit: 50 });
-
-  const session = sessions.data.find((s) => s.metadata?.bookingId === bookingId);
-
-  if (!session) {
-    this.logger.warn(`⚠️ Keine Stripe-Session für Buchung ${bookingId} gefunden.`);
-    return false;
-  }
-
-  const isExpired = session.expires_at && session.expires_at * 1000 < Date.now();
-  const isPaid = session.payment_status === 'paid';
-
-  return !isExpired && !isPaid;
-}
-
-
-  async handleWebhook(req: any, sig: string): Promise<{ success: boolean }> {
-    const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
-
-    // 🔒 TypeScript-fester Check
-    if (!webhookSecret) {
-      this.logger.error('❌ STRIPE_WEBHOOK_SECRET fehlt in .env-Datei');
-      throw new Error('Webhook secret is not defined');
+    if (!session.url) {
+      throw new Error(
+        `Stripe hat für Buchung ${bookingId} keine Checkout-URL zurückgegeben.`,
+      );
     }
 
+    return session.url;
+  }
+
+  async handleWebhook(
+    request: StripeWebhookRequest,
+    signature: string,
+  ): Promise<{ success: boolean }> {
     let event: Stripe.Event;
 
     try {
-      // 🔑 Verifikation der Signatur – req.body muss raw sein!
-      event = this.stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    } catch (err: any) {
-      this.logger.error('❌ Stripe Webhook Signature invalid:', err.message);
+      event = this.stripe.webhooks.constructEvent(
+        request.body,
+        signature,
+        this.webhookSecret,
+      );
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Unbekannter Fehler';
+      this.logger.error(`Stripe-Webhook-Signatur ungültig: ${message}`);
       return { success: false };
     }
 
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
-      const bookingId = session.metadata?.bookingId;
-
-      if (bookingId) {
-        this.logger.log(`✅ Zahlung erfolgreich für Buchung ${bookingId}`);
-
-        try {
-          // 1. Status auf paid setzen
-          await this.bookingService.updateStatus(bookingId, 'paid');
-          this.logger.log(`📌 Status für Buchung ${bookingId} erfolgreich auf "paid" gesetzt.`);
-
-          // ⏹️ Cleanup-Timer abbrechen, falls vorhanden
- if (cleanupTimers.has(bookingId)) {
-  clearTimeout(cleanupTimers.get(bookingId));
-  cleanupTimers.delete(bookingId);
-  this.logger.log(`🧹 Cleanup-Timer für Buchung ${bookingId} gestoppt.`);
-}
-
-
-          // 2. Buchung und Settings laden
-          const booking = await this.bookingService.getBookingById(bookingId);
-          const settings = await this.settingsService.getSettings();
-          const priceBase = booking.cars.reduce((acc, car) => acc + Number(car.basePrice ?? 0), 0);
-          const priceTax = booking.cars.reduce((acc, car) => acc + Number(car.touristTax ?? 0), 0);
-          const language = session.metadata?.locale || 'en'; // fallback: english
-
-
-          const bookingForPdf = {
-            ...booking,
-            cars: booking.cars.map((car) => ({
-              carPlate: car.carPlate,
-              adults: car.adults,
-              children: car.children,
-              priceBase: Number(car.basePrice ?? 0),
-              priceTax: Number(car.touristTax ?? 0),
-              
-            })),
-          };
-
-          // 3. PDF generieren
-          const pdfBuffer = await generateBookingPDF(bookingForPdf, settings, language);
-
-
-          // 4. E-Mail versenden
-          await this.resendService.sendBookingConfirmation(booking.guest.email, pdfBuffer, bookingForPdf, language);
-
-          const token = generateDownloadToken({ bookingId });
-          const downloadLink = `${process.env.FRONTEND_URL}/success?token=${token}`;
-
-          this.logger.log(`📧 E-Mail mit PDF wurde an ${booking.guest.email} versendet.`);
-        } catch (err) {
-          this.logger.error(`❌ Fehler im Buchungsnachbearbeitungsprozess: ${err.message}`);
-          return { success: false };
-        }
-
-        return { success: true };
-      }
+    if (
+      event.type !== 'checkout.session.completed' &&
+      event.type !== 'checkout.session.async_payment_succeeded'
+    ) {
+      return { success: true };
     }
 
+    const session = event.data.object;
+    const bookingId = session.metadata?.bookingId;
 
-    return { success: false };
+    if (!bookingId) {
+      this.logger.warn('Stripe Checkout Session enthält keine bookingId.');
+      return { success: false };
+    }
+
+    if (session.payment_status !== 'paid') {
+      this.logger.log(
+        `Zahlung für Buchung ${bookingId} ist noch nicht abgeschlossen.`,
+      );
+      return { success: true };
+    }
+
+    try {
+      await this.completePaidBooking(
+        bookingId,
+        session.metadata?.locale ?? 'en',
+      );
+      return { success: true };
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Unbekannter Fehler';
+      this.logger.error(
+        `Fehler im Zahlungsabschluss für Buchung ${bookingId}: ${message}`,
+      );
+      return { success: false };
+    }
   }
 
+  async completePaidBooking(
+    bookingId: string,
+    language: string,
+  ): Promise<'processed' | 'already-paid'> {
+    const result = await this.bookingService.markAsPaidIfNeeded(bookingId);
 
+    this.stopCleanupTimer(bookingId);
+
+    if (result === 'already-paid') {
+      this.logger.log(
+        `Buchung ${bookingId} war bereits bezahlt und wird nicht erneut verarbeitet.`,
+      );
+      return result;
+    }
+
+    const booking = await this.bookingService.getBookingById(bookingId);
+    const settings = await this.settingsService.getSettings();
+    const bookingForPdf = {
+      ...booking,
+      cars: booking.cars.map((car) => ({
+        carPlate: car.carPlate,
+        adults: car.adults,
+        children: car.children,
+        priceBase: Number(car.basePrice ?? 0),
+        priceTax: Number(car.touristTax ?? 0),
+      })),
+    };
+
+    const pdf = await generateBookingPDF(
+      bookingForPdf,
+      settings,
+      language === 'de' ? 'de' : 'en',
+    );
+
+    await this.resendService.sendBookingConfirmation(
+      booking.guest.email,
+      pdf,
+      bookingForPdf,
+      language,
+    );
+
+    this.logger.log(
+      `Buchung ${bookingId} wurde bezahlt und die Bestätigung versendet.`,
+    );
+    return 'processed';
+  }
+
+  private stopCleanupTimer(bookingId: string): void {
+    const timer = cleanupTimers.get(bookingId);
+    if (!timer) {
+      return;
+    }
+
+    clearTimeout(timer);
+    cleanupTimers.delete(bookingId);
+    this.logger.log(`Cleanup-Timer für Buchung ${bookingId} gestoppt.`);
+  }
 }

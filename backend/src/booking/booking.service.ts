@@ -1,4 +1,11 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { Repository, DataSource } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateBookingGuestDto } from './dto/create-booking-guest.dto';
@@ -14,7 +21,6 @@ import { LessThan, LessThanOrEqual, MoreThan } from 'typeorm';
 import { BookingSource } from '../entities/booking.entity';
 import { StripeService } from '@/stripe/stripe.service';
 import { cleanupTimers } from './booking-timers';
-import { Logger } from '@nestjs/common';
 
 const logger = new Logger('BookingCleanup');
 
@@ -43,6 +49,7 @@ export class BookingService {
 
     private readonly configService: ConfigService,
     private readonly availabilityService: AvailabilityService,
+    @Inject(forwardRef(() => StripeService))
     private readonly stripeService: StripeService,
 
     private readonly bookingDatesService: BookingDatesService,
@@ -97,8 +104,8 @@ export class BookingService {
           const isPaid = await this.stripeService.verifyPayment(bookingId);
 
           if (isPaid) {
-            await this.updateStatus(bookingId, 'paid');
-            logger.log(`✅ Stripe-Zahlung bestätigt. Buchung ${bookingId} wurde auf paid gesetzt.`);
+            await this.stripeService.completePaidBooking(bookingId, 'en');
+            logger.log(`✅ Stripe-Zahlung bestätigt und Buchung ${bookingId} abgeschlossen.`);
             cleanupTimers.delete(bookingId);
             return;
           }
@@ -291,9 +298,41 @@ export class BookingService {
     }
 
     booking.status = newStatus;
+    booking.statusUpdatedAt = new Date();
     await this.bookingRepository.save(booking);
 
     return { message: `Status auf ${newStatus} gesetzt.` };
+  }
+
+  async markAsPaidIfNeeded(
+    bookingId: string,
+  ): Promise<'updated' | 'already-paid'> {
+    const result = await this.bookingRepository
+      .createQueryBuilder()
+      .update(Booking)
+      .set({
+        status: 'paid',
+        statusUpdatedAt: new Date(),
+      })
+      .where('booking_id = :bookingId', { bookingId })
+      .andWhere('(status IS NULL OR status != :paidStatus)', {
+        paidStatus: 'paid',
+      })
+      .execute();
+
+    if (result.affected === 1) {
+      return 'updated';
+    }
+
+    const booking = await this.bookingRepository.findOne({
+      where: { booking_id: bookingId },
+    });
+
+    if (!booking) {
+      throw new NotFoundException(`Buchung ${bookingId} nicht gefunden.`);
+    }
+
+    return 'already-paid';
   }
 
   async getBookingById(bookingId: string) {
@@ -390,5 +429,4 @@ export class BookingService {
 
 
 }
-
 
