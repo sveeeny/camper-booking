@@ -1,4 +1,4 @@
-FROM node:22-alpine as build
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
@@ -8,13 +8,15 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run build
+ARG VITE_MODE=production
+
+RUN npm run build -- --mode ${VITE_MODE}
 
 FROM nginx:stable-alpine
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Add nginx configuration to handle SPA routing
+# Nginx-Konfiguration für Vue-SPA-Routing
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80

@@ -6,10 +6,8 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
-      - "443:443/udp"
     volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/Caddyfile.dev:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     networks:
@@ -20,6 +18,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: camper-booking-backend
+    env_file:
+      - ./backend/.env.development
     restart: unless-stopped
     networks:
       - internal
@@ -28,6 +28,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_MODE: development
     container_name: camper-booking-frontend
     restart: unless-stopped
     networks:
