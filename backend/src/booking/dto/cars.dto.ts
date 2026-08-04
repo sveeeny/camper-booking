@@ -1,10 +1,11 @@
-import { IsDateString, IsInt, IsNotEmpty, Min } from 'class-validator';
+import { IsDateString, IsNotEmpty, Min } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 // 💡 Hilfsfunktion zur Datumskonvertierung
 const formatDateToYMD = (value: string | Date): string => {
   if (!value) return '';
-  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value))
+    return value;
   return new Date(value).toISOString().split('T')[0];
 };
 
@@ -35,13 +36,4 @@ export class CarsDto {
   @Type(() => Number)
   @Min(0)
   children: number;
-
-  @Type(() => Number)
-  @Min(0)
-  basePrice: number;
-
-  @IsNotEmpty()
-  @Type(() => Number)
-  @Min(0)
-  touristTax: number;
 }

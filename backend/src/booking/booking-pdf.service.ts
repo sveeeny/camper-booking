@@ -23,7 +23,7 @@ interface PdfCopy {
   adults: string;
   children: string;
   basePrice: string;
-  touristTax: string;
+  personSurcharge: string;
   totalPrice: string;
   paid: string;
   arrivalTitle: string;
@@ -62,7 +62,7 @@ const PDF_COPY: Record<'de' | 'en', PdfCopy> = {
     adults: 'Erw.',
     children: 'Kinder',
     basePrice: 'Grundpreis',
-    touristTax: 'Kurtaxe',
+    personSurcharge: 'Personenpauschale',
     totalPrice: 'Gesamtpreis',
     paid: 'bezahlt',
     arrivalTitle: 'Wichtiger Hinweis zur Anfahrt',
@@ -111,7 +111,7 @@ const PDF_COPY: Record<'de' | 'en', PdfCopy> = {
     adults: 'Adults',
     children: 'Children',
     basePrice: 'Base price',
-    touristTax: 'Tourist tax',
+    personSurcharge: 'Per-person charge',
     totalPrice: 'Total Price',
     paid: 'paid',
     arrivalTitle: 'Important Arrival Information',
@@ -235,7 +235,7 @@ function createDocumentDefinition(
               tableHeader(copy.adults, 'center'),
               tableHeader(copy.children, 'center'),
               tableHeader(copy.basePrice, 'right'),
-              tableHeader(copy.touristTax, 'right'),
+              tableHeader(copy.personSurcharge, 'right'),
             ],
             ...vehicleRows,
           ],

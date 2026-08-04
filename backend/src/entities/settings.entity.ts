@@ -6,13 +6,13 @@ export class Settings {
     @PrimaryColumn({ default: 'singleton' })
     id: string = 'singleton';
 
-    @Column({ type: 'decimal', default: 2 })
+    @Column({ type: 'decimal', default: 4 })
     adultTax: number;
 
-    @Column({ type: 'decimal', default: 0 })
+    @Column({ type: 'decimal', default: 4 })
     childTax: number;
 
-    @Column({ type: 'decimal', default: 30 })
+    @Column({ type: 'decimal', default: 26 })
     pricePerNightPerCar: number;
 
     @Column({ type: 'int', default: 5 })

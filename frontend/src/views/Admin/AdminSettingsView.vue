@@ -5,17 +5,17 @@
     </h1>
 
     <form @submit.prevent="handleSubmit" class="space-y-6">
-      <!-- 💶 Preis- und Steuerwerte -->
+      <!-- 💶 Preis- und Personenwerte -->
       <fieldset class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <legend class="col-span-full text-lg font-semibold text-slate-700 dark:text-slate-200">Preise & Kurtaxe</legend>
+        <legend class="col-span-full text-lg font-semibold text-slate-700 dark:text-slate-200">Preise & Personenpauschalen</legend>
 
         <div>
-          <label class="block text-sm font-medium">Kurtaxe Erwachsene (CHF)</label>
+          <label class="block text-sm font-medium">Personenpauschale Erwachsene pro Nacht (CHF)</label>
           <input v-model.number="settings.adultTax" type="number" step="0.1" min="0" class="input" />
         </div>
 
         <div>
-          <label class="block text-sm font-medium">Kurtaxe Kinder (CHF)</label>
+          <label class="block text-sm font-medium">Personenpauschale Kinder pro Nacht (CHF)</label>
           <input v-model.number="settings.childTax" type="number" step="0.1" min="0" class="input" />
         </div>
 
@@ -104,9 +104,9 @@ interface Settings {
 }
 
 const settings = ref<Settings>({
-  adultTax: 2,
-  childTax: 0,
-  pricePerNightPerCar: 30,
+  adultTax: 4,
+  childTax: 4,
+  pricePerNightPerCar: 26,
   maxGuestsPerCar: 6,
   bookingAdvanceDays: 180,
   minNights: 1,

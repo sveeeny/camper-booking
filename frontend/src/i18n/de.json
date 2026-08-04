@@ -6,7 +6,7 @@
     "chooseCheckIn": "Check-in Datum wählen",
     "chooseCheckOut": "Check-out Datum wählen",
     "basePrice": "Grundpreis",
-    "excludingTax": "(exkl. Kurtaxe)",
+    "excludingTax": "(exkl. Personenpauschale)",
     "error": "Bitte überprüfe deine Eingaben"
   },
   "stepTwo": {
@@ -47,8 +47,8 @@
     },
     "price": {
       "title": "Preisübersicht",
-      "base": "Preis (exkl. Kurtaxe):",
-      "tax": "Kurtaxe:",
+      "base": "Stellplatzpreis:",
+      "tax": "Personenpauschale:",
       "total": "Total:"
     }
   },
@@ -74,7 +74,7 @@
       "adults": "Erwachsene:",
       "children": "Kinder:",
       "basePrice": "Grundpreis:",
-      "tax": "Kurtaxe:"
+      "tax": "Personenpauschale:"
     },
     "total": {
       "label": "Gesamtpreis: CHF {price}"
