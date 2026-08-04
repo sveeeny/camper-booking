@@ -4,6 +4,7 @@ import { generateBookingPDF } from '@/booking/booking-pdf.service';
 import { ResendService } from '@/resend/resend.service';
 import { SettingsService } from '@/settings/settings.service';
 import { StripeService } from './stripe.service';
+import Stripe from 'stripe';
 
 jest.mock('@/booking/booking-pdf.service', () => ({
   generateBookingPDF: jest.fn(),
@@ -35,6 +36,8 @@ describe('StripeService payment completion', () => {
     getBookingById: jest.fn(),
     markBookingConfirmationSent: jest.fn(),
     markBookingConfirmationFailed: jest.fn(),
+    getCheckoutAmountInRappen: jest.fn(),
+    setStripeCheckoutSessionId: jest.fn(),
   };
   const resendService = {
     sendBookingConfirmation: jest.fn(),
@@ -130,5 +133,29 @@ describe('StripeService payment completion', () => {
     );
     expect(generateBookingPDF).not.toHaveBeenCalled();
     expect(resendService.sendBookingConfirmation).not.toHaveBeenCalled();
+  });
+
+  it('uses only the amount stored by the backend for Stripe checkout', async () => {
+    bookingService.getCheckoutAmountInRappen.mockResolvedValue(7625);
+    const stripeClient = (service as unknown as { stripe: Stripe }).stripe;
+    const createSession = jest
+      .spyOn(stripeClient.checkout.sessions, 'create')
+      .mockResolvedValue({
+        id: 'cs_test_123',
+        url: 'https://checkout.stripe.test/session',
+      } as Stripe.Response<Stripe.Checkout.Session>);
+
+    await expect(
+      service.createCheckoutSession(bookingId, 'Buchung byherger', 'de'),
+    ).resolves.toBe('https://checkout.stripe.test/session');
+
+    expect(createSession).toHaveBeenCalledTimes(1);
+    expect(bookingService.getCheckoutAmountInRappen).toHaveBeenCalledWith(
+      bookingId,
+    );
+    expect(bookingService.setStripeCheckoutSessionId).toHaveBeenCalledWith(
+      bookingId,
+      'cs_test_123',
+    );
   });
 });

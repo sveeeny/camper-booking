@@ -5,8 +5,8 @@ import { Repository } from 'typeorm';
 import { Booking } from '../entities/booking.entity';
 import { Car } from '../entities/cars.entity';
 import { AvailabilityService } from '../availability/availability.service';
-import { CarsDto } from './dto/cars.dto';
 import { CreateBookingCheckDto } from './dto/create-booking-check.dto';
+import { PricedCar } from './booking-pricing.service';
 
 @Injectable()
 export class BookingDatesService {
@@ -17,8 +17,8 @@ export class BookingDatesService {
     @InjectRepository(Car)
     private readonly carRepository: Repository<Car>,
 
-    private readonly availabilityService: AvailabilityService
-  ) { }
+    private readonly availabilityService: AvailabilityService,
+  ) {}
 
   private formatDateToYMD(date: Date | string): string {
     return typeof date === 'string' ? date : date.toISOString().split('T')[0];
@@ -28,20 +28,23 @@ export class BookingDatesService {
   async reserveBookingDates(
     checkInDate: string,
     checkOutDate: string,
-    numberOfCars: number
+    numberOfCars: number,
   ): Promise<{ success: boolean; message?: string; bookingId?: string }> {
     const isStillAvailable = await this.availabilityService.isAvailable(
       checkInDate,
       checkOutDate,
-      numberOfCars
+      numberOfCars,
     );
 
     if (!isStillAvailable) {
-      return { success: false, message: 'Stellplätze wurden zwischenzeitlich belegt.' };
+      return {
+        success: false,
+        message: 'Stellplätze wurden zwischenzeitlich belegt.',
+      };
     }
 
     const booking = await this.bookingRepository.save(
-      this.bookingRepository.create({ numberOfCars })
+      this.bookingRepository.create({ numberOfCars }),
     );
 
     for (let carSlot = 1; carSlot <= numberOfCars; carSlot++) {
@@ -56,15 +59,18 @@ export class BookingDatesService {
           children: 0,
           touristTax: 0,
           booking,
-        })
+        }),
       );
     }
 
     // 📆 Blockiere belegte Nächte (von checkIn bis vor checkOut)
-    let availDate = new Date(checkInDate);
+    const availDate = new Date(checkInDate);
     const endDate = new Date(checkOutDate);
     while (availDate < endDate) {
-      await this.availabilityService.updateSpots(this.formatDateToYMD(availDate), numberOfCars);
+      await this.availabilityService.updateSpots(
+        this.formatDateToYMD(availDate),
+        numberOfCars,
+      );
       availDate.setDate(availDate.getDate() + 1);
     }
 
@@ -76,7 +82,7 @@ export class BookingDatesService {
     bookingId: string,
     checkInDate: string,
     checkOutDate: string,
-    cars: CarsDto[]
+    cars: PricedCar[],
   ): Promise<void> {
     for (let i = 0; i < cars.length; i++) {
       const carData = cars[i];
@@ -98,9 +104,9 @@ export class BookingDatesService {
       car.isCancelled = carData.isCancelled ?? false;
       car.adults = carData.adults;
       car.children = carData.children;
-      car.touristTax = carData.touristTax;
-      car.basePrice = carData.basePrice ?? 0;
-      
+      car.touristTax = carData.personSurcharge;
+      car.basePrice = carData.basePrice;
+
       await this.carRepository.save(car);
     }
   }
@@ -112,7 +118,9 @@ export class BookingDatesService {
     });
 
     if (cars.length === 0) {
-      throw new NotFoundException('Keine Fahrzeuge für diese Buchung gefunden.');
+      throw new NotFoundException(
+        'Keine Fahrzeuge für diese Buchung gefunden.',
+      );
     }
 
     for (const car of cars) {
@@ -126,7 +134,7 @@ export class BookingDatesService {
         this.formatDateToYMD(checkIn),
         this.formatDateToYMD(checkOut),
         1,
-        false // ➖ Verfügbarkeit verringern
+        false, // ➖ Verfügbarkeit verringern
       );
     }
   }
@@ -159,7 +167,9 @@ export class BookingDatesService {
     await this.carRepository.delete({ booking_id: bookingId });
 
     // 3️⃣ Booking aktualisieren (Anzahl Fahrzeuge)
-    const booking = await this.bookingRepository.findOneBy({ booking_id: bookingId });
+    const booking = await this.bookingRepository.findOneBy({
+      booking_id: bookingId,
+    });
     if (!booking) {
       throw new NotFoundException('Buchung nicht gefunden.');
     }
@@ -187,11 +197,8 @@ export class BookingDatesService {
           children: 0,
           touristTax: 0,
           booking,
-        })
+        }),
       );
     }
   }
-
-
-
 }

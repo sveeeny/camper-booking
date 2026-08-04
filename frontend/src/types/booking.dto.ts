@@ -20,6 +20,15 @@ export interface CarsDto {
   basePrice: number;
 }
 
+export interface BookingCarInput {
+  carPlate: string;
+  checkInDate: string;
+  checkOutDate: string;
+  isCancelled: boolean;
+  adults: number;
+  children: number;
+}
+
 export interface GuestDto {
   salutation: string;
   firstName: string;
@@ -44,9 +53,8 @@ export interface CreateBookingGuestDto {
   email: string;
   phoneCountryCode: string;
   phoneNumber: string;
-  totalPrice: number;
   source: 'host' | 'guest';
-  cars: CarsDto[];
+  cars: BookingCarInput[];
 }
 
 export interface StripeCheckoutResponse {

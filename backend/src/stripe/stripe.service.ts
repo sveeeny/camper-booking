@@ -90,10 +90,11 @@ export class StripeService {
 
   async createCheckoutSession(
     bookingId: string,
-    amountInRappen: number,
     productName: string,
     locale: string,
   ): Promise<string> {
+    const amountInRappen =
+      await this.bookingService.getCheckoutAmountInRappen(bookingId);
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [

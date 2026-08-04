@@ -15,12 +15,12 @@ import { Booking } from '../entities/booking.entity';
 import { Car } from '../entities/cars.entity';
 import { Availability } from '../entities/availability.entity';
 import { BookingDatesService } from './booking-dates.service';
-import { Between } from 'typeorm';
 import { eachDayOfInterval, subDays, format } from 'date-fns'; // sicherstellen, dass @types/date-fns NICHT installiert ist
 import { LessThan, LessThanOrEqual, MoreThan } from 'typeorm';
 import { BookingSource } from '../entities/booking.entity';
 import { StripeService } from '@/stripe/stripe.service';
 import { cleanupTimers } from './booking-timers';
+import { BookingPricingService } from './booking-pricing.service';
 
 const logger = new Logger('BookingCleanup');
 
@@ -51,6 +51,7 @@ export class BookingService {
     private readonly stripeService: StripeService,
 
     private readonly bookingDatesService: BookingDatesService,
+    private readonly bookingPricingService: BookingPricingService,
   ) {
     this.maxBookingFutureDays = this.configService.get<number>(
       'MAX_BOOKING_FUTURE_DAYS',
@@ -201,13 +202,41 @@ export class BookingService {
   async createBooking(dto: CreateBookingGuestDto): Promise<any> {
     const booking = await this.bookingRepository.findOne({
       where: { booking_id: dto.bookingId },
+      relations: ['cars'],
     });
 
     if (!booking) {
       throw new NotFoundException('Buchung nicht gefunden');
     }
 
-    // ➕ Gästeinfos speichern
+    if (dto.cars.length !== booking.numberOfCars) {
+      throw new BadRequestException(
+        'Die Anzahl Fahrzeuge stimmt nicht mit der Reservierung überein.',
+      );
+    }
+
+    const reservedCars = booking.cars.filter((car) => !car.isCancelled);
+    const datesMatchReservation =
+      reservedCars.length === booking.numberOfCars &&
+      reservedCars.every(
+        (car) =>
+          car.checkInDate === dto.checkInDate &&
+          car.checkOutDate === dto.checkOutDate,
+      );
+
+    if (!datesMatchReservation) {
+      throw new BadRequestException(
+        'Der Buchungszeitraum stimmt nicht mit der Reservierung überein.',
+      );
+    }
+
+    const pricing = await this.bookingPricingService.calculate(
+      dto.checkInDate,
+      dto.checkOutDate,
+      dto.cars,
+    );
+
+    // ➕ Gästeinfos und verbindlich berechneten Gesamtpreis speichern
     booking.salutation = dto.salutation;
     booking.firstName = dto.firstName;
     booking.lastName = dto.lastName;
@@ -215,7 +244,7 @@ export class BookingService {
     booking.phoneCountryCode = dto.phoneCountryCode;
     booking.phoneNumber = dto.phoneNumber;
     booking.email = dto.email;
-    booking.totalPrice = dto.totalPrice;
+    booking.totalPrice = pricing.totalPrice;
     booking.source = toBookingSource(dto.source ?? 'guest');
 
     await this.bookingRepository.save(booking);
@@ -225,13 +254,34 @@ export class BookingService {
       dto.bookingId,
       dto.checkInDate,
       dto.checkOutDate,
-      dto.cars,
+      pricing.cars,
     );
 
     return {
       message: 'Buchung erfolgreich gespeichert!',
       bookingId: booking.booking_id,
+      pricing: {
+        basePrice: pricing.basePrice,
+        personSurcharge: pricing.personSurcharge,
+        totalPrice: pricing.totalPrice,
+      },
     };
+  }
+
+  async getCheckoutAmountInRappen(bookingId: string): Promise<number> {
+    const booking = await this.bookingRepository.findOne({
+      where: { booking_id: bookingId },
+      select: { booking_id: true, totalPrice: true },
+    });
+
+    const totalPrice = Number(booking?.totalPrice);
+    if (!booking || !Number.isFinite(totalPrice) || totalPrice <= 0) {
+      throw new BadRequestException(
+        'Für diese Buchung ist kein gültiger Zahlungsbetrag vorhanden.',
+      );
+    }
+
+    return Math.round(totalPrice * 100);
   }
 
   // HARD DELETE

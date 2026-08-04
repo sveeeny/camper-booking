@@ -1,7 +1,6 @@
 import {
   IsString, IsIn, IsArray, IsEmail, IsNotEmpty, Matches,
   IsDateString, ValidateNested, MinLength, MaxLength, Validate, IsUUID,
-  isEnum
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { CarsDto } from '../dto/cars.dto';
@@ -63,9 +62,6 @@ export class CreateBookingGuestDto {
   @MinLength(8, { message: "Telefonnummer muss mindestens 8 Ziffern haben." })
   @MaxLength(15, { message: "Telefonnummer darf maximal 15 Ziffern haben." })
   phoneNumber: string;
-
-  @IsNotEmpty()
-  totalPrice: number;
 
   @IsNotEmpty()
   @IsArray()

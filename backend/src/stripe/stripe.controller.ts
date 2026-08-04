@@ -12,7 +12,6 @@ export class StripeController {
   async createSession(
     @Body()
     body: {
-      amount: number;
       bookingId: string;
       productName: string;
       locale: string;
@@ -20,7 +19,6 @@ export class StripeController {
   ) {
     const url = await this.stripeService.createCheckoutSession(
       body.bookingId,
-      body.amount,
       body.productName,
       body.locale,
     );

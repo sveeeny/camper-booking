@@ -6,7 +6,7 @@
     "chooseCheckIn": "Choose check-in date",
     "chooseCheckOut": "Choose check-out date",
     "basePrice": "Base price",
-    "excludingTax": "(excluding tourist tax)",
+    "excludingTax": "(excluding per-person charge)",
     "error": "Please check your input"
   },
   "stepTwo": {
@@ -47,8 +47,8 @@
     },
     "price": {
       "title": "Price Summary",
-      "base": "Base price (excl. tax):",
-      "tax": "Tourist tax:",
+      "base": "Pitch price:",
+      "tax": "Per-person charge:",
       "total": "Total:"
     }
   },
@@ -74,7 +74,7 @@
       "adults": "Adults:",
       "children": "Children:",
       "basePrice": "Base Price:",
-      "tax": "Tourist Tax:"
+      "tax": "Per-person charge:"
     },
     "total": {
       "label": "Total: CHF {price}"

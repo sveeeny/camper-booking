@@ -88,7 +88,6 @@ const {
   guestInfo,
   errorFields,
   errorMessage,
-  priceInfo,
   submitBookingStepOne,
   submitBookingStepTwo,
   initModeFromUser,
@@ -188,9 +187,7 @@ const handleSummaryConfirm = async () => {
   pingBookingTimer();
 
   try {
-    const amountInRappen = Math.round(priceInfo.value.total * 100);
     const response = await axios.post('/stripe/checkout', {
-      amount: amountInRappen,
       bookingId: bookingId.value,
       productName: t('stripe.productName'),
       locale: locale.value,
