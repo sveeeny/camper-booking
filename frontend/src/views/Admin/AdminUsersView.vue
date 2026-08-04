@@ -1,16 +1,17 @@
 <template>
-  <section class="max-w-5xl mx-auto px-4 py-8 space-y-8">
-    <header class="text-center">
-      <h2 class="text-2xl font-bold text-slate-800 dark:text-white">
+  <section class="mx-auto max-w-5xl space-y-6">
+    <header>
+      <p class="text-sm font-medium text-blue-600 dark:text-blue-400">Administration</p>
+      <h2 class="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
         Benutzerverwaltung
       </h2>
-      <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Benutzer einladen und sichere Links zum Setzen des Passworts versenden.
       </p>
     </header>
 
     <form
-      class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+      class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"
       @submit.prevent="inviteUser"
     >
       <h3 class="text-lg font-semibold text-slate-800 dark:text-white">
@@ -41,9 +42,9 @@
         </label>
       </div>
 
-      <div class="mt-5 flex justify-end">
+      <div class="mt-5 text-right">
         <button
-          class="rounded-md bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          class="w-full rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           type="submit"
           :disabled="isCreating"
         >
@@ -81,7 +82,7 @@
       <article
         v-for="user in users"
         :key="user.id"
-        class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+        class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"
       >
         <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
@@ -94,7 +95,7 @@
           </div>
 
           <button
-            class="w-fit rounded-md bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+            class="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-fit dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
             type="button"
             :disabled="resettingUserId === user.id"
             @click="sendPasswordReset(user)"

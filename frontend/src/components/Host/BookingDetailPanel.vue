@@ -1,23 +1,30 @@
 <template>
   <!-- Overlay -->
-  <div class="fixed inset-0 bg-black/30 z-40" @click.self="emitClose" />
+  <div class="fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-[1px]" @click.self="emitClose" />
 
   <!-- Slide-In Panel -->
   <div
-    class="fixed right-0 top-0 h-full w-full sm:w-[540px] bg-white dark:bg-slate-900 shadow-lg z-50 transition-transform duration-300 ease-in-out"
+    class="fixed right-0 top-0 z-50 h-full w-full border-l border-slate-200 bg-slate-50 shadow-2xl transition-transform duration-300 ease-in-out sm:w-[560px] dark:border-slate-700 dark:bg-slate-950"
     :class="{ 'translate-x-0': show, 'translate-x-full': !show }"
   >
     <!-- Header -->
-    <div class="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700">
+    <div class="flex items-center justify-between border-b border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
       <h2 class="text-xl font-bold text-slate-800 dark:text-white">Buchungsdetails</h2>
-      <button @click="emitClose" class="text-slate-500 hover:text-slate-800 dark:hover:text-white transition">✕</button>
+      <button
+        type="button"
+        aria-label="Buchungsdetails schließen"
+        class="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-slate-800 dark:hover:text-white"
+        @click="emitClose"
+      >
+        ✕
+      </button>
     </div>
 
     <!-- Inhalt -->
-    <div class="p-4 overflow-y-auto max-h-[calc(100vh-64px)]">
-      <div v-if="booking" class="space-y-6 text-left text-sm md:text-base">
+    <div class="max-h-[calc(100vh-64px)] overflow-y-auto p-4 sm:p-5">
+      <div v-if="booking" class="space-y-5 text-left text-sm text-slate-800 md:text-base dark:text-slate-100">
         <!-- Metadaten -->
-        <div class="text-base text-slate-500 dark:text-slate-400">
+        <div class="break-words rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
           <p><strong>Erstellt am:</strong> {{ formatTimestamp(booking.createdAt) }}</p>
           <p><strong>Zahlungsstatus aktualisiert:</strong> {{ formatTimestamp(booking.statusUpdatedAt) }}</p>
           <p><strong>Booking-ID:</strong> {{ booking.id }}</p>
@@ -26,18 +33,22 @@
 
         <!-- Bearbeiten-Button -->
         <div class="flex items-center gap-3">
-          <button @click="toggleEditing" class="text-blue-600 hover:underline">
+          <button
+            type="button"
+            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500"
+            @click="toggleEditing"
+          >
             {{ isEditing ? 'Speichern' : 'Bearbeiten' }}
           </button>
 
-          <button v-if="canBeDeleted" @click="deleteBooking" class="text-red-600 hover:underline ml-auto">
+          <button v-if="canBeDeleted" type="button" @click="deleteBooking" class="ml-auto rounded-lg px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 focus-visible:ring-2 focus-visible:ring-red-500 dark:hover:bg-red-950/40">
             Buchung löschen
           </button>
         </div>
 
         <!-- Block 1: Buchungsinfo -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow border dark:border-slate-700">
+          <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <p><strong>Check-in: </strong> {{ formatDate(booking.checkIn) }}</p>
             <p><strong>Check-out: </strong> {{ formatDate(booking.checkOut) }}</p>
             <p><strong>Anzahl Fahrzeuge: </strong> {{ booking.cars?.length ?? 0 }}</p>
@@ -46,17 +57,17 @@
           </div>
 
           <!-- Block 2: Gastinfo -->
-          <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow border dark:border-slate-700">
+          <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <p><strong>Anrede: </strong>
               <input v-if="isEditing" v-model="editable.salutation" class="input" />
               <span v-else>{{ booking.guest?.salutation }}</span>
             </p>
-            <p><strong>Name: </strong>
+            <p><strong>Vorname: </strong>
               <input v-if="isEditing" v-model="editable.firstName" class="input" placeholder="Vorname" />
               <span v-else>{{ booking.guest?.firstName }} </span>
             </p>
-            <p><strong>Vorname: </strong>
-              <input v-if="isEditing" v-model="editable.lastName" class="input ml-2" placeholder="Nachname" />
+            <p><strong>Nachname: </strong>
+              <input v-if="isEditing" v-model="editable.lastName" class="input" placeholder="Nachname" />
               <span v-else>{{ booking.guest?.lastName }}</span>
             </p>
             <p><strong>Nationalität: </strong>
@@ -76,16 +87,16 @@
         </div>
 
         <!-- Status & Aktion -->
-        <div class="mb-4 px-4 bg-white dark:bg-slate-800 p-4 rounded-xl shadow border flex items-center gap-3 ">
+        <div class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center dark:border-slate-700 dark:bg-slate-900">
           <p class="text-sm font-medium">
             Status:
-            <span :class="getStatusBadge(booking.status)">{{ booking.status }}</span>
+            <span :class="getStatusBadge(booking.status)">{{ getStatusLabel(booking.status) }}</span>
           </p>
 
           <button
             v-if="booking.status !== 'paid'"
             @click="markAsPaid"
-            class="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
+            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 sm:ml-auto"
             :disabled="updatingStatus"
           >
             {{ updatingStatus ? 'Aktualisiere…' : 'Als bezahlt markieren' }}
@@ -94,7 +105,7 @@
 
         <!-- Fahrzeuge -->
         <div class="grid gap-3" :class="gridClass">
-          <div v-for="(car, index) in booking.cars ?? []" :key="car.carPlate" class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow border dark:border-slate-700">
+          <div v-for="(car, index) in booking.cars ?? []" :key="car.carPlate" class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <h3 class="font-semibold mb-2">Fahrzeug {{ index + 1 }}</h3>
             <p><strong>KFZ-Nr: </strong> {{ car.carPlate }}</p>
             <p><strong>Erwachsene: </strong> {{ car.adults }}</p>
@@ -132,19 +143,31 @@ const emitClose = () => {
   setTimeout(() => emit('close'), 300);
 };
 
-const toggleEditing = () => {
-  isEditing.value = !isEditing.value;
-  if (!isEditing.value) saveChanges();
+const toggleEditing = async () => {
+  if (!isEditing.value) {
+    isEditing.value = true;
+    return;
+  }
+
+  if (await saveChanges()) {
+    isEditing.value = false;
+  }
 };
 
-const saveChanges = async () => {
-  if (!booking.value || !isEditing.value) return;
+const saveChanges = async (): Promise<boolean> => {
+  if (!booking.value) return false;
   try {
     await updateBooking(booking.value.id, editable);
+    if (booking.value.guest) {
+      Object.assign(booking.value.guest, editable);
+    }
+    emitter.emit('booking-updated');
+    return true;
   } catch (err) {
     console.error('Fehler beim Speichern:', err);
+    alert('Die Änderungen konnten nicht gespeichert werden.');
+    return false;
   }
-  emitter.emit('booking-updated');
 };
 
 const deleteBooking = async () => {
@@ -179,7 +202,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-  if (isEditing.value) saveChanges();
+  if (isEditing.value) void saveChanges();
 });
 
 const canBeDeleted = computed(() => {
@@ -205,6 +228,14 @@ const getStatusBadge = (status: string) => {
   ];
 };
 
+const getStatusLabel = (status: string) => {
+  if (status === 'paid') return 'Bezahlt';
+  if (status === 'pending') return 'Ausstehend';
+  if (status === 'cash') return 'Barzahlung';
+  if (status === 'cancelled') return 'Storniert';
+  return status;
+};
+
 const gridClass = computed(() => {
   const n = booking.value?.cars?.length ?? 0;
   return n === 1 ? 'grid-cols-1' : n === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3';
@@ -213,6 +244,6 @@ const gridClass = computed(() => {
 
 <style scoped>
 .input {
-  @apply w-full mt-1 p-1 border rounded dark:bg-slate-700 dark:text-white;
+  @apply mt-1 w-full rounded-lg border border-slate-300 bg-white p-2 text-slate-800 focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-white;
 }
 </style>

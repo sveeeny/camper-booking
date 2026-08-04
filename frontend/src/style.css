@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html {
+    @apply bg-slate-100 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+  }
+
+  body,
+  #app {
+    @apply min-h-screen;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    @apply focus-visible:outline-none;
+  }
+}
+
 /* 🔔 Zusätzliche Hilfsklassen, falls benötigt */
 .warning-message {
   @apply text-yellow-500 font-bold mt-1;
