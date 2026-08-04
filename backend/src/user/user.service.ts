@@ -40,8 +40,14 @@ export class UserService {
     password: string,
     role: 'admin' | 'host' = 'host',
   ): Promise<Partial<User>> {
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    if (!normalizedEmail || !password) {
+      throw new BadRequestException('E-Mail und Passwort sind erforderlich.');
+    }
+
     const existingUser = await this.userRepository.findOne({
-      where: { email },
+      where: { email: normalizedEmail },
     });
     if (existingUser) {
       throw new ConflictException(
@@ -49,12 +55,12 @@ export class UserService {
       );
     }
 
-    if (!email || !password) {
-      throw new BadRequestException('E-Mail und Passwort sind erforderlich.');
-    }
-
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = this.userRepository.create({ email, passwordHash, role });
+    const user = this.userRepository.create({
+      email: normalizedEmail,
+      passwordHash,
+      role,
+    });
     const savedUser = await this.userRepository.save(user);
 
     return { id: savedUser.id, email: savedUser.email, role: savedUser.role }; // ✅ Passwort wird nicht zurückgegeben
@@ -65,19 +71,26 @@ export class UserService {
     email?: string,
     password?: string,
   ): Promise<Partial<User>> {
+    if (email === undefined && password === undefined) {
+      throw new BadRequestException(
+        'Mindestens eine Änderung muss angegeben werden.',
+      );
+    }
+
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException(`Benutzer mit ID ${id} nicht gefunden.`);
     }
 
     if (email) {
+      const normalizedEmail = email.trim().toLowerCase();
       const existingUser = await this.userRepository.findOne({
-        where: { email },
+        where: { email: normalizedEmail },
       });
       if (existingUser && existingUser.id !== id) {
         throw new ConflictException('Diese E-Mail ist bereits vergeben.');
       }
-      user.email = email;
+      user.email = normalizedEmail;
     }
 
     if (password) {

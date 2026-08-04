@@ -22,6 +22,8 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
+import { RegisterDto } from '../auth/dto/register.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth('Authorization')
@@ -38,15 +40,13 @@ export class UserController {
     status: 201,
     description: 'Benutzer wurde erfolgreich erstellt.',
   })
-  async register(
-    @Body() body: { email: string; password: string; role?: 'admin' | 'host' },
-  ) {
+  async register(@Body() body: RegisterDto) {
     return this.userService.createUser(body.email, body.password, body.role);
   }
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard) // ⬅ Direkt auf die Methode setzen!
-  @Roles('admin', 'host')
+  @Roles('admin')
   @ApiOperation({ summary: 'Alle Benutzer abrufen' })
   @ApiResponse({
     status: 200,
@@ -58,7 +58,7 @@ export class UserController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'host') // ✅ Admins & Hosts dürfen Benutzer bearbeiten
+  @Roles('admin')
   @ApiOperation({ summary: 'Benutzerdaten aktualisieren' })
   @ApiResponse({
     status: 200,
@@ -66,7 +66,7 @@ export class UserController {
   })
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { email?: string; password?: string },
+    @Body() body: UpdateUserDto,
   ) {
     return this.userService.updateUser(id, body.email, body.password);
   }
@@ -79,7 +79,10 @@ export class UserController {
     status: 200,
     description: 'Benutzer wurde erfolgreich gelöscht.',
   })
-  async deleteUser(@Param('id', ParseIntPipe) id: number, @Request() req) {
+  async deleteUser(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: { user: { id: number } },
+  ) {
     const requestingUser = req.user;
 
     if (requestingUser.id === id) {

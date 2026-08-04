@@ -19,7 +19,7 @@ const routes = [
   {
     path: '/success',
     name: 'BookingSuccess',
-    component: () => import('@/components/User/Success.vue'), 
+    component: () => import('@/components/User/Success.vue'),
   },
   {
     path: '/payment-cancelled',
@@ -68,8 +68,16 @@ const routes = [
           requiresAuth: true,
           requiresAdmin: true, // 👈 falls du so ein Flag nutzt
         }
+      },
+      {
+        path: 'users',
+        name: 'AdminUsersView',
+        component: () => import('@/views/Admin/AdminUsersView.vue'),
+        meta: {
+          requiresAuth: true,
+          requiresAdmin: true,
+        },
       }
-
     ],
   },
 ];
@@ -98,7 +106,7 @@ router.beforeEach((to, _, next) => {
   }
 
   if (to.meta.requiresAdmin && userStore.role !== 'admin') {
-    next({ name: 'HostListView' }); 
+    next({ name: 'HostListView' });
     return;
   }
 
