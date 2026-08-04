@@ -3,7 +3,27 @@
     <h1 class="text-3xl font-bold text-slate-800 dark:text-white mb-6 text-center">Host-Dashboard</h1>
 
     <!-- 🔐 Obere rechte Buttons -->
-    <div class="flex justify-end items-center p-4 gap-2">
+    <div class="flex flex-wrap justify-end items-center p-4 gap-2">
+      <template v-if="userStore.isAdmin">
+        <RouterLink
+          v-if="isAdminView"
+          :to="{ name: 'HostListView' }"
+          class="px-4 py-2 rounded-md font-medium bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          Zur Host-Übersicht
+        </RouterLink>
+        <RouterLink
+          :to="{ name: 'AdminSettingsView' }"
+          :class="buttonClass(isRoute('AdminSettingsView'))">
+          Einstellungen
+        </RouterLink>
+        <RouterLink
+          :to="{ name: 'AdminUsersView' }"
+          :class="buttonClass(isRoute('AdminUsersView'))">
+          Benutzer verwalten
+        </RouterLink>
+      </template>
+
       <!-- ❌ Nur im Buchungsformular -->
       <button v-if="isAddBooking" @click="handleBackToDashboard"
         class="px-4 py-2 rounded-md font-medium bg-red-600 hover:bg-red-700 text-white">
@@ -75,6 +95,9 @@ const runManualBackendCleanup = async () => {
 
 const currentRouteName = computed(() => route.name);
 
+const isAdminView = computed(() =>
+  ['AdminSettingsView', 'AdminUsersView'].includes(currentRouteName.value as string),
+);
 const isAddBooking = computed(() => currentRouteName.value === 'HostAddBookingView');
 const isListOrWeekView = computed(() =>
   ['HostListView', 'HostWeekView'].includes(currentRouteName.value as string)

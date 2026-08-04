@@ -1,52 +1,52 @@
 import {
-  Controller,
-  Post,
   Body,
-  Get,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseGuards,
-  Request,
   ForbiddenException,
+  Get,
   NotFoundException,
+  Param,
   ParseIntPipe,
+  Post,
+  Request,
+  UseGuards,
 } from '@nestjs/common';
-import { UserService } from './user.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
 import {
-  ApiTags,
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
+import { InviteUserDto } from './dto/invite-user.dto';
+import { UserPasswordService } from './user-password.service';
+import { UserService } from './user.service';
 
 @ApiTags('Users')
 @ApiBearerAuth('Authorization')
-@UseGuards(JwtAuthGuard, RolesGuard) // ✅ Auth & Rollen-Guard aktiv
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly userPasswordService: UserPasswordService,
+  ) {}
 
-  @Post('register')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin') // ✅ Nur Admins dürfen neue Benutzer erstellen
-  @ApiOperation({ summary: 'Neuen Benutzer registrieren' })
+  @Post('invite')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Benutzer anlegen und per E-Mail einladen' })
   @ApiResponse({
     status: 201,
-    description: 'Benutzer wurde erfolgreich erstellt.',
+    description: 'Benutzer wurde erstellt und die Einladung versendet.',
   })
-  async register(
-    @Body() body: { email: string; password: string; role?: 'admin' | 'host' },
-  ) {
-    return this.userService.createUser(body.email, body.password, body.role);
+  async inviteUser(@Body() body: InviteUserDto) {
+    return this.userPasswordService.inviteUser(body.email, body.role);
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard) // ⬅ Direkt auf die Methode setzen!
-  @Roles('admin', 'host')
+  @Roles('admin')
   @ApiOperation({ summary: 'Alle Benutzer abrufen' })
   @ApiResponse({
     status: 200,
@@ -56,30 +56,28 @@ export class UserController {
     return this.userService.getAllUsers();
   }
 
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'host') // ✅ Admins & Hosts dürfen Benutzer bearbeiten
-  @ApiOperation({ summary: 'Benutzerdaten aktualisieren' })
+  @Post(':id/password-reset')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Link zum Setzen des Passworts senden' })
   @ApiResponse({
-    status: 200,
-    description: 'Benutzerdaten wurden aktualisiert.',
+    status: 201,
+    description: 'Reset-Link wurde per E-Mail versendet.',
   })
-  async updateUser(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: { email?: string; password?: string },
-  ) {
-    return this.userService.updateUser(id, body.email, body.password);
+  async sendPasswordReset(@Param('id', ParseIntPipe) id: number) {
+    return this.userPasswordService.sendPasswordLink(id);
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin') // ✅ Nur Admins dürfen Benutzer löschen
+  @Roles('admin')
   @ApiOperation({ summary: 'Benutzer löschen (nur Admin)' })
   @ApiResponse({
     status: 200,
     description: 'Benutzer wurde erfolgreich gelöscht.',
   })
-  async deleteUser(@Param('id', ParseIntPipe) id: number, @Request() req) {
+  async deleteUser(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: { user: { id: number } },
+  ) {
     const requestingUser = req.user;
 
     if (requestingUser.id === id) {

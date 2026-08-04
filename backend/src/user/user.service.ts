@@ -40,8 +40,14 @@ export class UserService {
     password: string,
     role: 'admin' | 'host' = 'host',
   ): Promise<Partial<User>> {
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    if (!normalizedEmail || !password) {
+      throw new BadRequestException('E-Mail und Passwort sind erforderlich.');
+    }
+
     const existingUser = await this.userRepository.findOne({
-      where: { email },
+      where: { email: normalizedEmail },
     });
     if (existingUser) {
       throw new ConflictException(
@@ -49,45 +55,15 @@ export class UserService {
       );
     }
 
-    if (!email || !password) {
-      throw new BadRequestException('E-Mail und Passwort sind erforderlich.');
-    }
-
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = this.userRepository.create({ email, passwordHash, role });
+    const user = this.userRepository.create({
+      email: normalizedEmail,
+      passwordHash,
+      role,
+    });
     const savedUser = await this.userRepository.save(user);
 
     return { id: savedUser.id, email: savedUser.email, role: savedUser.role }; // ✅ Passwort wird nicht zurückgegeben
-  }
-
-  async updateUser(
-    id: number,
-    email?: string,
-    password?: string,
-  ): Promise<Partial<User>> {
-    const user = await this.userRepository.findOne({ where: { id } });
-    if (!user) {
-      throw new NotFoundException(`Benutzer mit ID ${id} nicht gefunden.`);
-    }
-
-    if (email) {
-      const existingUser = await this.userRepository.findOne({
-        where: { email },
-      });
-      if (existingUser && existingUser.id !== id) {
-        throw new ConflictException('Diese E-Mail ist bereits vergeben.');
-      }
-      user.email = email;
-    }
-
-    if (password) {
-      user.passwordHash = await bcrypt.hash(password, 10);
-    }
-
-    // **Hier fehlt das Speichern des geänderten Users in der DB**
-    await this.userRepository.save(user); // 🔥 Speichert die Änderungen in der DB!
-
-    return { id: user.id, email: user.email, role: user.role };
   }
 
   async deleteUser(id: number): Promise<{ message: string }> {

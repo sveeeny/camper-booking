@@ -72,6 +72,61 @@ export class ResendService {
 
     this.logger.log('Buchungsbestätigung wurde erfolgreich versendet.');
   }
+
+  async sendPasswordSetup(
+    userEmail: string,
+    passwordUrl: string,
+    isInvitation: boolean,
+    idempotencyKey: string,
+  ): Promise<void> {
+    const recipients = this.recipientOverride
+      ? [this.recipientOverride]
+      : [userEmail];
+    const safeUrl = escapeHtml(passwordUrl);
+    const subject = isInvitation
+      ? 'Einladung zum Buchungssystem – Camper Herger'
+      : 'Passwort zurücksetzen – Camper Herger';
+    const headline = isInvitation
+      ? 'Dein Zugang zum Buchungssystem'
+      : 'Passwort zurücksetzen';
+    const introduction = isInvitation
+      ? 'Für dich wurde ein Benutzerkonto im Buchungssystem von Camper Herger erstellt.'
+      : 'Für dein Benutzerkonto wurde ein neues Passwort angefordert.';
+
+    const { error } = await this.resend.emails.send(
+      {
+        from: 'Camper Herger <no-reply@booking.byherger.ch>',
+        to: recipients,
+        subject,
+        html: `
+          <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #333; padding: 20px;">
+            <h2 style="color: #2c3e50;">${headline}</h2>
+            <p>${introduction}</p>
+            <p>Über den folgenden Link kannst du dein persönliches Passwort setzen:</p>
+            <p style="margin: 28px 0;">
+              <a href="${safeUrl}" style="background: #2563eb; color: white; padding: 12px 18px; text-decoration: none; border-radius: 6px;">
+                Passwort setzen
+              </a>
+            </p>
+            <p>Der Link ist eine Stunde gültig und kann nur einmal verwendet werden.</p>
+            <p>Falls du diese Nachricht nicht erwartet hast, melde dich bitte beim Administrator.</p>
+            <hr style="margin: 30px 0;" />
+            <p style="font-size: 0.9em; color: #777;">Diese Nachricht wurde automatisch generiert. Bitte nicht direkt darauf antworten.</p>
+          </div>
+        `,
+        text: `${introduction}\n\nPasswort setzen: ${passwordUrl}\n\nDer Link ist eine Stunde gültig und kann nur einmal verwendet werden.`,
+      },
+      { idempotencyKey },
+    );
+
+    if (error) {
+      throw new Error(
+        `Resend konnte die Passwort-E-Mail nicht senden: ${error.message}`,
+      );
+    }
+
+    this.logger.log('Passwort-Link wurde erfolgreich versendet.');
+  }
 }
 
 function escapeHtml(value: string): string {
