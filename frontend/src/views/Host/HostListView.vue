@@ -1,13 +1,28 @@
 <!-- src/views/Host/HostListView.vue -->
 <template>
-  <div class="max-w-4xl mx-auto px-4 py-6">
-    <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-4">Buchungen</h2>
+  <section class="mx-auto max-w-5xl space-y-5">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm font-medium text-blue-600 dark:text-blue-400">Tagesansicht</p>
+        <h2 class="mt-1 text-2xl font-bold text-slate-900 dark:text-white">Buchungen</h2>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          Alle anwesenden Gäste und Fahrzeuge für das gewählte Datum.
+        </p>
+      </div>
 
-    <button @click="selectToday" class="mt-2 text-sm text-blue-600 hover:underline">
-      Heute auswählen
-    </button>
+      <button
+        type="button"
+        class="w-fit rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+        @click="selectToday"
+      >
+        Heute
+      </button>
+    </div>
 
-    <div class="mb-4">
+    <div class="max-w-sm rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
+        Datum auswählen
+      </label>
       <Datepicker
         v-model="selectedDate"
         placeholder="Datum wählen"
@@ -26,12 +41,16 @@
       @select="showBookingDetail"
     />
 
-    <div class="mt-6 text-right">
-      <button @click="goToBookingForm" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">
+    <div class="text-right">
+      <button
+        type="button"
+        class="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:w-auto"
+        @click="goToBookingForm"
+      >
         + Buchung hinzufügen
       </button>
     </div>
-  </div>
+  </section>
 
   <HostBookingDetail
     v-if="selectedBookingId"

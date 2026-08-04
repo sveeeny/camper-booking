@@ -1,47 +1,53 @@
 <!-- src/components/Host/BookingGantt.vue -->
 <template>
-  <div class="mb-4 px-4 bg-slate-50 dark:bg-slate-800 p-4 rounded-xl shadow border flex items-center gap-3 ">
-  <div class="grid" :style="`grid-template-columns: 120px repeat(${daysOfWeek.length}, 1fr);`">
-    <!-- Kopfzeile -->
-    <div class="p-2 font-medium border bg-slate-200 dark:bg-slate-950 rounded-l-lg">Datum</div>
-    <div v-for="(day, i) in daysOfWeek" :key="i"
-      class="p-2 border text-base font-medium text-slate-700 dark:text-white bg-slate-200 dark:bg-slate-950">
-      {{ formatDay(day) }}
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <p class="border-b border-slate-200 px-4 py-2 text-xs text-slate-500 md:hidden dark:border-slate-700 dark:text-slate-400">
+      Für die ganze Woche seitlich wischen.
+    </p>
+    <div class="overflow-x-auto overscroll-x-contain">
+      <div
+        class="grid min-w-[640px] md:min-w-[720px]"
+        :style="`grid-template-columns: repeat(${daysOfWeek.length}, minmax(88px, 1fr));`"
+      >
+          <!-- Kopfzeile -->
+          <div v-for="(day, i) in daysOfWeek" :key="i"
+            class="flex h-16 items-center justify-center border-b border-r border-slate-200 bg-slate-100 p-2 text-center text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+            {{ formatDay(day) }}
+          </div>
+
+          <!-- Freie Plätze -->
+          <div v-for="(free, i) in freeSpotsPerDay" :key="'free-' + i"
+            class="flex h-12 items-center justify-center border-b border-r border-white/50 p-2 text-center font-semibold dark:border-slate-800"
+            :class="getSpotColor(free)">
+            {{ free }}
+          </div>
+
+          <!-- Buchungen -->
+          <template v-for="(row, rowIndex) in layoutRows" :key="rowIndex">
+            <div v-for="i in daysOfWeek.length" :key="'cell-' + rowIndex + '-' + i" class="relative h-16 border-b border-r border-slate-100 dark:border-slate-800" />
+
+            <template v-for="booking in row" :key="booking.id">
+              <button
+                type="button"
+                class="relative z-[1] m-1 flex cursor-pointer flex-col justify-center overflow-hidden whitespace-nowrap rounded-lg border px-2 py-1 text-left text-sm leading-tight text-white shadow-sm transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                :class="getBookingClass(booking)" :style="{
+                  gridColumn: booking.offset + 1 + ' / span ' + booking.length,
+                  gridRow: rowIndex + 3
+                }" @click="$emit('select', booking.id)">
+                <span class="font-bold">{{ booking.carPlate }}</span>
+                <span class="text-xs">{{ booking.guestName }}</span>
+              </button>
+            </template>
+          </template>
+      </div>
     </div>
-
-    <!-- Freie Plätze -->
-    <div class="p-2 my-1 font-medium border-l border-b min-h-10 flex justify-center  bg-slate-200 dark:bg-slate-950 rounded-l-lg">Freie Plätze</div>
-    <div v-for="(free, i) in freeSpotsPerDay" :key="'free-' + i"
-      class="p-2 my-1 text-center font-semibold border-r justify-center"
-      :class="getSpotColor(free)">
-      {{ free }}
-    </div>
-
-    <!-- Buchungen -->
-    <template v-for="(row, rowIndex) in layoutRows" :key="rowIndex">
-      <div></div>
-      <div v-for="i in daysOfWeek.length" :key="'cell-' + rowIndex + '-' + i" class="relative min-h-12" />
-
-      <template v-for="booking in row" :key="booking.id">
-        <div
-          class="cursor-pointer text-sm px-2 py-1 m-[2px] overflow-hidden whitespace-nowrap flex flex-col justify-center leading-tight h-half rounded-lg text-white"
-          :class="getBookingClass(booking)" :style="{
-            gridColumn: booking.offset + 2 + ' / span ' + booking.length,
-            gridRow: rowIndex + 3
-          }" @click="$emit('select', booking.id)">
-          <span class="font-bold">{{ booking.carPlate }}</span>
-          <span class="text-xs">{{ booking.guestName }}</span>
-        </div>
-      </template>
-    </template>
-  </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { HostBookingSummary } from '@/types';
-import { formatDateLocalYMD, formatDateToYMD, normalizeDate } from '@/composables/utils/dateUtils';
+import { formatDateLocalYMD, normalizeDate } from '@/composables/utils/dateUtils';
 import emitter from '@/composables/utils/eventBus';
 import { onMounted, onUnmounted } from 'vue';
 
@@ -146,19 +152,11 @@ const layoutRows = computed<PositionedBooking[][]>(() => {
 });
 
 const getBookingClass = (booking: HostBookingSummary) => {
-  if (booking.status !== 'paid') {
-    return 'bg-red-600';
-  }
-
-  const colors = [
-    'bg-blue-600',
-    'bg-green-600',
-    'bg-yellow-600',
-    'bg-pink-600',
-    'bg-purple-600',
-  ];
-  const hash = Array.from(booking.id).reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  return colors[hash % colors.length];
+  if (booking.status === 'paid') return 'border-blue-700 bg-blue-600';
+  if (booking.status === 'cash') return 'border-emerald-700 bg-emerald-600';
+  if (booking.status === 'pending') return 'border-amber-700 bg-amber-600';
+  if (booking.status === 'cancelled') return 'border-red-700 bg-red-600';
+  return 'border-slate-600 bg-slate-500';
 };
 
 const getSpotColor = (free: number): string => {
@@ -171,5 +169,5 @@ const getSpotColor = (free: number): string => {
 };
 
 const formatDay = (date: Date) =>
-  date.toLocaleDateString('de-CH', { weekday: 'narrow', day: '2-digit', month: '2-digit' });
+  date.toLocaleDateString('de-CH', { weekday: 'short', day: '2-digit', month: '2-digit' });
 </script>

@@ -1,18 +1,21 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-900 px-4">
-    <div class="max-w-md w-full bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md">
-      <h2 class="text-2xl font-semibold text-center text-slate-800 dark:text-white mb-6">
-        Host Login
-      </h2>
+  <div class="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-10 dark:bg-slate-950">
+    <div class="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
+      <div class="bg-slate-900 px-6 py-7 text-white dark:bg-slate-800">
+        <p class="text-sm font-medium uppercase tracking-[0.18em] text-blue-300">Camper Herger</p>
+        <h1 class="mt-2 text-2xl font-semibold">Host-Bereich</h1>
+        <p class="mt-1 text-sm text-slate-300">Melde dich an, um Buchungen zu verwalten.</p>
+      </div>
 
-      <form @submit.prevent="handleLogin" class="space-y-4">
+      <form @submit.prevent="handleLogin" class="space-y-5 p-6 sm:p-7">
         <div>
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">E-Mail</label>
           <input
             v-model="email"
             type="email"
             required
-            class="w-full px-4 py-2 border rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autocomplete="email"
+            class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
           />
         </div>
 
@@ -22,20 +25,21 @@
             v-model="password"
             type="password"
             required
-            class="w-full px-4 py-2 border rounded-md bg-white dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autocomplete="current-password"
+            class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
           />
         </div>
 
-        <div class="flex items-center gap-2">
-          <input id="remember" type="checkbox" v-model="rememberMe" />
+        <div class="flex items-center gap-2.5">
+          <input id="remember" type="checkbox" v-model="rememberMe" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
           <label for="remember" class="text-sm text-slate-700 dark:text-slate-300">Eingeloggt bleiben</label>
         </div>
 
-        <p v-if="errorMessage" class="text-red-600 text-sm text-center">{{ errorMessage }}</p>
+        <p v-if="errorMessage" role="alert" class="rounded-lg bg-red-50 px-3 py-2 text-center text-sm text-red-700 dark:bg-red-950/50 dark:text-red-300">{{ errorMessage }}</p>
 
         <button
           type="submit"
-          class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition"
+          class="w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-blue-500 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
         >
           Einloggen
         </button>

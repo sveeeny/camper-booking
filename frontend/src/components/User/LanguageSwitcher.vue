@@ -1,6 +1,6 @@
 <!-- components/LanguageSwitcher.vue -->
 <template>
-    <select v-model="locale" class="px-2 py-1 pr-6 rounded border text-sm min-w-[130px] g-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 border dark:border-slate-600">
+    <select v-model="locale" aria-label="Sprache wählen" class="min-w-[130px] rounded-lg border border-white/30 bg-white/95 px-3 py-2 pr-8 text-sm text-slate-800 shadow-sm focus:border-blue-400 focus:ring-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200">
         <option value="de">🇩🇪 Deutsch</option>
         <option value="en">🇬🇧 English</option>
     </select>

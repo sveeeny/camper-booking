@@ -1,134 +1,143 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 py-6">
-    <h1 class="text-3xl font-bold text-slate-800 dark:text-white mb-6 text-center">Host-Dashboard</h1>
+  <div class="min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div class="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6">
+      <header class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-4 sm:px-6 dark:border-slate-800">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
+              Camper Herger
+            </p>
+            <h1 class="mt-1 text-xl font-bold text-slate-900 sm:text-2xl dark:text-white">
+              Host-Bereich
+            </h1>
+          </div>
 
-    <!-- 🔐 Obere rechte Buttons -->
-    <div class="flex flex-wrap justify-end items-center p-4 gap-2">
-      <template v-if="userStore.isAdmin">
-        <RouterLink
-          v-if="isAdminView"
-          :to="{ name: 'HostListView' }"
-          class="px-4 py-2 rounded-md font-medium bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          Zur Host-Übersicht
-        </RouterLink>
-        <RouterLink
-          :to="{ name: 'AdminSettingsView' }"
-          :class="buttonClass(isRoute('AdminSettingsView'))">
-          Einstellungen
-        </RouterLink>
-        <RouterLink
-          :to="{ name: 'AdminUsersView' }"
-          :class="buttonClass(isRoute('AdminUsersView'))">
-          Benutzer verwalten
-        </RouterLink>
-      </template>
+          <button
+            type="button"
+            class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            @click="handleLogout"
+          >
+            Abmelden
+          </button>
+        </div>
 
-      <!-- ❌ Nur im Buchungsformular -->
-      <button v-if="isAddBooking" @click="handleBackToDashboard"
-        class="px-4 py-2 rounded-md font-medium bg-red-600 hover:bg-red-700 text-white">
-        Buchung abbrechen
-      </button>
+        <nav class="grid grid-cols-2 gap-2 p-3 sm:flex sm:flex-wrap sm:items-center sm:p-4" aria-label="Host-Navigation">
+          <RouterLink :to="{ name: 'HostListView' }" :class="navLinkClass('HostListView')">
+            Tagesansicht
+          </RouterLink>
+          <RouterLink :to="{ name: 'HostWeekView' }" :class="navLinkClass('HostWeekView')">
+            Wochenansicht
+          </RouterLink>
+          <RouterLink :to="{ name: 'HostAddBookingView' }" :class="navLinkClass('HostAddBookingView')">
+            Buchung hinzufügen
+          </RouterLink>
 
-      <button @click="showToast" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded">
-      Zeige Test-Toast
-    </button>
+          <template v-if="userStore.isAdmin">
+            <RouterLink :to="{ name: 'AdminSettingsView' }" :class="navLinkClass('AdminSettingsView')">
+              Einstellungen
+            </RouterLink>
+            <RouterLink :to="{ name: 'AdminUsersView' }" :class="navLinkClass('AdminUsersView')">
+              Benutzer
+            </RouterLink>
 
-      <!-- 🧹 Manuelles Cleanup -->
-<button @click="runManualBackendCleanup"
-  class="px-4 py-2 rounded-md font-medium bg-emerald-600 hover:bg-emerald-700 text-white">
-  Cleanup starten
-</button>
+            <details class="relative col-span-2 sm:ml-auto">
+              <summary class="nav-link cursor-pointer list-none border border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
+                Wartung
+              </summary>
+              <div class="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                <p class="font-semibold text-slate-900 dark:text-white">Temporäre Buchungen bereinigen</p>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  Entfernt abgelaufene, nicht abgeschlossene Buchungen.
+                </p>
+                <button
+                  type="button"
+                  class="mt-4 w-full rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                  @click="runManualBackendCleanup"
+                >
+                  Cleanup starten
+                </button>
+              </div>
+            </details>
+          </template>
+        </nav>
 
+        <div v-if="isAddBooking" class="border-t border-slate-200 px-4 py-3 text-right dark:border-slate-800">
+          <button
+            type="button"
+            class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+            @click="handleBackToDashboard"
+          >
+            Buchung abbrechen
+          </button>
+        </div>
+      </header>
 
-      <!-- 🔓 Logout -->
-      <button @click="handleLogout" class="px-4 py-2 rounded-md font-medium bg-slate-400 hover:bg-slate-500 text-white">
-        Logout
-      </button>
+      <main class="mt-5">
+        <router-view v-slot="{ Component }">
+          <component :is="Component" />
+        </router-view>
+      </main>
     </div>
-
-    <!-- 🔘 Ansichtsauswahl – nur bei Listen-/Wochenansicht -->
-    <div v-if="isListOrWeekView" class="flex justify-center gap-4 mb-6">
-      <RouterLink :to="{ name: 'HostListView' }" :class="buttonClass(isRoute('HostListView'))">Tagesansicht</RouterLink>
-
-      <RouterLink :to="{ name: 'HostWeekView' }" :class="buttonClass(isRoute('HostWeekView'))">Wochenansicht
-      </RouterLink>
-    </div>
-
-    <!-- 📋 Inhalt -->
-    <router-view v-slot="{ Component }">
-      <component :is="Component" />
-    </router-view>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useRoute, useRouter, RouterLink } from 'vue-router';
-import { useUserStore } from '@/store/userStore';
-import { useBookingCleanup } from '@/composables/useBookingCleanup';
 import { computed } from 'vue';
-import api from '@/api';
+import { RouterLink, useRoute } from 'vue-router';
 import { useToast } from 'vue-toastification';
+import api from '@/api';
+import { useBookingCleanup } from '@/composables/useBookingCleanup';
+import { useUserStore } from '@/store/userStore';
 
-const toast = useToast();
-
-const showToast = () => {
-  toast.success('🎉 Toast funktioniert!');
-};
-
-const router = useRouter();
 const route = useRoute();
+const toast = useToast();
 const userStore = useUserStore();
 const { cleanupWithPrompt } = useBookingCleanup();
 
+const currentRouteName = computed(() => String(route.name ?? ''));
+const isAddBooking = computed(() => currentRouteName.value === 'HostAddBookingView');
+
+const navLinkClass = (routeName: string) => [
+  'nav-link',
+  currentRouteName.value === routeName
+    ? 'bg-blue-600 text-white shadow-sm'
+    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700',
+];
+
 const runManualBackendCleanup = async () => {
+  const confirmed = window.confirm(
+    'Sollen abgelaufene, nicht abgeschlossene Buchungen jetzt bereinigt werden?',
+  );
+  if (!confirmed) return;
+
   try {
     const response = await api.patch('/bookings/manual-cleanup');
-    alert(response.data.message || 'Cleanup erfolgreich gestartet');
-  } catch (err) {
-    console.error('❌ Fehler beim Cleanup:', err);
-    alert('Fehler beim Cleanup');
+    toast.success(response.data.message || 'Cleanup erfolgreich abgeschlossen.');
+  } catch {
+    toast.error('Cleanup konnte nicht ausgeführt werden.');
   }
 };
 
-// 📍 Aktuelle Route
-
-const currentRouteName = computed(() => route.name);
-
-const isAdminView = computed(() =>
-  ['AdminSettingsView', 'AdminUsersView'].includes(currentRouteName.value as string),
-);
-const isAddBooking = computed(() => currentRouteName.value === 'HostAddBookingView');
-const isListOrWeekView = computed(() =>
-  ['HostListView', 'HostWeekView'].includes(currentRouteName.value as string)
-);
-const isRoute = (name: string) => currentRouteName.value === name;
-
-// 🎨 Styling für Buttons
-const buttonClass = (active: boolean) =>
-  `px-4 py-2 rounded-md font-medium ${active
-    ? 'bg-slate-200 text-black dark:bg-slate-950 dark:text-white'
-    : 'bg-slate-100 text-black dark:bg-slate-700 dark:text-white'
-  }`;
-
-// 🔁 Dashboard-Button
 const handleBackToDashboard = async () => {
   await cleanupWithPrompt({
     requireConfirmation: true,
-    message: 'Zurück zum Dashboard? Die Buchung wird gelöscht.',
+    message: 'Zurück zur Übersicht? Die angefangene Buchung wird gelöscht.',
     redirect: '/host',
   });
 };
 
-// 🔓 Logout
 const handleLogout = async () => {
   await cleanupWithPrompt({
-    requireConfirmation: isAddBooking.value, // ✅ Nur im Buchungsformular bestätigen
+    requireConfirmation: isAddBooking.value,
     message: 'Möchtest du dich wirklich abmelden? Offene Buchungen werden gelöscht.',
     redirect: '/login',
   });
-
-  userStore.logout(); // 🔑 Wichtig!
+  userStore.logout();
 };
-
 </script>
+
+<style scoped>
+.nav-link {
+  @apply rounded-lg px-3 py-2 text-center text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+}
+</style>

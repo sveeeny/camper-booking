@@ -1,17 +1,27 @@
 <template>
   <div class="min-h-screen w-full bg-cover bg-center bg-no-repeat" style="background-image: url('/chicken.jpg')">
-    <div class="bg-black/40 min-h-screen backdrop-blur-sm flex flex-col justify-between">
-      <header class="flex justify-end items-center p-4">
+    <div class="flex min-h-screen flex-col bg-slate-950/50 backdrop-blur-[2px]">
+      <header class="flex items-center justify-between px-4 py-4 sm:px-6">
+        <div class="text-white">
+          <p class="text-base font-semibold tracking-wide">Camper Herger</p>
+          <p class="text-xs text-slate-200">Stellplatz online buchen</p>
+        </div>
         <LanguageSwitcher />
       </header>
 
-      <div class="w-full max-w-3xl mx-auto px-[2.5%]">
-        <StepOne v-if="step === 1" @next="handleStepOneSubmit" />
-        <StepTwo v-else-if="step === 2" @submit="handleStepTwoSubmit" />
-        <Summary v-else-if="step === 3" @confirm="handleSummaryConfirm" />
-      </div>
+      <main class="flex flex-1 items-center px-3 py-4 sm:px-6 sm:py-8">
+        <div
+          class="mx-auto w-full max-w-6xl rounded-2xl border border-white/15 bg-slate-950/65 py-5 shadow-2xl backdrop-blur-md sm:py-7"
+        >
+          <StepOne v-if="step === 1" @next="handleStepOneSubmit" />
+          <StepTwo v-else-if="step === 2" @submit="handleStepTwoSubmit" />
+          <Summary v-else-if="step === 3" @confirm="handleSummaryConfirm" />
+        </div>
+      </main>
 
-      <Timeline :step="stepIndex" :can-proceed="true" @next="handleNext" @prev="step--" @confirm="handleSummaryConfirm" />
+      <footer class="border-t border-white/10 bg-slate-950/75 backdrop-blur-md">
+        <Timeline :step="stepIndex" :can-proceed="true" @next="handleNext" @prev="step--" @confirm="handleSummaryConfirm" />
+      </footer>
     </div>
   </div>
 </template>

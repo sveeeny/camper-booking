@@ -1,14 +1,17 @@
 <!-- src/components/User/StepOne.vue -->
 <template>
-  <div class="flex flex-col gap-4 md:gap-6 px-4 px-20">
+  <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-5 md:gap-6 md:px-10">
     <!-- 🧭 Titel -->
-    <h3 class="text-xl font-semibold text-slate-200">{{ t('stepOne.title') }}</h3>
+    <div>
+      <p class="text-sm font-medium uppercase tracking-[0.18em] text-blue-300">Online-Buchung</p>
+      <h1 class="mt-1 text-2xl font-semibold text-white sm:text-3xl">{{ t('stepOne.title') }}</h1>
+    </div>
 
     <!-- 🚗 Anzahl Fahrzeuge -->
     <div>
       <label class="block text-m font-medium text-slate-300 mb-1">{{ t('stepOne.vehicles') }}</label>
       <select v-model="numberOfCars"
-        class="w-full rounded-md px-3 py-2 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600">
+        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200">
         <option v-for="n in 5" :key="n" :value="n">{{ n }}</option>
       </select>
     </div>
@@ -21,7 +24,7 @@
       </label>
 
       <!-- Check-in -->
-      <div class="rounded-md border-slate-600 border">
+      <div class="overflow-hidden rounded-lg border border-slate-500 bg-white shadow-sm">
         <div v-show="!checkInDate">
           <Datepicker v-model="checkInDate" v-bind="checkInProps" :dark="isDarkMode" :markers="checkInMarkers"
             actionRow: false ref="checkInPickerRef" teleport-center>
@@ -69,7 +72,7 @@
     </div>
 
     <!-- 💰 Preis -->
-    <div class="w-full bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm rounded px-4 py-2">
+    <div class="w-full rounded-lg border border-slate-200/70 bg-white/95 px-4 py-3 text-sm text-slate-700 shadow-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200">
       <p><strong>{{ t('stepOne.basePrice') }}:</strong> {{ basePriceCHF }} CHF</p>
       <p class="text-xs text-slate-700 dark:text-slate-200">{{ t('stepOne.excludingTax') }}</p>
     </div>
