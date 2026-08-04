@@ -66,43 +66,6 @@ export class UserService {
     return { id: savedUser.id, email: savedUser.email, role: savedUser.role }; // ✅ Passwort wird nicht zurückgegeben
   }
 
-  async updateUser(
-    id: number,
-    email?: string,
-    password?: string,
-  ): Promise<Partial<User>> {
-    if (email === undefined && password === undefined) {
-      throw new BadRequestException(
-        'Mindestens eine Änderung muss angegeben werden.',
-      );
-    }
-
-    const user = await this.userRepository.findOne({ where: { id } });
-    if (!user) {
-      throw new NotFoundException(`Benutzer mit ID ${id} nicht gefunden.`);
-    }
-
-    if (email) {
-      const normalizedEmail = email.trim().toLowerCase();
-      const existingUser = await this.userRepository.findOne({
-        where: { email: normalizedEmail },
-      });
-      if (existingUser && existingUser.id !== id) {
-        throw new ConflictException('Diese E-Mail ist bereits vergeben.');
-      }
-      user.email = normalizedEmail;
-    }
-
-    if (password) {
-      user.passwordHash = await bcrypt.hash(password, 10);
-    }
-
-    // **Hier fehlt das Speichern des geänderten Users in der DB**
-    await this.userRepository.save(user); // 🔥 Speichert die Änderungen in der DB!
-
-    return { id: user.id, email: user.email, role: user.role };
-  }
-
   async deleteUser(id: number): Promise<{ message: string }> {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {

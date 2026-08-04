@@ -1,7 +1,6 @@
 import {
   Injectable,
   UnauthorizedException,
-  ConflictException,
   BadRequestException,
 } from '@nestjs/common';
 import { UserService } from '../user/user.service';
@@ -61,22 +60,5 @@ export class AuthService {
     const token = this.jwtService.sign(payload);
 
     return { access_token: token };
-  }
-
-  async register(email: string, password: string, role: 'admin' | 'host') {
-    if (!email || !password || !role) {
-      throw new BadRequestException(
-        'E-Mail, Passwort und Rolle sind erforderlich.',
-      );
-    }
-
-    const existingUser = await this.userService.findUserByEmail(email);
-    if (existingUser) {
-      throw new ConflictException(
-        'Ein Benutzer mit dieser E-Mail existiert bereits.',
-      );
-    }
-
-    return this.userService.createUser(email, password, role);
   }
 }

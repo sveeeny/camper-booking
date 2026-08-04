@@ -1,6 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
 import type { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
 import { User } from './user.entity';
 import { UserService } from './user.service';
 
@@ -49,34 +47,5 @@ describe('UserService', () => {
       role: 'host',
     });
     expect(result).not.toHaveProperty('passwordHash');
-  });
-
-  it('stores a hash instead of the new password', async () => {
-    const user = {
-      id: 7,
-      email: 'host@example.com',
-      passwordHash: 'old-hash',
-      role: 'host',
-    } as User;
-    repository.findOne.mockResolvedValue(user);
-    repository.save.mockImplementation((input) =>
-      Promise.resolve(input as User),
-    );
-
-    await service.updateUser(7, undefined, 'another-secure-password');
-
-    expect(repository.save).toHaveBeenCalledWith(user);
-    expect(user.passwordHash).not.toBe('another-secure-password');
-    await expect(
-      bcrypt.compare('another-secure-password', user.passwordHash),
-    ).resolves.toBe(true);
-  });
-
-  it('rejects an update without changes', async () => {
-    await expect(service.updateUser(7)).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
-    expect(repository.findOne).not.toHaveBeenCalled();
-    expect(repository.save).not.toHaveBeenCalled();
   });
 });

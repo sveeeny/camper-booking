@@ -37,6 +37,11 @@ const routes = [
     component: HostLoginView,
   },
   {
+    path: '/passwort-setzen',
+    name: 'SetPasswordView',
+    component: () => import('@/views/Host/SetPasswordView.vue'),
+  },
+  {
     path: '/host',
     component: HostDashboardView,
     meta: { requiresAuth: true },

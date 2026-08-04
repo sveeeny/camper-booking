@@ -5,17 +5,20 @@
         Benutzerverwaltung
       </h2>
       <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-        Neue Benutzer anlegen und bestehende Passwörter sicher ersetzen.
+        Benutzer einladen und sichere Links zum Setzen des Passworts versenden.
       </p>
     </header>
 
     <form
       class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800"
-      @submit.prevent="createUser"
+      @submit.prevent="inviteUser"
     >
       <h3 class="text-lg font-semibold text-slate-800 dark:text-white">
-        Benutzer hinzufügen
+        Benutzer einladen
       </h3>
+      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        Der neue Benutzer erhält eine E-Mail und setzt sein Passwort selbst.
+      </p>
 
       <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -36,30 +39,6 @@
             <option value="admin">Administrator</option>
           </select>
         </label>
-
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-          Passwort
-          <input
-            v-model="newUser.password"
-            class="input"
-            type="password"
-            autocomplete="new-password"
-            minlength="8"
-            required
-          />
-        </label>
-
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-          Passwort bestätigen
-          <input
-            v-model="newUser.passwordConfirmation"
-            class="input"
-            type="password"
-            autocomplete="new-password"
-            minlength="8"
-            required
-          />
-        </label>
       </div>
 
       <div class="mt-5 flex justify-end">
@@ -68,7 +47,7 @@
           type="submit"
           :disabled="isCreating"
         >
-          {{ isCreating ? 'Wird angelegt …' : 'Benutzer anlegen' }}
+          {{ isCreating ? 'Einladung wird versendet …' : 'Einladung senden' }}
         </button>
       </div>
     </form>
@@ -104,7 +83,7 @@
         :key="user.id"
         class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800"
       >
-        <div class="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <p class="font-semibold text-slate-800 dark:text-white">
               {{ user.email }}
@@ -113,49 +92,20 @@
               {{ roleLabel(user.role) }} · angelegt am {{ formatDate(user.createdAt) }}
             </p>
           </div>
-          <span
-            class="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:bg-slate-700 dark:text-slate-200"
-          >
-            {{ user.role }}
-          </span>
-        </div>
-
-        <form
-          class="mt-5 grid grid-cols-1 items-end gap-4 md:grid-cols-[1fr_1fr_auto]"
-          @submit.prevent="changePassword(user)"
-        >
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-            Neues Passwort
-            <input
-              v-model="passwordDrafts[user.id].password"
-              class="input"
-              type="password"
-              autocomplete="new-password"
-              minlength="8"
-              required
-            />
-          </label>
-
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-            Passwort bestätigen
-            <input
-              v-model="passwordDrafts[user.id].confirmation"
-              class="input"
-              type="password"
-              autocomplete="new-password"
-              minlength="8"
-              required
-            />
-          </label>
 
           <button
-            class="rounded-md bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-            type="submit"
-            :disabled="updatingUserId === user.id"
+            class="w-fit rounded-md bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+            type="button"
+            :disabled="resettingUserId === user.id"
+            @click="sendPasswordReset(user)"
           >
-            {{ updatingUserId === user.id ? 'Speichert …' : 'Passwort ändern' }}
+            {{
+              resettingUserId === user.id
+                ? 'E-Mail wird versendet …'
+                : 'Passwort zurücksetzen'
+            }}
           </button>
-        </form>
+        </div>
       </article>
     </div>
   </section>
@@ -177,21 +127,13 @@ interface ManagedUser {
   updatedAt: string;
 }
 
-interface PasswordDraft {
-  password: string;
-  confirmation: string;
-}
-
 const toast = useToast();
 const users = ref<ManagedUser[]>([]);
 const isLoading = ref(false);
 const isCreating = ref(false);
-const updatingUserId = ref<number | null>(null);
-const passwordDrafts = reactive<Record<number, PasswordDraft>>({});
+const resettingUserId = ref<number | null>(null);
 const newUser = reactive({
   email: '',
-  password: '',
-  passwordConfirmation: '',
   role: 'host' as UserRole,
 });
 
@@ -204,18 +146,11 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
-const preparePasswordDrafts = () => {
-  for (const user of users.value) {
-    passwordDrafts[user.id] ??= { password: '', confirmation: '' };
-  }
-};
-
 const loadUsers = async () => {
   isLoading.value = true;
   try {
     const { data } = await api.get<ManagedUser[]>('/users');
     users.value = data;
-    preparePasswordDrafts();
   } catch (error) {
     toast.error(getErrorMessage(error, 'Benutzer konnten nicht geladen werden.'));
   } finally {
@@ -223,49 +158,42 @@ const loadUsers = async () => {
   }
 };
 
-const createUser = async () => {
-  if (newUser.password !== newUser.passwordConfirmation) {
-    toast.error('Die beiden Passwörter stimmen nicht überein.');
-    return;
-  }
-
+const inviteUser = async () => {
   isCreating.value = true;
   try {
-    await api.post('/users/register', {
+    await api.post('/users/invite', {
       email: newUser.email,
-      password: newUser.password,
       role: newUser.role,
     });
     newUser.email = '';
-    newUser.password = '';
-    newUser.passwordConfirmation = '';
     newUser.role = 'host';
-    toast.success('Benutzer wurde erfolgreich angelegt.');
+    toast.success('Benutzer wurde angelegt und die Einladung versendet.');
     await loadUsers();
   } catch (error) {
-    toast.error(getErrorMessage(error, 'Benutzer konnte nicht angelegt werden.'));
+    toast.error(
+      getErrorMessage(error, 'Einladung konnte nicht versendet werden.'),
+    );
   } finally {
     isCreating.value = false;
   }
 };
 
-const changePassword = async (user: ManagedUser) => {
-  const draft = passwordDrafts[user.id];
-  if (draft.password !== draft.confirmation) {
-    toast.error('Die beiden Passwörter stimmen nicht überein.');
-    return;
-  }
+const sendPasswordReset = async (user: ManagedUser) => {
+  const confirmed = window.confirm(
+    `Soll ein neuer Passwort-Link an ${user.email} gesendet werden?`,
+  );
+  if (!confirmed) return;
 
-  updatingUserId.value = user.id;
+  resettingUserId.value = user.id;
   try {
-    await api.patch(`/users/${user.id}`, { password: draft.password });
-    draft.password = '';
-    draft.confirmation = '';
-    toast.success(`Passwort für ${user.email} wurde geändert.`);
+    await api.post(`/users/${user.id}/password-reset`);
+    toast.success(`Der Passwort-Link wurde an ${user.email} versendet.`);
   } catch (error) {
-    toast.error(getErrorMessage(error, 'Passwort konnte nicht geändert werden.'));
+    toast.error(
+      getErrorMessage(error, 'Der Passwort-Link konnte nicht versendet werden.'),
+    );
   } finally {
-    updatingUserId.value = null;
+    resettingUserId.value = null;
   }
 };
 
