@@ -20,9 +20,9 @@ export class SettingsService {
     if (!settings) {
       settings = this.settingsRepository.create({
         id: 'singleton',
-        adultTax: 2,
-        childTax: 0,
-        pricePerNightPerCar: 30,
+        adultTax: 4,
+        childTax: 4,
+        pricePerNightPerCar: 26,
         maxGuestsPerCar: 6,
         bookingAdvanceDays: 180,
         minNights: 1,

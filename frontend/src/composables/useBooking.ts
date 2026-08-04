@@ -62,9 +62,9 @@ export function useBooking() {
 
   //Settings laden
   const settingsStore = useSettingsStore();
-  const adultTax = computed(() => settingsStore.settings?.adultTax ?? 2);
-  const childTax = computed(() => settingsStore.settings?.childTax ?? 0);
-  const pricePerNightPerCar = computed(() => settingsStore.settings?.pricePerNightPerCar ?? 30);
+  const adultTax = computed(() => settingsStore.settings?.adultTax ?? 4);
+  const childTax = computed(() => settingsStore.settings?.childTax ?? 4);
+  const pricePerNightPerCar = computed(() => settingsStore.settings?.pricePerNightPerCar ?? 26);
   const maxGuestsPerCar = computed(() => settingsStore.settings?.maxGuestsPerCar ?? 10);
   const minNights = computed(() => settingsStore.settings?.minNights ?? 1);
   const maxNights = computed(() => settingsStore.settings?.maxNights ?? 14);
@@ -86,20 +86,20 @@ export function useBooking() {
   );
 
   const basePrice = computed(() => calculateBasePrice());
-  const kurtaxe = computed(() => calculateKurtaxe());
-  const totalPrice = computed(() => basePrice.value + kurtaxe.value);
+  const personSurcharge = computed(() => calculatePersonSurcharge());
+  const totalPrice = computed(() => basePrice.value + personSurcharge.value);
 
   // Exportiere als ein zusammengesetztes Objekt:
   const priceInfo = computed(() => ({
     base: basePrice.value,
-    tax: kurtaxe.value,
+    tax: personSurcharge.value,
     total: totalPrice.value,
   }));
 
   /**
-  * Preisberechnung: Kurtaxe (Erwachsene & Kinder getrennt)
+  * Preisberechnung: Personenpauschale (Erwachsene & Kinder getrennt)
   */
-  const calculateKurtaxe = (): number => {
+  const calculatePersonSurcharge = (): number => {
     if (!bookingStore.selectedDates) return 0;
 
     const checkIn = normalizeDate(bookingStore.selectedDates[0]);
@@ -129,7 +129,7 @@ export function useBooking() {
    * Preisberechnung: Total
    */
   const calculateTotalPrice = (): number => {
-    return calculateBasePrice() + calculateKurtaxe();
+    return calculateBasePrice() + calculatePersonSurcharge();
   };
 
   /**
@@ -290,9 +290,15 @@ export function useBooking() {
       bookingId: bookingId.value,
       checkInDate: formatDateLocalYMD(checkIn),
       checkOutDate: formatDateLocalYMD(checkOut),
-      totalPrice: priceInfo.value.total,
       source: mode.value,
-      cars: cars.value,
+      cars: cars.value.map((car) => ({
+        carPlate: car.carPlate,
+        checkInDate: car.checkInDate,
+        checkOutDate: car.checkOutDate,
+        isCancelled: car.isCancelled,
+        adults: car.adults,
+        children: car.children,
+      })),
     };
 
     try {
@@ -313,7 +319,7 @@ export function useBooking() {
   return {
     // 💰 Preisfunktionen
     calculateBasePrice,
-    calculateKurtaxe,
+    calculatePersonSurcharge,
     calculateTotalPrice,
     priceInfo,
 

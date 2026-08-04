@@ -10,7 +10,7 @@ import { Car } from './cars.entity';
 @Entity('bookings')
 export class Booking {
   @PrimaryGeneratedColumn('uuid')
-  booking_id: string;  
+  booking_id: string;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -40,7 +40,7 @@ export class Booking {
   source: 'guest' | 'host';
 
   @Column({ type: 'text', nullable: true })
-  notizen: string;  
+  notizen: string;
 
   @Column({ default: 'draft' })
   status: string;
@@ -59,6 +59,21 @@ export class Booking {
 
   @Column({ type: 'timestamp', nullable: true })
   statusUpdatedAt: Date;
+
+  @Column({ type: 'varchar', nullable: true })
+  stripeCheckoutSessionId: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  paymentConfirmedAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  confirmationProcessingAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  confirmationSentAt: Date | null;
+
+  @Column({ type: 'text', nullable: true })
+  confirmationLastError: string | null;
 
   @Column({ nullable: true })
   cancelReason: string;

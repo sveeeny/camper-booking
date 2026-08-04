@@ -27,6 +27,7 @@ export class ResendService {
     pdf: Buffer,
     booking: BookingPdfInput,
     language: string,
+    idempotencyKey: string,
   ): Promise<void> {
     const lang: keyof typeof emailTranslations =
       language === 'en' ? 'en' : 'de';
@@ -36,11 +37,12 @@ export class ResendService {
       : [guestEmail, ...(this.copyRecipient ? [this.copyRecipient] : [])];
     const firstName = escapeHtml(booking.guest.firstName);
 
-    const { error } = await this.resend.emails.send({
-      from: 'Camper Herger <no-reply@booking.byherger.ch>',
-      to: recipients,
-      subject: translation.subject,
-      html: `
+    const { error } = await this.resend.emails.send(
+      {
+        from: 'Camper Herger <no-reply@booking.byherger.ch>',
+        to: recipients,
+        subject: translation.subject,
+        html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #333; padding: 20px;">
           <h2 style="color: #2c3e50;">${translation.headline}</h2>
           <p>${translation.greeting(firstName)}</p>
@@ -51,14 +53,16 @@ export class ResendService {
           <p style="font-size: 0.9em; color: #777;">${translation.footer}</p>
         </div>
       `,
-      text: translation.textBody(booking.guest.firstName),
-      attachments: [
-        {
-          filename: 'Confirmation.pdf',
-          content: pdf.toString('base64'),
-        },
-      ],
-    });
+        text: translation.textBody(booking.guest.firstName),
+        attachments: [
+          {
+            filename: 'Confirmation.pdf',
+            content: pdf.toString('base64'),
+          },
+        ],
+      },
+      { idempotencyKey },
+    );
 
     if (error) {
       throw new Error(
@@ -66,9 +70,7 @@ export class ResendService {
       );
     }
 
-    this.logger.log(
-      `Buchungsbestätigung wurde an ${recipients.join(', ')} versendet.`,
-    );
+    this.logger.log('Buchungsbestätigung wurde erfolgreich versendet.');
   }
 }
 

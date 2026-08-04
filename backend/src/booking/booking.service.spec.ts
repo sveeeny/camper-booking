@@ -9,6 +9,7 @@ import { StripeService } from '@/stripe/stripe.service';
 import { Repository } from 'typeorm';
 import { BookingDatesService } from './booking-dates.service';
 import { BookingService } from './booking.service';
+import { BookingPricingService } from './booking-pricing.service';
 
 describe('BookingService', () => {
   let service: BookingService;
@@ -18,6 +19,7 @@ describe('BookingService', () => {
   const bookingSave = jest.fn();
   const reserveBookingDates = jest.fn();
   const updateCarEntries = jest.fn();
+  const calculatePricing = jest.fn();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -46,6 +48,12 @@ describe('BookingService', () => {
           useValue: {
             reserveBookingDates,
             updateCarEntries,
+          },
+        },
+        {
+          provide: BookingPricingService,
+          useValue: {
+            calculate: calculatePricing,
           },
         },
         {
@@ -88,31 +96,80 @@ describe('BookingService', () => {
       phoneCountryCode: '+41',
       phoneNumber: '799999999',
       email: 'test@example.com',
-      totalPrice: 100,
       checkInDate: '2025-06-01',
       checkOutDate: '2025-06-03',
-      cars: [],
+      cars: [
+        {
+          carPlate: 'UR 1234',
+          checkInDate: '2025-06-01',
+          checkOutDate: '2025-06-03',
+          isCancelled: false,
+          adults: 2,
+          children: 1,
+        },
+      ],
       source: 'guest' as const,
     };
-    const booking = { booking_id: dto.bookingId } as Booking;
+    const booking = {
+      booking_id: dto.bookingId,
+      numberOfCars: 1,
+      cars: [
+        {
+          isCancelled: false,
+          checkInDate: dto.checkInDate,
+          checkOutDate: dto.checkOutDate,
+        },
+      ],
+    } as Booking;
+    const pricedCars = [
+      {
+        ...dto.cars[0],
+        basePrice: 52,
+        personSurcharge: 24,
+      },
+    ];
     bookingFindOne.mockResolvedValue(booking);
     bookingSave.mockResolvedValue(booking);
+    calculatePricing.mockResolvedValue({
+      nights: 2,
+      basePrice: 52,
+      personSurcharge: 24,
+      totalPrice: 76,
+      cars: pricedCars,
+    });
 
     await expect(service.createBooking(dto)).resolves.toEqual({
       message: 'Buchung erfolgreich gespeichert!',
       bookingId: dto.bookingId,
+      pricing: {
+        basePrice: 52,
+        personSurcharge: 24,
+        totalPrice: 76,
+      },
     });
-    expect(bookingRepository.save).toHaveBeenCalledWith(
+    expect(bookingSave).toHaveBeenCalledWith(
       expect.objectContaining({
         email: dto.email,
         firstName: dto.firstName,
+        totalPrice: 76,
       }),
     );
     expect(updateCarEntries).toHaveBeenCalledWith(
       dto.bookingId,
       dto.checkInDate,
       dto.checkOutDate,
-      dto.cars,
+      pricedCars,
+    );
+  });
+
+  it('returns the stored booking price in rappen for Stripe', async () => {
+    bookingFindOne.mockResolvedValue({
+      booking_id: 'booking-1',
+      totalPrice: 76.25,
+    } as Booking);
+
+    await expect(service.getCheckoutAmountInRappen('booking-1')).resolves.toBe(
+      7625,
     );
   });
 
